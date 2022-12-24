@@ -1,0 +1,34 @@
+path:
+  ckpt_path: "./output/ckpt/LJSpeech"
+  log_path: "./output/log/LJSpeech"
+  result_path: "./output/result/LJSpeech"
+optimizer:
+  batch_size: 48
+  betas: [0.9, 0.98]
+  eps: 0.000000001
+  weight_decay: 0.0
+  grad_clip_thresh: 1
+  grad_acc_step: 1
+  warm_up_step: 2000
+  anneal_steps: [50000, 100000, 150000]
+  anneal_rate: 0.5
+  init_lr: 0.001
+loss:
+  noise_loss: "l1"
+  dur_loss: "mse"
+  pitch_loss: "l1"
+  cwt_loss: "l1"
+  # cwt_add_f0_loss: false
+  lambda_f0: 1.0
+  lambda_uv: 1.0
+  lambda_ph_dur: 1.0
+  lambda_word_dur: 1.0
+  lambda_sent_dur: 1.0
+step:
+  total_step_aux: 160000
+  total_step_naive: 160000
+  total_step_shallow: 320000
+  log_step: 100
+  synth_step: 1000
+  val_step: 1000
+  save_step: 10000

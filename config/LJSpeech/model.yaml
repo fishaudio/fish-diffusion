@@ -1,0 +1,51 @@
+transformer:
+  encoder_layer: 4
+  encoder_head: 2
+  encoder_hidden: 256
+  decoder_layer: 6
+  decoder_head: 2
+  decoder_hidden: 256
+  ffn_kernel_size: 9
+  encoder_dropout: 0.1
+  decoder_dropout: 0.1
+  ffn_padding: "SAME"
+  ffn_act: "gelu"
+
+denoiser:
+  denoiser_hidden: 512
+  denoiser_dropout: 0.2
+  residual_layers: 20
+  residual_channels: 256
+  noise_schedule_naive: "cosine"
+  noise_schedule_shallow: "linear"
+  timesteps: 100
+  K_step: 100
+  max_beta: 0.06
+  s: 0.008
+  keep_bins: 80
+
+variance_predictor:
+  filter_size: 256
+  predictor_grad: 0.1
+  predictor_layers: 2
+  predictor_kernel: 5
+  cwt_hidden_size: 128
+  cwt_std_scale: 0.8
+  dur_predictor_layers: 2
+  dur_predictor_kernel: 3
+  dropout: 0.5
+
+variance_embedding:
+  use_pitch_embed: True
+  pitch_n_bins: 300
+  use_energy_embed: False
+  energy_n_bins: 256
+  energy_quantization: "linear" # support 'linear' or 'log', 'log' is allowed only if the energy values are not normalized during preprocessing
+
+multi_speaker: False
+
+max_seq_len: 1000
+
+vocoder:
+  model: "HiFi-GAN" # support 'HiFi-GAN', 'MelGAN'
+  speaker: "LJSpeech" # support  'LJSpeech', 'universal'
