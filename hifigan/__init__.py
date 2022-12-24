@@ -1,7 +1,2 @@
-from .models import Generator
-
-
-class AttrDict(dict):
-    def __init__(self, *args, **kwargs):
-        super(AttrDict, self).__init__(*args, **kwargs)
-        self.__dict__ = self
+from hifigan.network.vocoders.nsf_hifigan  import NsfHifiGAN
+# from https://github.com/openvpi/diffsinger

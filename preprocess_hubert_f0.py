@@ -90,7 +90,7 @@ def process(filename):
 
     mel_path = filename + ".mel.npy"
     if not os.path.exists(mel_path):
-        wav, _ = librosa.load(filename)
+        wav, _ = librosa.load(filename, sampling_rate)
         mel_spectrogram, energy = Audio.tools.get_mel_from_wav(wav, STFT)
         np.save(mel_path, mel_spectrogram)
     else:

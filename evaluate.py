@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 
 from utils.tools import to_device, log, synth_one_sample
 from model import DiffSingerLoss
-from dataset import Dataset
+from data_utils import Dataset
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

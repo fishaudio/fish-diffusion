@@ -12,7 +12,7 @@ from tqdm import tqdm
 from utils.model import get_model, get_vocoder, get_param_num
 from utils.tools import get_configs_of, to_device, log, synth_one_sample
 from model import DiffSingerLoss
-from dataset import Dataset
+from data_utils import Dataset
 
 from evaluate import evaluate
 
@@ -152,15 +152,15 @@ def main(args, configs):
                     model.train()
 
                 if step % save_step == 0:
+                    savepath = os.path.join(train_config["path"]["ckpt_path"], "{}.pth.tar".format(step), )
+                    rmpath = os.path.join(train_config["path"]["ckpt_path"], "{}.pth.tar".format(step-3*save_step), )
+                    os.system(f"rm {rmpath}")
                     torch.save(
                         {
                             "model": model.module.state_dict(),
                             "optimizer": optimizer._optimizer.state_dict(),
                         },
-                        os.path.join(
-                            train_config["path"]["ckpt_path"],
-                            "{}.pth.tar".format(step),
-                        ),
+                        savepath,
                     )
 
                 if step >= total_step:
