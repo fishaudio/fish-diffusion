@@ -63,10 +63,10 @@ class STFT(torch.nn.Module):
             mode="reflect",
         )
         input_data = input_data.squeeze(1)
-
+        dev = "cuda" if torch.cuda.is_available() else "cpu"
         forward_transform = F.conv1d(
-            input_data.cuda(),
-            torch.autograd.Variable(self.forward_basis, requires_grad=False).cuda(),
+            input_data.to(dev),
+            torch.autograd.Variable(self.forward_basis, requires_grad=False).to(dev),
             stride=self.hop_length,
             padding=0,
         ).cpu()

@@ -1,5 +1,7 @@
 import os
 import json
+
+import torchaudio
 import yaml
 from math import exp
 
@@ -13,6 +15,8 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from utils.pitch_tools import denorm_f0, expand_f0_ph, cwt2f0
+from hubert import hubert_model
+
 
 
 matplotlib.use("Agg")
@@ -20,6 +24,26 @@ matplotlib.use("Agg")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
+def get_hubert_model(rank=None):
+
+  hubert_soft = hubert_model.hubert_soft("hubert/hubert-soft-0d54a1f4.pt")
+  if rank is not None:
+    hubert_soft = hubert_soft.cuda(rank)
+  return hubert_soft
+
+def get_hubert_content(hmodel, y=None, path=None):
+  if path is not None:
+    source, sr = torchaudio.load(path)
+    source = torchaudio.functional.resample(source, sr, 16000)
+    if len(source.shape) == 2 and source.shape[1] >= 2:
+      source = torch.mean(source, dim=0).unsqueeze(0)
+  else:
+    source = y
+  source = source.unsqueeze(0)
+  with torch.inference_mode():
+    units = hmodel.units(source)
+    return units.transpose(1,2)
 
 def get_configs_of(dataset):
     config_dir = os.path.join("./config", dataset)
@@ -33,76 +57,37 @@ def get_configs_of(dataset):
 
 
 def to_device(data, device):
-    if len(data) == 18:
-        (
-            ids,
-            raw_texts,
-            speakers,
-            texts,
-            src_lens,
-            max_src_len,
-            mels,
-            mel_lens,
-            max_mel_len,
-            pitches,
-            f0s,
-            uvs,
-            cwt_specs,
-            f0_means,
-            f0_stds,
-            energies,
-            durations,
-            mel2phs,
-        ) = data
+    (
+        ids,
+        speakers,
+        contents,
+        src_lens,
+        max_src_len,
+        mels,
+        mel_lens,
+        max_mel_len,
+        pitches,
+    ) = data
 
-        speakers = torch.from_numpy(speakers).long().to(device)
-        texts = torch.from_numpy(texts).long().to(device)
-        src_lens = torch.from_numpy(src_lens).to(device)
-        mels = torch.from_numpy(mels).float().to(device) if mels is not None else mels
-        mel_lens = torch.from_numpy(mel_lens).to(device)
-        pitches = torch.from_numpy(pitches).long().to(device)
-        f0s = torch.from_numpy(f0s).float().to(device)
-        uvs = torch.from_numpy(uvs).float().to(device)
-        cwt_specs = torch.from_numpy(cwt_specs).float().to(device) if cwt_specs is not None else cwt_specs
-        f0_means = torch.from_numpy(f0_means).float().to(device) if f0_means is not None else f0_means
-        f0_stds = torch.from_numpy(f0_stds).float().to(device) if f0_stds is not None else f0_stds
-        energies = torch.from_numpy(energies).to(device)
-        durations = torch.from_numpy(durations).long().to(device)
-        mel2phs = torch.from_numpy(mel2phs).long().to(device)
+    speakers = torch.from_numpy(speakers).long().to(device)
+    contents = torch.from_numpy(contents).float().to(device)
+    src_lens = torch.from_numpy(src_lens).to(device)
+    mels = torch.from_numpy(mels).float().to(device) if mels is not None else mels
+    mel_lens = torch.from_numpy(mel_lens).to(device)
+    pitches = torch.from_numpy(pitches).float().to(device)
 
-        pitch_data = {
-            "pitch": pitches,
-            "f0": f0s,
-            "uv": uvs,
-            "cwt_spec": cwt_specs,
-            "f0_mean": f0_means,
-            "f0_std": f0_stds,
-        }
+    return [
+        ids,
+        speakers,
+        contents,
+        src_lens,
+        max_src_len,
+        mels,
+        mel_lens,
+        max_mel_len,
+        pitches,
+    ]
 
-        return [
-            ids,
-            raw_texts,
-            speakers,
-            texts,
-            src_lens,
-            max_src_len,
-            mels,
-            mel_lens,
-            max_mel_len,
-            pitch_data,
-            energies,
-            durations,
-            mel2phs,
-        ]
-
-    if len(data) == 6:
-        (ids, raw_texts, speakers, texts, src_lens, max_src_len) = data
-
-        speakers = torch.from_numpy(speakers).long().to(device)
-        texts = torch.from_numpy(texts).long().to(device)
-        src_lens = torch.from_numpy(src_lens).to(device)
-
-        return (ids, raw_texts, speakers, texts, src_lens, max_src_len)
 
 
 def log(
@@ -112,11 +97,6 @@ def log(
         logger.add_scalar("Loss/total_loss", losses[0], step)
         logger.add_scalar("Loss/mel_loss", losses[1], step)
         logger.add_scalar("Loss/noise_loss", losses[2], step)
-        for k, v in losses[3].items():
-            logger.add_scalar("Loss/{}_loss".format(k), v, step)
-        logger.add_scalar("Loss/energy_loss", losses[4], step)
-        for k, v in losses[5].items():
-            logger.add_scalar("Loss/{}_loss".format(k), v, step)
 
     if lr is not None:
         logger.add_scalar("Training/learning_rate", lr, step)
@@ -130,6 +110,7 @@ def log(
             tag,
             audio / max(abs(audio)),
             sample_rate=sampling_rate,
+            global_step=step
         )
 
 
@@ -153,55 +134,10 @@ def expand(values, durations):
 
 def synth_one_sample(args, targets, predictions, vocoder, model_config, preprocess_config, diffusion):
 
-    pitch_config = preprocess_config["preprocessing"]["pitch"]
-    pitch_type = pitch_config["pitch_type"]
-    use_pitch_embed = model_config["variance_embedding"]["use_pitch_embed"]
-    use_energy_embed = model_config["variance_embedding"]["use_energy_embed"]
-    basename = targets[0][0]
-    src_len = predictions[10][0].item()
-    mel_len = predictions[11][0].item()
-    mel_target = targets[6][0, :mel_len].float().detach().transpose(0, 1)
-    duration = targets[11][0, :src_len].int().detach().cpu().numpy()
+    basename = targets[0][0].split(os.sep)[-1].split(".")[0]
+    mel_len = predictions[7][0].item()
+    mel_target = targets[5][0, :mel_len].float().detach().transpose(0, 1)
     figs = {}
-    if use_pitch_embed:
-        pitch_prediction, pitch_target = predictions[4], targets[9]
-        f0 = pitch_target["f0"]
-        if pitch_type == "ph":
-            mel2ph = targets[12]
-            f0 = expand_f0_ph(f0, mel2ph, pitch_config)
-            f0_pred = expand_f0_ph(pitch_prediction["pitch_pred"][:, :, 0], mel2ph, pitch_config)
-            figs["f0"] = f0_to_figure(f0[0, :mel_len], None, f0_pred[0, :mel_len])
-        else:
-            f0 = denorm_f0(f0, pitch_target["uv"], pitch_config)
-            if pitch_type == "cwt":
-                # cwt
-                cwt_out = pitch_prediction["cwt"]
-                cwt_spec = cwt_out[:, :, :10]
-                cwt = torch.cat([cwt_spec, pitch_target["cwt_spec"]], -1)
-                figs["cwt"] = spec_to_figure(cwt[0, :mel_len])
-                # f0
-                f0_pred = cwt2f0(cwt_spec, pitch_prediction["f0_mean"], pitch_prediction["f0_std"], pitch_config["cwt_scales"])
-                if pitch_config["use_uv"]:
-                    assert cwt_out.shape[-1] == 11
-                    uv_pred = cwt_out[:, :, -1] > 0
-                    f0_pred[uv_pred > 0] = 0
-                f0_cwt = denorm_f0(pitch_target["f0_cwt"], pitch_target["uv"], pitch_config)
-                figs["f0"] = f0_to_figure(f0[0, :mel_len], f0_cwt[0, :mel_len], f0_pred[0, :mel_len])
-            elif pitch_type == "frame":
-                # f0
-                uv_pred = pitch_prediction["pitch_pred"][:, :, 1] > 0
-                pitch_pred = denorm_f0(pitch_prediction["pitch_pred"][:, :, 0], uv_pred, pitch_config)
-                figs["f0"] = f0_to_figure(f0[0, :mel_len], None, pitch_pred[0, :mel_len])
-    if use_energy_embed:
-        if preprocess_config["preprocessing"]["energy"]["feature"] == "phoneme_level":
-            energy_prediction = predictions[5][0, :src_len].detach().cpu().numpy()
-            energy_prediction = expand(energy_prediction, duration)
-            energy_target = targets[10][0, :src_len].detach().cpu().numpy()
-            energy_target = expand(energy_target, duration)
-        else:
-            energy_prediction = predictions[5][0, :mel_len].detach().cpu().numpy()
-            energy_target = targets[10][0, :mel_len].detach().cpu().numpy()
-        figs["energy"] = energy_to_figure(energy_target, energy_prediction)
 
     if args.model == "aux":
         mel_prediction = predictions[0][0, :mel_len].float().detach().transpose(0, 1)
@@ -341,6 +277,22 @@ def energy_to_figure(energy_gt, energy_pred=None):
     plt.legend()
     return fig
 
+
+def repeat_expand_2d(content, target_len):
+    # content : [h, t]
+
+    src_len = content.shape[-1]
+    target = torch.zeros([content.shape[0], target_len], dtype=torch.float)
+    temp = torch.arange(src_len+1) * target_len / src_len
+    current_pos = 0
+    for i in range(target_len):
+        if i < temp[current_pos+1]:
+            target[:, i] = content[:, current_pos]
+        else:
+            current_pos += 1
+            target[:, i] = content[:, current_pos]
+
+    return target
 
 def pad_1D(inputs, PAD=0):
     def pad_data(x, length, PAD):

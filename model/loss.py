@@ -5,7 +5,6 @@ import os
 import json
 from utils.tools import ssim
 from utils.pitch_tools import cwt2f0_norm
-from text import sil_phonemes_ids
 
 
 class DiffSingerLoss(nn.Module):
@@ -22,29 +21,21 @@ class DiffSingerLoss(nn.Module):
         self.energy_feature_level = preprocess_config["preprocessing"]["energy"][
             "feature"
         ]
-        self.sil_ph_ids = sil_phonemes_ids()
 
     def forward(self, inputs, predictions):
         (
-            texts,
+            _,
             _,
             _,
             mel_targets,
             _,
             _,
-            pitch_targets,
-            energy_targets,
-            duration_targets,
-            mel2phs,
-        ) = inputs[3:]
+            _,
+        ) = inputs[2:]
         (
             mel_predictions,
             _,
             noise_loss,
-            _,
-            pitch_predictions,
-            energy_predictions,
-            log_duration_predictions,
             _,
             src_masks,
             mel_masks,
@@ -56,17 +47,8 @@ class DiffSingerLoss(nn.Module):
         mel_targets = mel_targets[:, : mel_masks.shape[1], :]
         self.mel_masks = mel_masks[:, :mel_masks.shape[1]]
         self.mel_masks_fill = ~self.mel_masks
-        self.mel2phs = mel2phs
 
-        duration_loss = self.get_duration_loss(log_duration_predictions, duration_targets, texts)
-
-        pitch_loss = energy_loss = torch.zeros(1).to(mel_targets.device)
-        if self.use_pitch_embed:
-            pitch_loss = self.get_pitch_loss(pitch_predictions, pitch_targets)
-        if self.use_energy_embed:
-            energy_loss = self.get_energy_loss(energy_predictions, energy_targets)
-
-        total_loss = sum(duration_loss.values()) + sum(pitch_loss.values()) + energy_loss
+        total_loss = torch.zeros(1).to(mel_targets.device)
 
         if self.model == "aux":
             noise_loss = torch.zeros(1).to(mel_targets.device)
@@ -82,9 +64,6 @@ class DiffSingerLoss(nn.Module):
             total_loss,
             mel_loss,
             noise_loss,
-            pitch_loss,
-            energy_loss,
-            duration_loss,
         )
 
     def get_mel_loss(self, mel_predictions, mel_targets):
@@ -118,49 +97,6 @@ class DiffSingerLoss(nn.Module):
         dim = target.size(-1)
         return target.abs().sum(-1, keepdim=True).ne(0).float().repeat(1, 1, dim)
 
-    def get_duration_loss(self, dur_pred, dur_gt, txt_tokens):
-        """
-        :param dur_pred: [B, T], float, log scale
-        :param txt_tokens: [B, T]
-        :return:
-        """
-        losses = {}
-        B, T = txt_tokens.shape
-        nonpadding = self.src_masks.float()
-        dur_gt = dur_gt.float() * nonpadding
-        is_sil = torch.zeros_like(txt_tokens).bool()
-        for p_id in self.sil_ph_ids:
-            is_sil = is_sil | (txt_tokens == p_id)
-        is_sil = is_sil.float()  # [B, T_txt]
-
-        # phone duration loss
-        if self.loss_config["dur_loss"] == "mse":
-            losses["pdur"] = F.mse_loss(dur_pred, (dur_gt + 1).log(), reduction="none")
-            losses["pdur"] = (losses["pdur"] * nonpadding).sum() / nonpadding.sum()
-            dur_pred = (dur_pred.exp() - 1).clamp(min=0)
-        elif self.loss_config["dur_loss"] == "mog":
-            return NotImplementedError
-        elif self.loss_config["dur_loss"] == "crf":
-            # losses["pdur"] = -self.model.dur_predictor.crf(
-            #     dur_pred, dur_gt.long().clamp(min=0, max=31), mask=nonpadding > 0, reduction="mean")
-            return NotImplementedError
-        losses["pdur"] = losses["pdur"] * self.loss_config["lambda_ph_dur"]
-
-        # use linear scale for sent and word duration
-        if self.loss_config["lambda_word_dur"] > 0:
-            word_id = (is_sil.cumsum(-1) * (1 - is_sil)).long()
-            word_dur_p = dur_pred.new_zeros([B, word_id.max() + 1]).scatter_add(1, word_id, dur_pred)[:, 1:]
-            word_dur_g = dur_gt.new_zeros([B, word_id.max() + 1]).scatter_add(1, word_id, dur_gt)[:, 1:]
-            wdur_loss = F.mse_loss((word_dur_p + 1).log(), (word_dur_g + 1).log(), reduction="none")
-            word_nonpadding = (word_dur_g > 0).float()
-            wdur_loss = (wdur_loss * word_nonpadding).sum() / word_nonpadding.sum()
-            losses["wdur"] = wdur_loss * self.loss_config["lambda_word_dur"]
-        if self.loss_config["lambda_sent_dur"] > 0:
-            sent_dur_p = dur_pred.sum(-1)
-            sent_dur_g = dur_gt.sum(-1)
-            sdur_loss = F.mse_loss((sent_dur_p + 1).log(), (sent_dur_g + 1).log(), reduction="mean")
-            losses["sdur"] = sdur_loss.mean() * self.loss_config["lambda_sent_dur"]
-        return losses
 
     def get_pitch_loss(self, pitch_predictions, pitch_targets):
         losses = {}

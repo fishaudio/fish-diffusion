@@ -20,12 +20,12 @@ def evaluate(args, model, step, configs, logger=None, vocoder=None, losses=None)
 
     # Get dataset
     dataset = Dataset(
-        "val.txt", preprocess_config, train_config, sort=False, drop_last=False
+        preprocess_config["path"]["val_filelist"], preprocess_config, train_config, sort=False, drop_last=False
     )
     batch_size = train_config["optimizer"]["batch_size"]
     loader = DataLoader(
         dataset,
-        batch_size=batch_size,
+        batch_size=2,
         shuffle=False,
         collate_fn=dataset.collate_fn,
     )
@@ -39,9 +39,7 @@ def evaluate(args, model, step, configs, logger=None, vocoder=None, losses=None)
             batch = to_device(batch, device)
             with torch.no_grad():
                 # Forward
-                output, p_targets = model(*(batch[2:]))
-                # Update Batch
-                batch[9] = p_targets
+                output = model(*(batch[1:]))
 
                 # Cal Loss
                 losses = Loss(batch, output)
@@ -64,7 +62,7 @@ def evaluate(args, model, step, configs, logger=None, vocoder=None, losses=None)
             loss_means.append(loss_sum / len(dataset))
             loss_means_.append(loss_sum / len(dataset))
 
-    message = "Validation Step {}, Total Loss: {:.4f}, Mel Loss: {:.4f}, Noise Loss: {:.4f}, Pitch Loss: {:.4f}, Energy Loss: {:.4f}, Duration Loss: {:.4f}".format(
+    message = "Validation Step {}, Total Loss: {:.4f}, Mel Loss: {:.4f}, Noise Loss: {:.4f}, ".format(
         *([step] + [l for l in loss_means_])
     )
 
@@ -91,13 +89,15 @@ def evaluate(args, model, step, configs, logger=None, vocoder=None, losses=None)
             logger,
             audio=wav_reconstruction,
             sampling_rate=sampling_rate,
-            tag="Validation/step_{}_{}_reconstructed".format(step, tag),
+            tag="Validation/{}_reconstructed".format(tag),
+            step=step
         )
         log(
             logger,
             audio=wav_prediction,
             sampling_rate=sampling_rate,
-            tag="Validation/step_{}_{}_synthesized".format(step, tag),
+            tag="Validation/{}_synthesized".format(tag),
+            step=step
         )
 
     return message

@@ -26,14 +26,12 @@ def main(args, configs):
 
     # Get dataset
     dataset = Dataset(
-        "train.txt", preprocess_config, train_config, sort=True, drop_last=True
+        preprocess_config["path"]["train_filelist"], preprocess_config, train_config, sort=True, drop_last=True
     )
     batch_size = train_config["optimizer"]["batch_size"]
-    group_size = 4  # Set this larger than 1 to enable sorting in Dataset
-    assert batch_size * group_size < len(dataset)
     loader = DataLoader(
         dataset,
-        batch_size=batch_size * group_size,
+        batch_size=batch_size,
         shuffle=True,
         collate_fn=dataset.collate_fn,
     )
@@ -80,10 +78,7 @@ def main(args, configs):
                 batch = to_device(batch, device)
 
                 # Forward
-                output, p_targets = model(*(batch[2:]))
-                # Update Batch
-                batch[9] = p_targets
-
+                output = model(*(batch[1:]))
                 # Cal Loss
                 losses = Loss(batch, output)
                 total_loss = losses[0]
@@ -102,7 +97,7 @@ def main(args, configs):
                 if step % log_step == 0:
                     losses_ = [sum(l.values()).item() if isinstance(l, dict) else l.item() for l in losses]
                     message1 = "Step {}/{}, ".format(step, total_step)
-                    message2 = "Total Loss: {:.4f}, Mel Loss: {:.4f}, Noise Loss: {:.4f}, Pitch Loss: {:.4f}, Energy Loss: {:.4f}, Duration Loss: {:.4f}".format(
+                    message2 = "Total Loss: {:.4f}, Mel Loss: {:.4f}, Noise Loss: {:.4f}".format(
                         *losses_
                     )
 
@@ -136,13 +131,15 @@ def main(args, configs):
                         train_logger,
                         audio=wav_reconstruction,
                         sampling_rate=sampling_rate,
-                        tag="Training/step_{}_{}_reconstructed".format(step, tag),
+                        tag="Training/reconstructed",
+                        step=step
                     )
                     log(
                         train_logger,
                         audio=wav_prediction,
                         sampling_rate=sampling_rate,
-                        tag="Training/step_{}_{}_synthesized".format(step, tag),
+                        tag="Training/synthesized",
+                        step=step
                     )
 
                 if step % val_step == 0:
