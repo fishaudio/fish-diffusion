@@ -55,14 +55,15 @@ def get_vocoder(config, device):
         vocoder.mel2wav.eval()
         vocoder.mel2wav.to(device)
     elif name == "HiFi-GAN":
+        dev = "cuda" if torch.cuda.is_available() else "cpu"
         with open("hifigan/config.json", "r") as f:
             config = json.load(f)
         config = hifigan.AttrDict(config)
         vocoder = hifigan.Generator(config)
         if speaker == "LJSpeech":
-            ckpt = torch.load("hifigan/generator_LJSpeech.pth.tar")
+            ckpt = torch.load("hifigan/generator_LJSpeech.pth.tar", map_location=dev)
         elif speaker == "universal":
-            ckpt = torch.load("hifigan/generator_universal.pth.tar")
+            ckpt = torch.load("hifigan/generator_universal.pth.tar", map_location=dev)
         vocoder.load_state_dict(ckpt["generator"])
         vocoder.eval()
         vocoder.remove_weight_norm()

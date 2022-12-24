@@ -150,7 +150,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--text",
         type=str,
-        default=None,
+        default="the worst, which perhaps was the English, was a terrible falling off from the work of the earlier。",
         help="raw text to synthesize, for single-sentence mode only",
     )
     parser.add_argument(
