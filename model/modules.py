@@ -11,7 +11,8 @@ import torch.nn.functional as F
 
 from utils.tools import get_mask_from_lengths, pad, dur_to_mel2ph
 from utils.pitch_tools import f0_to_coarse, denorm_f0, cwt2f0_norm
-
+from . import attentions
+import utils.commons
 from .blocks import (
     Embedding,
     SinusoidalPositionalEmbedding,
@@ -104,27 +105,25 @@ class FFTBlocks(nn.Module):
         return x
 
 
-class FastspeechEncoder(FFTBlocks):
+class FastspeechEncoder(nn.Module):
     def __init__(self, config):
+        super().__init__()
         max_seq_len = config["max_seq_len"]
         hidden_size = config["transformer"]["encoder_hidden"]
-        super().__init__(
-            hidden_size,
-            config["transformer"]["encoder_layer"],
-            max_seq_len=max_seq_len * 2,
-            ffn_kernel_size=config["transformer"]["ffn_kernel_size"],
-            dropout=config["transformer"]["encoder_dropout"],
-            num_heads=config["transformer"]["encoder_head"],
-            use_pos_embed=False, # use_pos_embed_alpha for compatibility
-            ffn_padding=config["transformer"]["ffn_padding"],
-            ffn_act=config["transformer"]["ffn_act"],
-        )
+
         self.padding_idx = 0
         self.embed_scale = math.sqrt(hidden_size)
         self.embed_positions = SinusoidalPositionalEmbedding(
             hidden_size, self.padding_idx, init_size=max_seq_len,
         )
         self.proj = nn.Conv1d(256, hidden_size, 1)
+        self.enc = attentions.Encoder(
+            hidden_size,
+            768,
+            2,
+            6,
+            3,
+            0.1)
 
     def forward(self, contents, encoder_padding_mask):
         """
@@ -135,8 +134,10 @@ class FastspeechEncoder(FFTBlocks):
             "encoder_out": [T x B x C]
         }
         """
-        x = self.proj(contents.transpose(1,2)).transpose(1,2)
-        x = super(FastspeechEncoder, self).forward(x, encoder_padding_mask)
+        contents = contents.transpose(1, 2)
+        x_mask = encoder_padding_mask.unsqueeze(1)
+        x = self.proj(contents)
+        x = self.enc(x * x_mask, x_mask).transpose(1, 2)
         return x
 
     def forward_embedding(self, txt_tokens):
