@@ -23,7 +23,7 @@ if __name__ == "__main__":
         spk_dict[speaker] = spk_id
         spk_id += 1
         wavs = [os.path.join(args.source_dir, speaker, i) for i in os.listdir(os.path.join(args.source_dir, speaker))]
-        wavs = [i for i in wavs if i.endswith("wav")]
+        wavs = [i for i in wavs if i.endswith("wav") and not i.endswith(".16k.wav")]
         shuffle(wavs)
         train += wavs[2:-10]
         val += wavs[:2]

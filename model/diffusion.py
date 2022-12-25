@@ -81,7 +81,7 @@ class GaussianDiffusion(nn.Module):
             (1. - alphas_cumprod_prev) * np.sqrt(alphas) / (1. - alphas_cumprod)))
 
         with open(
-                os.path.join(preprocess_config["path"]["preprocessed_path"], "stats.json")
+                os.path.join("dataset", "stats.json")
         ) as f:
             stats = json.load(f)
             self.register_buffer("spec_min", torch.FloatTensor(stats["spec_min"])[None, None, :model_config["denoiser"]["keep_bins"]])

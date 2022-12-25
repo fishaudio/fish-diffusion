@@ -1,10 +1,1 @@
-./dataset/jishuang/000360.wav
-./dataset/yunhao/000216.wav
-./dataset/huiyu/001428.wav
-./dataset/nen/nen504_003.wav
-./dataset/jishuang/000020.wav
-./dataset/huiyu/000718.wav
-./dataset/nen/nen009_001.wav
-./dataset/yunhao/000707.wav
-./dataset/paimon/vo_ABDLQ002_4_paimon_04.wav
-./dataset/paimon/vo_YMLQ002_3_paimon_10.wav
+./dataset/aa/000001.wav

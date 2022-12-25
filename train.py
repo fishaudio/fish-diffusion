@@ -76,7 +76,8 @@ def main(args, configs):
         for batchs in loader:
             for batch in batchs:
                 batch = to_device(batch, device)
-
+                pitches = batch[8].clone()
+                assert batch[8][0].shape[0] == batch[5][0].shape[0]
                 # Forward
                 output = model(*(batch[1:]))
                 # Cal Loss
@@ -109,9 +110,12 @@ def main(args, configs):
                     log(train_logger, step, losses=losses, lr=lr)
 
                 if step % synth_step == 0:
+                    assert batch[8][0].shape[0] == batch[5][0].shape[0], (batch[8][0].shape,batch[5][0].shape[0])
+
                     figs, wav_reconstruction, wav_prediction, tag = synth_one_sample(
                         args,
                         batch,
+                        pitches,
                         output,
                         vocoder,
                         model_config,

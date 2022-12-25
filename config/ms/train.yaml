@@ -3,7 +3,7 @@ path:
   log_path: "./output/log/LJSpeech"
   result_path: "./output/result/LJSpeech"
 optimizer:
-  batch_size: 48
+  batch_size: 15
   betas: [0.9, 0.98]
   eps: 0.000000001
   weight_decay: 0.0
@@ -12,7 +12,7 @@ optimizer:
   warm_up_step: 2000
   anneal_steps: [50000, 100000, 150000]
   anneal_rate: 0.5
-  init_lr: 0.001
+  init_lr: 0.0005
 loss:
   noise_loss: "l1"
   dur_loss: "mse"
@@ -31,4 +31,4 @@ step:
   log_step: 100
   synth_step: 1000
   val_step: 1000
-  save_step: 10000
+  save_step: 200

@@ -132,11 +132,12 @@ def expand(values, durations):
     return np.array(out)
 
 
-def synth_one_sample(args, targets, predictions, vocoder, model_config, preprocess_config, diffusion):
-
+def synth_one_sample(args, targets,pitches, predictions, vocoder, model_config, preprocess_config, diffusion):
     basename = targets[0][0].split(os.sep)[-1].split(".")[0]
-    pitch = targets[-1][0]
+
+
     mel_len = predictions[7][0].item()
+    pitch = pitches[0][:mel_len]
     mel_target = targets[5][0, :mel_len].float().detach().transpose(0, 1)
     figs = {}
 
@@ -161,8 +162,8 @@ def synth_one_sample(args, targets, predictions, vocoder, model_config, preproce
     )
 
     if vocoder is not None:
-        wav_reconstruction = vocoder.spec2wav(mel_target, f0=pitch)
-        wav_prediction = vocoder.spec2wav(mel_prediction, f0=pitch)
+        wav_reconstruction = vocoder.spec2wav(mel_target.cpu().numpy().T, f0=pitch.cpu().numpy())
+        wav_prediction = vocoder.spec2wav(mel_prediction.cpu().numpy().T, f0=pitch.cpu().numpy())
     else:
         wav_reconstruction = wav_prediction = None
 

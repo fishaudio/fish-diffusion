@@ -22,7 +22,7 @@ denoiser:
   K_step: 100
   max_beta: 0.06
   s: 0.008
-  keep_bins: 80
+  keep_bins: 128
 
 variance_predictor:
   filter_size: 256

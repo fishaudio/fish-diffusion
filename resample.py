@@ -19,20 +19,26 @@ def process(item):
         peak = np.abs(wav).max()
         if peak > 1.0:
             wav = 0.98 * wav / peak
-        wav2 = librosa.resample(wav, orig_sr=sr, target_sr=args.sr2)
+        wav2 = librosa.resample(wav, orig_sr=sr, target_sr=44100)
         save_name = wav_name
         save_path2 = os.path.join(args.out_dir2, speaker, save_name)
         wavfile.write(
             save_path2,
-            args.sr2,
+            44100,
             (wav2 * np.iinfo(np.int16).max).astype(np.int16)
+        )
+        wav3 = librosa.resample(wav, orig_sr=sr, target_sr=16000)
+        save_path3 = os.path.join(args.out_dir2, speaker, save_name)+".16k.wav"
+        wavfile.write(
+            save_path3,
+            16000,
+            (wav3 * np.iinfo(np.int16).max).astype(np.int16)
         )
 
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--sr2", type=int, default=44100, help="sampling rate")
     parser.add_argument("--in_dir", type=str, default="./dataset_raw", help="path to source dir")
     parser.add_argument("--out_dir2", type=str, default="./dataset", help="path to target dir")
     args = parser.parse_args()

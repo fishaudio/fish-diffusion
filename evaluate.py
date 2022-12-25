@@ -37,6 +37,7 @@ def evaluate(args, model, step, configs, logger=None, vocoder=None, losses=None)
     for batchs in loader:
         for batch in batchs:
             batch = to_device(batch, device)
+            pitches = batch[8].clone()
             with torch.no_grad():
                 # Forward
                 output = model(*(batch[1:]))
@@ -70,6 +71,7 @@ def evaluate(args, model, step, configs, logger=None, vocoder=None, losses=None)
         figs, wav_reconstruction, wav_prediction, tag = synth_one_sample(
             args,
             batch,
+            pitches,
             output,
             vocoder,
             model_config,

@@ -34,7 +34,8 @@ STFT = Audio.stft.TacotronSTFT(
 )
 
 def get_f0(path,p_len=None, f0_up_key=0):
-    x, _ = librosa.load(path, sampling_rate)
+    x, sr = librosa.load(path, sr=None)
+    assert sr == sampling_rate
     if p_len is None:
         p_len = x.shape[0]//hop_length
     else:
@@ -70,7 +71,8 @@ def resize2d(x, target_len):
     return res
 
 def compute_f0(path, c_len):
-    x, sr = librosa.load(path, sr=sampling_rate)
+    x, sr = librosa.load(path, sr=None)
+    assert sr == sampling_rate
     f0, t = pyworld.dio(
         x.astype(np.double),
         fs=sr,
@@ -90,7 +92,8 @@ def process(filename):
 
     mel_path = filename + ".mel.npy"
     if not os.path.exists(mel_path):
-        wav, _ = librosa.load(filename, sampling_rate)
+        wav, sr = librosa.load(filename,sr=None)
+        assert sr == sampling_rate
         mel_spectrogram, energy = Audio.tools.get_mel_from_wav(wav, STFT)
         np.save(mel_path, mel_spectrogram)
     else:
@@ -99,7 +102,8 @@ def process(filename):
     save_name = filename+".soft.npy"
     if not os.path.exists(save_name):
         devive = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        wav, _ = librosa.load(filename, sr=16000)
+        wav, sr = librosa.load(filename+".16k.wav",sr=None)
+        assert sr == 16000
         wav = torch.from_numpy(wav).unsqueeze(0).to(devive)
         c = utils.tools.get_hubert_content(hmodel, wav).cpu().squeeze(0)
         c = utils.tools.repeat_expand_2d(c, mel_spectrogram.shape[-1]).numpy()
@@ -124,6 +128,7 @@ if __name__ == "__main__":
     print("Loaded hubert.")
 
     filenames = glob(f'{args.in_dir}/*/*.wav', recursive=True)#[:10]
+    filenames = [i for i in filenames if not i.endswith(".16k.wav")]
     
     for filename in tqdm(filenames):
         process(filename)
