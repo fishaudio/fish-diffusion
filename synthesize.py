@@ -2,21 +2,88 @@ import os
 import re
 import argparse
 from string import punctuation
-
-import parselmouth
 from tqdm import tqdm
-import librosa
+
 import torch
 import yaml
 import numpy as np
 from torch.utils.data import DataLoader
 from g2p_en import G2p
 # from pypinyin import pinyin, Style
-import utils.tools
+
 from utils.model import get_model, get_vocoder
 from utils.tools import get_configs_of, to_device, synth_samples
+from dataset import Dataset, TextDataset
+from text import text_to_sequence
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+def read_lexicon(lex_path):
+    lexicon = {}
+    with open(lex_path) as f:
+        for line in f:
+            temp = re.split(r"\s+", line.strip("\n"))
+            word = temp[0]
+            phones = temp[1:]
+            if word.lower() not in lexicon:
+                lexicon[word.lower()] = phones
+    return lexicon
+
+
+def preprocess_english(text, preprocess_config):
+    text = text.rstrip(punctuation)
+    lexicon = read_lexicon(preprocess_config["path"]["lexicon_path"])
+
+    g2p = G2p()
+    phones = []
+    words = re.split(r"([,;.\-\?\!\s+])", text)
+    for w in words:
+        if w.lower() in lexicon:
+            phones += lexicon[w.lower()]
+        else:
+            phones += list(filter(lambda p: p != " ", g2p(w)))
+    phones = "{" + "}{".join(phones) + "}"
+    phones = re.sub(r"\{[^\w\s]?\}", "{sp}", phones)
+    phones = phones.replace("}{", " ")
+
+    print("Raw Text Sequence: {}".format(text))
+    print("Phoneme Sequence: {}".format(phones))
+    sequence = np.array(
+        text_to_sequence(
+            phones, preprocess_config["preprocessing"]["text"]["text_cleaners"]
+        )
+    )
+
+    return np.array(sequence)
+
+
+# def preprocess_mandarin(text, preprocess_config):
+#     lexicon = read_lexicon(preprocess_config["path"]["lexicon_path"])
+
+#     phones = []
+#     pinyins = [
+#         p[0]
+#         for p in pinyin(
+#             text, style=Style.TONE3, strict=False, neutral_tone_with_five=True
+#         )
+#     ]
+#     for p in pinyins:
+#         if p in lexicon:
+#             phones += lexicon[p]
+#         else:
+#             phones.append("sp")
+
+#     phones = "{" + " ".join(phones) + "}"
+#     print("Raw Text Sequence: {}".format(text))
+#     print("Phoneme Sequence: {}".format(phones))
+#     sequence = np.array(
+#         text_to_sequence(
+#             phones, preprocess_config["preprocessing"]["text"]["text_cleaners"]
+#         )
+#     )
+
+#     return np.array(sequence)
 
 
 def synthesize(model, args, configs, vocoder, batchs, control_values):
@@ -54,77 +121,139 @@ def synthesize(model, args, configs, vocoder, batchs, control_values):
             synthesize_(batch)
 
 
-sample_rate = 44100
-hop_len = 512
-
-def get_f0(path,p_len=None, f0_up_key=0):
-    x, sr = librosa.load(path, sr=None)
-    assert sr == sample_rate
-    if p_len is None:
-        p_len = x.shape[0]//hop_len
-    else:
-        assert abs(p_len-x.shape[0]//hop_len) < 3, (path, p_len, x.shape)
-    time_step = hop_len / sample_rate * 1000
-    f0_min = 50
-    f0_max = 1100
-    f0_mel_min = 1127 * np.log(1 + f0_min / 700)
-    f0_mel_max = 1127 * np.log(1 + f0_max / 700)
-
-    f0 = parselmouth.Sound(x, sample_rate).to_pitch_ac(
-        time_step=time_step / 1000, voicing_threshold=0.6,
-        pitch_floor=f0_min, pitch_ceiling=f0_max).selected_array['frequency']
-
-    pad_size=(p_len - len(f0) + 1) // 2
-    if(pad_size>0 or p_len - len(f0) - pad_size>0):
-        f0 = np.pad(f0,[[pad_size,p_len - len(f0) - pad_size]], mode='constant')
-
-    f0bak = f0.copy()
-    f0 *= pow(2, f0_up_key / 12)
-    f0_mel = 1127 * np.log(1 + f0 / 700)
-    f0_mel[f0_mel > 0] = (f0_mel[f0_mel > 0] - f0_mel_min) * 254 / (f0_mel_max - f0_mel_min) + 1
-    f0_mel[f0_mel <= 1] = 1
-    f0_mel[f0_mel > 255] = 255
-    f0_coarse = np.rint(f0_mel).astype(np.int)
-    return f0_coarse, f0bak
-
-
-def getc(filename,hmodel):
-
-    devive = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    wav, sr = librosa.load(filename, sr=16000)
-    wav = torch.from_numpy(wav).unsqueeze(0).to(devive)
-    c = utils.tools.get_hubert_content(hmodel, wav).cpu().squeeze(0)
-    c = utils.tools.repeat_expand_2d(c, (wav.shape[0] * sample_rate / 16000) // hop_len).numpy()
-    return c
-
 if __name__ == "__main__":
-    speaker_id = 0
-    conf_name = "ms"
-    trans = 0
-    src = "君の知らない物語-src.wav"
 
-    tgt = src.replace(".wav", f"_{speaker_id}_{trans}.wav")
-    restore_step = 10000
-    preprocess_config, model_config, train_config = get_configs_of(conf_name)
-    configs = (preprocess_config, model_config, train_config)
     parser = argparse.ArgumentParser()
-    parser.add_argument("--restore_step", type=int, required=True,default=restore_step)
+    parser.add_argument("--restore_step", type=int, required=True)
+    parser.add_argument("--path_tag", type=str, default="")
+    parser.add_argument(
+        "--model",
+        type=str,
+        choices=["naive", "aux", "shallow"],
+        required=True,
+        help="training model type",
+    )
+    parser.add_argument("--teacher_forced", action="store_true")
+    parser.add_argument(
+        "--mode",
+        type=str,
+        choices=["batch", "single"],
+        required=True,
+        help="Synthesize a whole dataset or a single sentence",
+    )
+    parser.add_argument(
+        "--source",
+        type=str,
+        default=None,
+        help="path to a source file with format like train.txt and val.txt, for batch mode only",
+    )
+    parser.add_argument(
+        "--text",
+        type=str,
+        default="the worst, which perhaps was the English, was a terrible falling off from the work of the earlier。",
+        help="raw text to synthesize, for single-sentence mode only",
+    )
+    parser.add_argument(
+        "--speaker_id",
+        type=int,
+        default=0,
+        help="speaker ID for multi-speaker synthesis, for single-sentence mode only",
+    )
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        required=True,
+        help="name of dataset",
+    )
+    parser.add_argument(
+        "--pitch_control",
+        type=float,
+        default=1.0,
+        help="control the pitch of the whole utterance, larger value for higher pitch",
+    )
+    parser.add_argument(
+        "--energy_control",
+        type=float,
+        default=1.0,
+        help="control the energy of the whole utterance, larger value for larger volume",
+    )
+    parser.add_argument(
+        "--duration_control",
+        type=float,
+        default=1.0,
+        help="control the speed of the whole utterance, larger value for slower speaking rate",
+    )
     args = parser.parse_args()
 
+    # Check source texts
+    if args.mode == "batch":
+        assert args.text is None
+        if args.teacher_forced:
+            assert args.source is None
+        else:
+            assert args.source is not None
+    if args.mode == "single":
+        assert args.source is None and args.text is not None and not args.teacher_forced
+
+    # Read Config
+    preprocess_config, model_config, train_config = get_configs_of(args.dataset)
+    configs = (preprocess_config, model_config, train_config)
+    if args.model == "shallow":
+        assert args.restore_step >= train_config["step"]["total_step_aux"]
+    if args.model in ["aux", "shallow"]:
+        train_tag = "shallow"
+    elif args.model == "naive":
+        train_tag = "naive"
+    else:
+        raise NotImplementedError
+    path_tag = "_{}".format(args.path_tag) if args.path_tag != "" else args.path_tag
+    train_config["path"]["ckpt_path"] = train_config["path"]["ckpt_path"]+"_{}{}".format(train_tag, path_tag)
+    train_config["path"]["log_path"] = train_config["path"]["log_path"]+"_{}{}".format(train_tag, path_tag)
+    train_config["path"]["result_path"] = train_config["path"]["result_path"]+"_{}{}".format(args.model, path_tag)
+    if preprocess_config["preprocessing"]["pitch"]["pitch_type"] == "cwt":
+        from utils.pitch_tools import get_lf0_cwt
+        preprocess_config["preprocessing"]["pitch"]["cwt_scales"] = get_lf0_cwt(np.ones(10))[1]
+    os.makedirs(
+        os.path.join(train_config["path"]["result_path"], str(args.restore_step)), exist_ok=True)
+
+    # Log Configuration
+    print("\n==================================== Inference Configuration ====================================")
+    print(" ---> Type of Modeling:", args.model)
+    print(" ---> Total Batch Size:", int(train_config["optimizer"]["batch_size"]))
+    print(" ---> Path of ckpt:", train_config["path"]["ckpt_path"])
+    print(" ---> Path of log:", train_config["path"]["log_path"])
+    print(" ---> Path of result:", train_config["path"]["result_path"])
+    print("================================================================================================")
+
+    # Get model
     model = get_model(args, configs, device, train=False)
-    hmodel = utils.tools.get_hubert_model(0 if torch.cuda.is_available() else None)
+
     # Load vocoder
     vocoder = get_vocoder(model_config, device)
 
-    ids = [src]
-    c = getc(src, hmodel)
-    c_lens = np.array([c.shape[0]])
-    
-    contents = np.array([c])
-    speakers = np.array([speaker_id])
-    text_lens = np.array([len(texts[0])])
-    
-    batchs = [(ids, raw_texts, speakers, texts, text_lens, max(text_lens))]
+    # Preprocess texts
+    if args.mode == "batch":
+        # Get dataset
+        if args.teacher_forced:
+            dataset = Dataset(
+                "val.txt", preprocess_config, train_config, sort=False, drop_last=False
+            )
+        else:
+            dataset = TextDataset(args.source, preprocess_config)
+        batchs = DataLoader(
+            dataset,
+            batch_size=8,
+            collate_fn=dataset.collate_fn,
+        )
+    if args.mode == "single":
+        ids = raw_texts = [args.text[:100]]
+        speakers = np.array([args.speaker_id])
+        if preprocess_config["preprocessing"]["text"]["language"] == "en":
+            texts = np.array([preprocess_english(args.text, preprocess_config)])
+        elif preprocess_config["preprocessing"]["text"]["language"] == "zh":
+            raise NotImplementedError
+        text_lens = np.array([len(texts[0])])
+        batchs = [(ids, raw_texts, speakers, texts, text_lens, max(text_lens))]
 
     control_values = args.pitch_control, args.energy_control, args.duration_control
 
