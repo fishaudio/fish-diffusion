@@ -55,11 +55,11 @@ def getc(filename, hmodel):
 
 
 if __name__ == "__main__":
-    speaker_id = 4
+    speaker_id = 3
     conf_name = "ms"
-    trans = -5
+    trans = 0
     src = "raw/君の知らない物語-src.wav"
-    restore_step = 50000
+    restore_step = 128000
 
     tgt = src.replace(".wav", f"_{speaker_id}_{trans}.wav")
     preprocess_config, model_config, train_config = get_configs_of(conf_name)

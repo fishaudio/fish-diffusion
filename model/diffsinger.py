@@ -63,13 +63,10 @@ class DiffSinger(nn.Module):
             if mel_lens is not None
             else None
         )
-
-        output = self.text_encoder(contents, src_masks)
-
-        if self.speaker_emb is not None:
-            output = output + self.speaker_emb(speakers).unsqueeze(1).expand(
+        spk_emb =  self.speaker_emb(speakers).unsqueeze(1).expand(
                 -1, max_src_len, -1
             )
+        output = self.text_encoder(contents, src_masks,spk_emb)
 
         output += self.pitch_emb(utils.pitch_tools.f0_to_coarse(pitches))
 

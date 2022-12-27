@@ -126,7 +126,7 @@ class FastspeechEncoder(FFTBlocks):
         )
         self.proj = nn.Conv1d(256, hidden_size, 1)
 
-    def forward(self, contents, encoder_padding_mask):
+    def forward(self, contents, encoder_padding_mask, spk_emb):
         """
 
         :param txt_tokens: [B, T]
@@ -136,6 +136,7 @@ class FastspeechEncoder(FFTBlocks):
         }
         """
         x = self.proj(contents.transpose(1,2)).transpose(1,2)
+        x += spk_emb
         x = super(FastspeechEncoder, self).forward(x, encoder_padding_mask)
         return x
 
