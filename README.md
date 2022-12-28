@@ -1,6 +1,7 @@
 # diff-svc
 基于[DiffSinger非官方仓库](https://github.com/keonlee9420/DiffSinger) 实现的 [diffsvc](https://github.com/prophesier/diff-svc)
 
+> 经过对照实验发现，似乎多人模型会严重泄漏音色，而单人模型则不会泄漏，因此该仓库目前不可用\
 >（没错又复活了，之前导致弃坑的bug似乎修复了）\
 >（暂时依然在开发测试中）
 
