@@ -9,6 +9,8 @@ import audio as Audio
 from pyworld import pyworld
 from tqdm import tqdm
 from scipy.io import wavfile
+
+from utils import mel_spectrogram_torch
 from utils.tools import get_configs_of
 
 import utils.tools
@@ -19,7 +21,7 @@ logging.getLogger('numba').setLevel(logging.WARNING)
 import parselmouth
 import librosa
 import numpy as np
-
+dev = "cuda" if torch.cuda.is_available() else "cpu"
 config, *_ = get_configs_of("ms")
 sampling_rate = config["preprocessing"]["audio"]["sampling_rate"]
 hop_length = config["preprocessing"]["stft"]["hop_length"]
@@ -100,16 +102,37 @@ def process(filename):
         mel_spectrogram = np.load(mel_path)
 
     save_name = filename+".soft.npy"
-    if not os.path.exists(save_name):
-        devive = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        wav, sr = librosa.load(filename+".16k.wav",sr=None)
-        assert sr == 16000
-        wav = torch.from_numpy(wav).unsqueeze(0).to(devive)
-        c = utils.tools.get_hubert_content(hmodel, wav).cpu().squeeze(0)
+    # if not os.path.exists(save_name):
+    #     devive = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    #     wav, sr = librosa.load(filename+".16k.wav",sr=None)
+    #     assert sr == 16000
+    #     wav = torch.from_numpy(wav).unsqueeze(0).to(devive)
+    #     c = utils.tools.get_hubert_content(hmodel, wav).cpu().squeeze(0)
+    #     c = utils.tools.repeat_expand_2d(c, mel_spectrogram.shape[-1]).numpy()
+    #     np.save(save_name,c)
+    # else:
+    #     c = np.load(save_name)
+
+    wav, _ = librosa.load(filename+".22k.wav", sr=22050)
+    wav = torch.from_numpy(wav).unsqueeze(0).to(dev)
+    sr_mel = mel_spectrogram_torch(
+        wav,
+        1024,
+        80,
+        22050,
+        256,
+        1024,
+        0,
+        8000
+    )
+    for i in range(68, 92+1, 4):
+        mel_rs = utils.transform(sr_mel, i)
+        wav_rs = vocoder(mel_rs)[0][0].detach().cpu().numpy()
+        _wav_rs = librosa.resample(wav_rs, orig_sr=22050, target_sr=16000)
+        wav_rs = torch.from_numpy(_wav_rs).to(dev).unsqueeze(0)
+        c = utils.tools.get_hubert_content(hmodel, wav_rs).cpu().squeeze(0)
         c = utils.tools.repeat_expand_2d(c, mel_spectrogram.shape[-1]).numpy()
-        np.save(save_name,c)
-    else:
-        c = np.load(save_name)
+        np.save(save_name.replace(".soft.npy", f".{i}.soft.npy"),c)
 
     f0path = filename+".f0.npy"
     if not os.path.exists(f0path):
@@ -126,6 +149,7 @@ if __name__ == "__main__":
     print("Loading hubert for content...")
     hmodel = utils.tools.get_hubert_model(0 if torch.cuda.is_available() else None)
     print("Loaded hubert.")
+    vocoder = utils.tools.get_vocoder(0)
 
     filenames = glob(f'{args.in_dir}/*/*.wav', recursive=True)#[:10]
     filenames = [i for i in filenames if not i.endswith(".16k.wav")]

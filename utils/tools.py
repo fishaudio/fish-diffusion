@@ -16,6 +16,7 @@ from tqdm import tqdm
 
 from utils.pitch_tools import denorm_f0, expand_f0_ph, cwt2f0
 from hubert import hubert_model
+import vanilla_hifigan
 
 
 
@@ -23,6 +24,18 @@ matplotlib.use("Agg")
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+def get_vocoder(rank):
+    with open("vanilla_hifigan/config.json", "r") as f:
+        config = json.load(f)
+    config = vanilla_hifigan.AttrDict(config)
+    vocoder = vanilla_hifigan.Generator(config)
+    ckpt = torch.load("vanilla_hifigan/generator_v1")
+    vocoder.load_state_dict(ckpt["generator"])
+    vocoder.eval()
+    vocoder.remove_weight_norm()
+    vocoder.to(device)
+    return vocoder
 
 
 def get_hubert_model(rank=None):

@@ -1,6 +1,7 @@
 import json
 import math
 import os
+import random
 
 import torch
 import numpy as np
@@ -43,8 +44,8 @@ class Dataset(Dataset):
 
         mel_path = wavpath + ".mel.npy"
         mel = np.load(mel_path).T
-
-        c_path = wavpath + ".soft.npy"
+        i = 68 + 4 * random.randint(0, 6)
+        c_path = wavpath + f".{i}.soft.npy"
         c = np.load(c_path).T
         pitch_path = wavpath + ".f0.npy"
         pitch = np.load(pitch_path)

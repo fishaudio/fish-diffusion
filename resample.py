@@ -27,11 +27,11 @@ def process(item):
             44100,
             (wav2 * np.iinfo(np.int16).max).astype(np.int16)
         )
-        wav3 = librosa.resample(wav, orig_sr=sr, target_sr=16000)
-        save_path3 = os.path.join(args.out_dir2, speaker, save_name)+".16k.wav"
+        wav3 = librosa.resample(wav, orig_sr=sr, target_sr=22050)
+        save_path3 = os.path.join(args.out_dir2, speaker, save_name)+".22k.wav"
         wavfile.write(
             save_path3,
-            16000,
+            22050,
             (wav3 * np.iinfo(np.int16).max).astype(np.int16)
         )
 
