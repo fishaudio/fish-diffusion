@@ -127,8 +127,7 @@ def process(filename):
         8000
     )
 
-    samples = random.sample(range(68, 92+1), n_sr)
-
+    samples = random.choices(range(68, 92+1), k=n_sr)
     for i in range(n_sr):
         mel_rs = utils.transform(sr_mel, samples[i])
         wav_rs = vocoder(mel_rs)[0][0].detach().cpu().numpy()
@@ -159,7 +158,7 @@ if __name__ == "__main__":
     vocoder = utils.tools.get_vocoder(0)
 
     filenames = glob(f'{args.in_dir}/*/*.wav', recursive=True)#[:10]
-    filenames = [i for i in filenames if not i.endswith(".16k.wav")]
+    filenames = [i for i in filenames if not i.endswith((".22k.wav", ".16k.wav"))]
     
     for filename in tqdm(filenames):
         process(filename)
