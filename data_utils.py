@@ -33,6 +33,7 @@ class Dataset(Dataset):
         self.pitch_type = preprocess_config["preprocessing"]["pitch"]["pitch_type"]
         self.f0_mean = float(preprocess_config["preprocessing"]["pitch"]["f0_mean"])
         self.f0_std = float(preprocess_config["preprocessing"]["pitch"]["f0_std"])
+        self.n_sr = int(preprocess_config["preprocessing"]["n_sr"])
 
     def __len__(self):
         return len(self.wavpaths)
@@ -44,7 +45,7 @@ class Dataset(Dataset):
 
         mel_path = wavpath + ".mel.npy"
         mel = np.load(mel_path).T
-        i = 68 + 4 * random.randint(0, 6)
+        i = random.randint(0, self.n_sr)
         c_path = wavpath + f".{i}.soft.npy"
         c = np.load(c_path).T
         pitch_path = wavpath + ".f0.npy"

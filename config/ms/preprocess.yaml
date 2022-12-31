@@ -8,6 +8,7 @@ path:
   train_filelist: "filelists/train.txt"
   val_filelist: "filelists/val.txt"
 preprocessing:
+  n_sr: 5 # from 1-24
   val_size: 512
   text:
     text_cleaners: ["english_cleaners"]

@@ -9,6 +9,7 @@ import audio as Audio
 from pyworld import pyworld
 from tqdm import tqdm
 from scipy.io import wavfile
+import random
 
 from utils import mel_spectrogram_torch
 from utils.tools import get_configs_of
@@ -125,8 +126,11 @@ def process(filename):
         0,
         8000
     )
-    for i in range(68, 92+1, 4):
-        mel_rs = utils.transform(sr_mel, i)
+
+    samples = random.sample(range(68, 92+1), n_sr)
+
+    for i in range(n_sr):
+        mel_rs = utils.transform(sr_mel, samples[i])
         wav_rs = vocoder(mel_rs)[0][0].detach().cpu().numpy()
         _wav_rs = librosa.resample(wav_rs, orig_sr=22050, target_sr=16000)
         wav_rs = torch.from_numpy(_wav_rs).to(dev).unsqueeze(0)
@@ -144,8 +148,11 @@ def process(filename):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--in_dir", type=str, default="dataset/", help="path to input dir")
-    args = parser.parse_args()
+    parser.add_argument("--dataset", type=str, default="ms", help="config dataset")
 
+    args = parser.parse_args()
+    preprocess_config, model_config, train_config = get_configs_of(args.ms)
+    n_sr = int(preprocess_config["preprocessing"]["n_sr"])
     print("Loading hubert for content...")
     hmodel = utils.tools.get_hubert_model(0 if torch.cuda.is_available() else None)
     print("Loaded hubert.")
