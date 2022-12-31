@@ -150,12 +150,12 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="ms", help="config dataset")
 
     args = parser.parse_args()
-    preprocess_config, model_config, train_config = get_configs_of(args.ms)
+    preprocess_config, model_config, train_config = get_configs_of(args.dataset)
     n_sr = int(preprocess_config["preprocessing"]["n_sr"])
     print("Loading hubert for content...")
     hmodel = utils.tools.get_hubert_model(0 if torch.cuda.is_available() else None)
     print("Loaded hubert.")
-    vocoder = utils.tools.get_vocoder(0)
+    vocoder = utils.tools.get_vocoder(0 if torch.cuda.is_available() else None)
 
     filenames = glob(f'{args.in_dir}/*/*.wav', recursive=True)#[:10]
     filenames = [i for i in filenames if not i.endswith((".22k.wav", ".16k.wav"))]

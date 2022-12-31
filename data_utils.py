@@ -45,7 +45,7 @@ class Dataset(Dataset):
 
         mel_path = wavpath + ".mel.npy"
         mel = np.load(mel_path).T
-        i = random.randint(0, self.n_sr)
+        i = random.randint(0, self.n_sr-1)
         c_path = wavpath + f".{i}.soft.npy"
         c = np.load(c_path).T
         pitch_path = wavpath + ".f0.npy"

@@ -27,6 +27,8 @@ def transform(mel, height): # 68-92
         silence = tgt[:,-1:,:].repeat(1,mel.size(-2)-height,1)
         silence += torch.randn_like(silence) / 10
         return torch.cat((tgt, silence), 1)
+mel_basis = {}
+hann_window = {}
 
 def mel_spectrogram_torch(y, n_fft, num_mels, sampling_rate, hop_size, win_size, fmin, fmax, center=False):
     if torch.min(y) < -1.:

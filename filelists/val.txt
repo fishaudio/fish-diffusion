@@ -1,1 +1,4 @@
-./dataset/aa/000001.wav
+./dataset/yunhao/000026.wav
+./dataset/jishuang/000003.wav
+./dataset/yunhao/000912.wav
+./dataset/jishuang/000005.wav

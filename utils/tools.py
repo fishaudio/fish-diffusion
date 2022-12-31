@@ -30,7 +30,7 @@ def get_vocoder(rank):
         config = json.load(f)
     config = vanilla_hifigan.AttrDict(config)
     vocoder = vanilla_hifigan.Generator(config)
-    ckpt = torch.load("vanilla_hifigan/generator_v1")
+    ckpt = torch.load("vanilla_hifigan/generator_v1", map_location=device)
     vocoder.load_state_dict(ckpt["generator"])
     vocoder.eval()
     vocoder.remove_weight_norm()
