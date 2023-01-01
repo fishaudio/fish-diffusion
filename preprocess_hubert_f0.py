@@ -133,7 +133,7 @@ def process(filename):
         wav_rs = vocoder(mel_rs)[0][0].detach().cpu().numpy()
         _wav_rs = librosa.resample(wav_rs, orig_sr=22050, target_sr=16000)
         wav_rs = torch.from_numpy(_wav_rs).to(dev).unsqueeze(0)
-        c = utils.tools.get_hubert_content(hmodel, wav_rs).cpu().squeeze(0)
+        c = utils.tools.get_cn_hubert_units(hmodel, wav_rs).cpu().squeeze(0)
         c = utils.tools.repeat_expand_2d(c, mel_spectrogram.shape[-1]).numpy()
         np.save(save_name.replace(".soft.npy", f".{i}.soft.npy"),c)
 
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     preprocess_config, model_config, train_config = get_configs_of(args.dataset)
     n_sr = int(preprocess_config["preprocessing"]["n_sr"])
     print("Loading hubert for content...")
-    hmodel = utils.tools.get_hubert_model(0 if torch.cuda.is_available() else None)
+    hmodel = utils.tools.load_cn_model(0 if torch.cuda.is_available() else None)
     print("Loaded hubert.")
     vocoder = utils.tools.get_vocoder(0 if torch.cuda.is_available() else None)
 
