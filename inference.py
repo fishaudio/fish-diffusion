@@ -49,17 +49,17 @@ def getc(filename, hmodel):
     devive = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     wav, sr = librosa.load(filename, sr=16000)
     wav = torch.from_numpy(wav).unsqueeze(0).to(devive)
-    c = utils.tools.get_hubert_content(hmodel, wav).cpu().squeeze(0)
+    c = utils.tools.get_cn_hubert_units(hmodel, wav).cpu().squeeze(0)
     c = utils.tools.repeat_expand_2d(c, int((wav.shape[1] * sample_rate / 16000) // hop_len)).numpy()
     return c
 
 
 if __name__ == "__main__":
-    speaker_id = 1
+    speaker_id = 0
     conf_name = "ms"
     trans = -5
     src = "raw/君の知らない物語-src.wav"
-    restore_step = 594000
+    restore_step = 6600
 
     tgt = src.replace(".wav", f"_{speaker_id}_{trans}_{restore_step}step.wav").replace("raw", "results")
     preprocess_config, model_config, train_config = get_configs_of(conf_name)
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     train_config["path"]["ckpt_path"] = train_config["path"]["ckpt_path"]+"_{}".format(args.model)
 
     model = get_model(args, configs, device, train=False)
-    hmodel = utils.tools.get_hubert_model(0 if torch.cuda.is_available() else None)
+    hmodel = utils.tools.load_cn_model(0 if torch.cuda.is_available() else None)
     # Load vocoder
     vocoder = get_vocoder(model_config, device)
 

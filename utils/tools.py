@@ -29,7 +29,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 
-def load_cn_model(n):
+def load_cn_model(n=None):
     from fairseq import checkpoint_utils
     models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task(
         ['hubert/chinese-hubert-base.pt'],
@@ -65,7 +65,7 @@ def get_cn_hubert_units(con_model, y=None, path=None):
     with torch.no_grad():
         logits = con_model.extract_features(**inputs)
         feats = con_model.final_proj(logits[0])
-    return feats
+    return feats.transpose(1,2)
 
 def get_vocoder(rank):
     with open("vanilla_hifigan/config.json", "r") as f:
