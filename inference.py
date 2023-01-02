@@ -55,20 +55,21 @@ def getc(filename, hmodel):
 
 
 if __name__ == "__main__":
-    speaker_id = 0
+    speaker_id = 2
     conf_name = "ms"
-    trans = -5
-    src = "raw/君の知らない物語-src.wav"
-    restore_step = 6600
+    trans = -8
+    src = "raw/再见.wav"
+    restore_step = 45600
 
     tgt = src.replace(".wav", f"_{speaker_id}_{trans}_{restore_step}step.wav").replace("raw", "results")
     preprocess_config, model_config, train_config = get_configs_of(conf_name)
+    train_config["path"]["ckpt_path"] = "output/ckpt/cn_hubert_sr"
     configs = (preprocess_config, model_config, train_config)
     parser = argparse.ArgumentParser()
     parser.add_argument("--restore_step", type=int, required=False, default=restore_step)
     parser.add_argument("--model", type=str, required=False, default="naive")
     args = parser.parse_args()
-    train_config["path"]["ckpt_path"] = train_config["path"]["ckpt_path"]+"_{}".format(args.model)
+    # train_config["path"]["ckpt_path"] = train_config["path"]["ckpt_path"]+"_{}".format(args.model)
 
     model = get_model(args, configs, device, train=False)
     hmodel = utils.tools.load_cn_model(0 if torch.cuda.is_available() else None)
