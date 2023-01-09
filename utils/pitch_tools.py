@@ -2,8 +2,8 @@
 # world
 #########
 import librosa
-import parselmouth
 import numpy as np
+import parselmouth
 import torch
 import torch.nn.functional as F
 from pycwt import wavelet
@@ -26,12 +26,17 @@ f0_mel_max = 1127 * np.log(1 + f0_max / 700)
 def f0_to_coarse(f0):
     is_torch = isinstance(f0, torch.Tensor)
     f0_mel = 1127 * (1 + f0 / 700).log() if is_torch else 1127 * np.log(1 + f0 / 700)
-    f0_mel[f0_mel > 0] = (f0_mel[f0_mel > 0] - f0_mel_min) * (f0_bin - 2) / (f0_mel_max - f0_mel_min) + 1
+    f0_mel[f0_mel > 0] = (f0_mel[f0_mel > 0] - f0_mel_min) * (f0_bin - 2) / (
+        f0_mel_max - f0_mel_min
+    ) + 1
 
     f0_mel[f0_mel <= 1] = 1
     f0_mel[f0_mel > f0_bin - 1] = f0_bin - 1
     f0_coarse = (f0_mel + 0.5).long() if is_torch else np.rint(f0_mel).astype(np.int)
-    assert f0_coarse.max() <= 255 and f0_coarse.min() >= 1, (f0_coarse.max(), f0_coarse.min())
+    assert f0_coarse.max() <= 255 and f0_coarse.min() >= 1, (
+        f0_coarse.max(),
+        f0_coarse.min(),
+    )
     return f0_coarse
 
 
@@ -69,7 +74,7 @@ def denorm_f0(f0, uv, config, pitch_padding=None, min=None, max=None):
     if config["pitch_norm"] == "standard":
         f0 = f0 * config["f0_std"] + config["f0_mean"]
     if config["pitch_norm"] == "log":
-        f0 = 2 ** f0
+        f0 = 2**f0
     if min is not None:
         f0 = f0.clamp(min=min)
     if max is not None:
@@ -97,14 +102,21 @@ def get_pitch(wav_data, mel, config):
 
     if hop_length == 128:
         pad_size = 4
-    elif hop_length  == 256:
+    elif hop_length == 256:
         pad_size = 2
     else:
         assert False
 
-    f0 = parselmouth.Sound(wav_data, sampling_rate).to_pitch_ac(
-        time_step=time_step / 1000, voicing_threshold=0.6,
-        pitch_floor=f0_min, pitch_ceiling=f0_max).selected_array["frequency"]
+    f0 = (
+        parselmouth.Sound(wav_data, sampling_rate)
+        .to_pitch_ac(
+            time_step=time_step / 1000,
+            voicing_threshold=0.6,
+            pitch_floor=f0_min,
+            pitch_ceiling=f0_max,
+        )
+        .selected_array["frequency"]
+    )
     lpad = pad_size * 2
     rpad = len(mel) - len(f0) - lpad
     f0 = np.pad(f0, [[lpad, rpad]], mode="constant")
@@ -115,7 +127,7 @@ def get_pitch(wav_data, mel, config):
     assert np.abs(delta_l) <= 8
     if delta_l > 0:
         f0 = np.concatenate([f0, [f0[-1]] * delta_l], 0)
-    f0 = f0[:len(mel)]
+    f0 = f0[: len(mel)]
     pitch_coarse = f0_to_coarse(f0)
     return f0, pitch_coarse
 
@@ -191,7 +203,9 @@ def get_lf0_cwt(lf0):
     s0 = dt * 2
     J = 9
 
-    Wavelet_lf0, scales, _, _, _, _ = wavelet.cwt(np.squeeze(lf0), dt, dj, s0, J, mother)
+    Wavelet_lf0, scales, _, _, _, _ = wavelet.cwt(
+        np.squeeze(lf0), dt, dj, s0, J, mother
+    )
     # Wavelet.shape => (J + 1, len(lf0))
     Wavelet_lf0 = np.real(Wavelet_lf0).T
     return Wavelet_lf0, scales
@@ -229,7 +243,9 @@ def get_lf0_cwt_norm(f0s, mean, std):
         cont_lf0_lpf_norm = (cont_lf0_lpf - mean) / std
 
         Wavelet_lf0, scales = get_lf0_cwt(cont_lf0_lpf_norm)  # [560,10]
-        Wavelet_lf0_norm, mean_scale, std_scale = norm_scale(Wavelet_lf0)  # [560,10],[1,10],[1,10]
+        Wavelet_lf0_norm, mean_scale, std_scale = norm_scale(
+            Wavelet_lf0
+        )  # [560,10],[1,10],[1,10]
 
         Wavelet_lf0s_norm.append(Wavelet_lf0_norm)
         uvs.append(uv)
@@ -245,24 +261,34 @@ def get_lf0_cwt_norm(f0s, mean, std):
 
 def inverse_cwt_torch(Wavelet_lf0, scales):
     import torch
-    b = ((torch.arange(0, len(scales)).float().to(Wavelet_lf0.device)[None, None, :] + 1 + 2.5) ** (-2.5))
+
+    b = (
+        torch.arange(0, len(scales)).float().to(Wavelet_lf0.device)[None, None, :]
+        + 1
+        + 2.5
+    ) ** (-2.5)
     lf0_rec = Wavelet_lf0 * b
     lf0_rec_sum = lf0_rec.sum(-1)
-    lf0_rec_sum = (lf0_rec_sum - lf0_rec_sum.mean(-1, keepdim=True)) / lf0_rec_sum.std(-1, keepdim=True)
+    lf0_rec_sum = (lf0_rec_sum - lf0_rec_sum.mean(-1, keepdim=True)) / lf0_rec_sum.std(
+        -1, keepdim=True
+    )
     return lf0_rec_sum
 
 
 def inverse_cwt(Wavelet_lf0, scales):
-    b = ((np.arange(0, len(scales))[None, None, :] + 1 + 2.5) ** (-2.5))
+    b = (np.arange(0, len(scales))[None, None, :] + 1 + 2.5) ** (-2.5)
     lf0_rec = Wavelet_lf0 * b
     lf0_rec_sum = lf0_rec.sum(-1)
-    lf0_rec_sum = (lf0_rec_sum - lf0_rec_sum.mean(-1, keepdims=True)) / lf0_rec_sum.std(-1, keepdims=True)
+    lf0_rec_sum = (lf0_rec_sum - lf0_rec_sum.mean(-1, keepdims=True)) / lf0_rec_sum.std(
+        -1, keepdims=True
+    )
     return lf0_rec_sum
 
 
 def cwt2f0(cwt_spec, mean, std, cwt_scales):
     assert len(mean.shape) == 1 and len(std.shape) == 1 and len(cwt_spec.shape) == 3
     import torch
+
     if isinstance(cwt_spec, torch.Tensor):
         f0 = inverse_cwt_torch(cwt_spec, cwt_scales)
         f0 = f0 * std[:, None] + mean[:, None]
@@ -273,9 +299,9 @@ def cwt2f0(cwt_spec, mean, std, cwt_scales):
         f0 = np.exp(f0)  # [B, T]
     return f0
 
+
 def cwt2f0_norm(cwt_spec, mean, std, mel2ph, config):
     f0 = cwt2f0(cwt_spec, mean, std, config["cwt_scales"])
-    f0 = torch.cat(
-        [f0] + [f0[:, -1:]] * (mel2ph.shape[1] - f0.shape[1]), 1)
+    f0 = torch.cat([f0] + [f0[:, -1:]] * (mel2ph.shape[1] - f0.shape[1]), 1)
     f0_norm = norm_f0(f0, None, config)
     return f0_norm

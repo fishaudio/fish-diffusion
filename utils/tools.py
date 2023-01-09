@@ -1,25 +1,22 @@
-import os
 import json
-
-import librosa
-import torchaudio
-import yaml
+import os
 from math import exp
 
+import librosa
+import matplotlib
+import numpy as np
 import torch
 import torch.nn.functional as F
-from torch.autograd import Variable
-import numpy as np
-import matplotlib
-from scipy.io import wavfile
+import torchaudio
+import yaml
 from matplotlib import pyplot as plt
+from scipy.io import wavfile
+from torch.autograd import Variable
 from tqdm import tqdm
 
-from utils.pitch_tools import denorm_f0, expand_f0_ph, cwt2f0
-from hubert import hubert_model
 import vanilla_hifigan
-
-
+from hubert import hubert_model
+from utils.pitch_tools import cwt2f0, denorm_f0, expand_f0_ph
 
 matplotlib.use("Agg")
 
@@ -27,12 +24,11 @@ matplotlib.use("Agg")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-
-
 def load_cn_model(n=None):
     from fairseq import checkpoint_utils
+
     models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task(
-        ['hubert/chinese-hubert-base.pt'],
+        ["hubert/chinese-hubert-large-fairseq-ckpt.pt"],
         suffix="",
     )
     model = models[0]
@@ -65,7 +61,8 @@ def get_cn_hubert_units(con_model, y=None, path=None):
     with torch.no_grad():
         logits = con_model.extract_features(**inputs)
         feats = con_model.final_proj(logits[0])
-    return feats.transpose(1,2)
+    return feats.transpose(1, 2)
+
 
 def get_vocoder(rank):
     with open("vanilla_hifigan/config.json", "r") as f:
@@ -82,32 +79,37 @@ def get_vocoder(rank):
 
 def get_hubert_model(rank=None):
 
-  hubert_soft = hubert_model.hubert_soft("hubert/hubert-soft-0d54a1f4.pt")
-  if rank is not None:
-    hubert_soft = hubert_soft.cuda(rank)
-  return hubert_soft
+    hubert_soft = hubert_model.hubert_soft("hubert/hubert-soft-0d54a1f4.pt")
+    if rank is not None:
+        hubert_soft = hubert_soft.cuda(rank)
+    return hubert_soft
+
 
 def get_hubert_content(hmodel, y=None, path=None):
-  if path is not None:
-    source, sr = torchaudio.load(path)
-    source = torchaudio.functional.resample(source, sr, 16000)
-    if len(source.shape) == 2 and source.shape[1] >= 2:
-      source = torch.mean(source, dim=0).unsqueeze(0)
-  else:
-    source = y
-  source = source.unsqueeze(0)
-  with torch.inference_mode():
-    units = hmodel.units(source)
-    return units.transpose(1,2)
+    if path is not None:
+        source, sr = torchaudio.load(path)
+        source = torchaudio.functional.resample(source, sr, 16000)
+        if len(source.shape) == 2 and source.shape[1] >= 2:
+            source = torch.mean(source, dim=0).unsqueeze(0)
+    else:
+        source = y
+    source = source.unsqueeze(0)
+    with torch.inference_mode():
+        units = hmodel.units(source)
+        return units.transpose(1, 2)
+
 
 def get_configs_of(dataset):
     config_dir = os.path.join("./config", dataset)
-    preprocess_config = yaml.load(open(
-        os.path.join(config_dir, "preprocess.yaml"), "r"), Loader=yaml.FullLoader)
-    model_config = yaml.load(open(
-        os.path.join(config_dir, "model.yaml"), "r"), Loader=yaml.FullLoader)
-    train_config = yaml.load(open(
-        os.path.join(config_dir, "train.yaml"), "r"), Loader=yaml.FullLoader)
+    preprocess_config = yaml.load(
+        open(os.path.join(config_dir, "preprocess.yaml"), "r"), Loader=yaml.FullLoader
+    )
+    model_config = yaml.load(
+        open(os.path.join(config_dir, "model.yaml"), "r"), Loader=yaml.FullLoader
+    )
+    train_config = yaml.load(
+        open(os.path.join(config_dir, "train.yaml"), "r"), Loader=yaml.FullLoader
+    )
     return preprocess_config, model_config, train_config
 
 
@@ -144,9 +146,15 @@ def to_device(data, device):
     ]
 
 
-
 def log(
-    logger, step=None, losses=None, lr=None, figs=None, audio=None, sampling_rate=22050, tag=""
+    logger,
+    step=None,
+    losses=None,
+    lr=None,
+    figs=None,
+    audio=None,
+    sampling_rate=22050,
+    tag="",
 ):
     if losses is not None:
         logger.add_scalar("Loss/total_loss", losses[0], step)
@@ -162,10 +170,7 @@ def log(
 
     if audio is not None:
         logger.add_audio(
-            tag,
-            audio / max(abs(audio)),
-            sample_rate=sampling_rate,
-            global_step=step
+            tag, audio / max(abs(audio)), sample_rate=sampling_rate, global_step=step
         )
 
 
@@ -187,9 +192,17 @@ def expand(values, durations):
     return np.array(out)
 
 
-def synth_one_sample(args, targets,pitches, predictions, vocoder, model_config, preprocess_config, diffusion):
+def synth_one_sample(
+    args,
+    targets,
+    pitches,
+    predictions,
+    vocoder,
+    model_config,
+    preprocess_config,
+    diffusion,
+):
     basename = targets[0][0].split(os.sep)[-1].split(".")[0]
-
 
     mel_len = predictions[7][0].item()
     pitch = pitches[0][:mel_len]
@@ -217,15 +230,21 @@ def synth_one_sample(args, targets,pitches, predictions, vocoder, model_config, 
     )
 
     if vocoder is not None:
-        wav_reconstruction = vocoder.spec2wav(mel_target.cpu().numpy().T, f0=pitch.cpu().numpy())
-        wav_prediction = vocoder.spec2wav(mel_prediction.cpu().numpy().T, f0=pitch.cpu().numpy())
+        wav_reconstruction = vocoder.spec2wav(
+            mel_target.cpu().numpy().T, f0=pitch.cpu().numpy()
+        )
+        wav_prediction = vocoder.spec2wav(
+            mel_prediction.cpu().numpy().T, f0=pitch.cpu().numpy()
+        )
     else:
         wav_reconstruction = wav_prediction = None
 
     return figs, wav_reconstruction, wav_prediction, basename
 
 
-def synth_samples(targets, predictions, vocoder, model_config, preprocess_config, path, args):
+def synth_samples(
+    targets, predictions, vocoder, model_config, preprocess_config, path, args
+):
 
     multi_speaker = model_config["multi_speaker"]
     teacher_forced_tag = "_teacher_forced" if args.teacher_forced else ""
@@ -238,8 +257,12 @@ def synth_samples(targets, predictions, vocoder, model_config, preprocess_config
         duration = predictions[7][i, :src_len].detach().cpu().numpy()
 
         fig_save_dir = os.path.join(
-            path, str(args.restore_step), "{}_{}{}.png".format(basename, args.speaker_id, teacher_forced_tag)\
-                if multi_speaker and args.mode == "single" else "{}{}.png".format(basename, teacher_forced_tag))
+            path,
+            str(args.restore_step),
+            "{}_{}{}.png".format(basename, args.speaker_id, teacher_forced_tag)
+            if multi_speaker and args.mode == "single"
+            else "{}{}.png".format(basename, teacher_forced_tag),
+        )
         fig = plot_mel(
             [
                 mel_prediction.cpu().numpy(),
@@ -259,10 +282,17 @@ def synth_samples(targets, predictions, vocoder, model_config, preprocess_config
 
     sampling_rate = preprocess_config["preprocessing"]["audio"]["sampling_rate"]
     for wav, basename in zip(wav_predictions, basenames):
-        wavfile.write(os.path.join(
-            path, str(args.restore_step), "{}_{}{}.wav".format(basename, args.speaker_id, teacher_forced_tag)\
-                if multi_speaker and args.mode == "single" else "{}{}.wav".format(basename, teacher_forced_tag)),
-            sampling_rate, wav)
+        wavfile.write(
+            os.path.join(
+                path,
+                str(args.restore_step),
+                "{}_{}{}.wav".format(basename, args.speaker_id, teacher_forced_tag)
+                if multi_speaker and args.mode == "single"
+                else "{}{}.wav".format(basename, teacher_forced_tag),
+            ),
+            sampling_rate,
+            wav,
+        )
 
 
 def plot_mel(data, titles=None):
@@ -328,16 +358,17 @@ def repeat_expand_2d(content, target_len):
 
     src_len = content.shape[-1]
     target = torch.zeros([content.shape[0], target_len], dtype=torch.float)
-    temp = torch.arange(src_len+1) * target_len / src_len
+    temp = torch.arange(src_len + 1) * target_len / src_len
     current_pos = 0
     for i in range(target_len):
-        if i < temp[current_pos+1]:
+        if i < temp[current_pos + 1]:
             target[:, i] = content[:, current_pos]
         else:
             current_pos += 1
             target[:, i] = content[:, current_pos]
 
     return target
+
 
 def pad_1D(inputs, PAD=0):
     def pad_data(x, length, PAD):
@@ -437,7 +468,9 @@ def dur_to_mel2ph(dur, dur_padding=None, alpha=1.0):
     dur_cumsum_prev = F.pad(dur_cumsum, [1, -1], mode="constant", value=0)
 
     pos_idx = torch.arange(dur.sum(-1).max())[None, None].to(dur.device)
-    token_mask = (pos_idx >= dur_cumsum_prev[:, :, None]) & (pos_idx < dur_cumsum[:, :, None])
+    token_mask = (pos_idx >= dur_cumsum_prev[:, :, None]) & (
+        pos_idx < dur_cumsum[:, :, None]
+    )
     mel2ph = (token_idx * token_mask.long()).sum(1)
     return mel2ph
 
@@ -461,20 +494,25 @@ def make_positions(tensor, padding_idx):
     # prefers ints, cumsum defaults to output longs, and ONNX doesn"t know
     # how to handle the dtype kwarg in cumsum.
     mask = tensor.ne(padding_idx).int()
-    return (
-                   torch.cumsum(mask, dim=1).type_as(mask) * mask
-           ).long() + padding_idx
+    return (torch.cumsum(mask, dim=1).type_as(mask) * mask).long() + padding_idx
 
 
 def gaussian(window_size, sigma):
-    gauss = torch.Tensor([exp(-(x - window_size // 2) ** 2 / float(2 * sigma ** 2)) for x in range(window_size)])
+    gauss = torch.Tensor(
+        [
+            exp(-((x - window_size // 2) ** 2) / float(2 * sigma**2))
+            for x in range(window_size)
+        ]
+    )
     return gauss / gauss.sum()
 
 
 def create_window(window_size, channel):
     _1D_window = gaussian(window_size, 1.5).unsqueeze(1)
     _2D_window = _1D_window.mm(_1D_window.t()).float().unsqueeze(0).unsqueeze(0)
-    window = Variable(_2D_window.expand(channel, 1, window_size, window_size).contiguous())
+    window = Variable(
+        _2D_window.expand(channel, 1, window_size, window_size).contiguous()
+    )
     return window
 
 
@@ -486,14 +524,23 @@ def _ssim(img1, img2, window, window_size, channel, size_average=True):
     mu2_sq = mu2.pow(2)
     mu1_mu2 = mu1 * mu2
 
-    sigma1_sq = F.conv2d(img1 * img1, window, padding=window_size // 2, groups=channel) - mu1_sq
-    sigma2_sq = F.conv2d(img2 * img2, window, padding=window_size // 2, groups=channel) - mu2_sq
-    sigma12 = F.conv2d(img1 * img2, window, padding=window_size // 2, groups=channel) - mu1_mu2
+    sigma1_sq = (
+        F.conv2d(img1 * img1, window, padding=window_size // 2, groups=channel) - mu1_sq
+    )
+    sigma2_sq = (
+        F.conv2d(img2 * img2, window, padding=window_size // 2, groups=channel) - mu2_sq
+    )
+    sigma12 = (
+        F.conv2d(img1 * img2, window, padding=window_size // 2, groups=channel)
+        - mu1_mu2
+    )
 
-    C1 = 0.01 ** 2
-    C2 = 0.03 ** 2
+    C1 = 0.01**2
+    C2 = 0.03**2
 
-    ssim_map = ((2 * mu1_mu2 + C1) * (2 * sigma12 + C2)) / ((mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2))
+    ssim_map = ((2 * mu1_mu2 + C1) * (2 * sigma12 + C2)) / (
+        (mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2)
+    )
 
     if size_average:
         return ssim_map.mean()
@@ -502,11 +549,11 @@ def _ssim(img1, img2, window, window_size, channel, size_average=True):
 
 
 def ssim(img1, img2, window_size=11, size_average=True):
-        (_, channel, _, _) = img1.size()
-        global window
-        if window is None:
-            window = create_window(window_size, channel)
-            if img1.is_cuda:
-                window = window.cuda(img1.get_device())
-            window = window.type_as(img1)
-        return _ssim(img1, img2, window, window_size, channel, size_average)
+    (_, channel, _, _) = img1.size()
+    global window
+    if window is None:
+        window = create_window(window_size, channel)
+        if img1.is_cuda:
+            window = window.cuda(img1.get_device())
+        window = window.type_as(img1)
+    return _ssim(img1, img2, window, window_size, channel, size_average)

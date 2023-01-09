@@ -1,20 +1,19 @@
 import argparse
 import os
 
-import torch
-import yaml
 import numpy as np
+import torch
 import torch.nn as nn
+import yaml
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-from utils.model import get_model, get_vocoder, get_param_num
-from utils.tools import get_configs_of, to_device, log, synth_one_sample
-from model import DiffSingerLoss
 from data_utils import Dataset
-
 from evaluate import evaluate
+from model import DiffSingerLoss
+from utils.model import get_model, get_param_num, get_vocoder
+from utils.tools import get_configs_of, log, synth_one_sample, to_device
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -26,7 +25,11 @@ def main(args, configs):
 
     # Get dataset
     dataset = Dataset(
-        preprocess_config["path"]["train_filelist"], preprocess_config, train_config, sort=True, drop_last=True
+        preprocess_config["path"]["train_filelist"],
+        preprocess_config,
+        train_config,
+        sort=True,
+        drop_last=True,
     )
     batch_size = train_config["optimizer"]["batch_size"]
     loader = DataLoader(
@@ -40,7 +43,9 @@ def main(args, configs):
     model, optimizer = get_model(args, configs, device, train=True)
     model = nn.DataParallel(model)
     num_param = get_param_num(model)
-    Loss = DiffSingerLoss(args, preprocess_config, model_config, train_config).to(device)
+    Loss = DiffSingerLoss(args, preprocess_config, model_config, train_config).to(
+        device
+    )
     print("Number of DiffSinger Parameters:", num_param)
 
     # Load vocoder
@@ -96,7 +101,10 @@ def main(args, configs):
                     optimizer.zero_grad()
 
                 if step % log_step == 0:
-                    losses_ = [sum(l.values()).item() if isinstance(l, dict) else l.item() for l in losses]
+                    losses_ = [
+                        sum(l.values()).item() if isinstance(l, dict) else l.item()
+                        for l in losses
+                    ]
                     message1 = "Step {}/{}, ".format(step, total_step)
                     message2 = "Total Loss: {:.4f}, Mel Loss: {:.4f}, Noise Loss: {:.4f}".format(
                         *losses_
@@ -110,7 +118,10 @@ def main(args, configs):
                     log(train_logger, step, losses=losses, lr=lr)
 
                 if step % synth_step == 0:
-                    assert batch[8][0].shape[0] == batch[5][0].shape[0], (batch[8][0].shape,batch[5][0].shape[0])
+                    assert batch[8][0].shape[0] == batch[5][0].shape[0], (
+                        batch[8][0].shape,
+                        batch[5][0].shape[0],
+                    )
 
                     figs, wav_reconstruction, wav_prediction, tag = synth_one_sample(
                         args,
@@ -136,19 +147,21 @@ def main(args, configs):
                         audio=wav_reconstruction,
                         sampling_rate=sampling_rate,
                         tag="Training/reconstructed",
-                        step=step
+                        step=step,
                     )
                     log(
                         train_logger,
                         audio=wav_prediction,
                         sampling_rate=sampling_rate,
                         tag="Training/synthesized",
-                        step=step
+                        step=step,
                     )
 
                 if step % val_step == 0:
                     model.eval()
-                    message = evaluate(args, model, step, configs, val_logger, vocoder, losses)
+                    message = evaluate(
+                        args, model, step, configs, val_logger, vocoder, losses
+                    )
                     with open(os.path.join(val_log_path, "log.txt"), "a") as f:
                         f.write(message + "\n")
                     outer_bar.write(message)
@@ -156,8 +169,14 @@ def main(args, configs):
                     model.train()
 
                 if step % save_step == 0:
-                    savepath = os.path.join(train_config["path"]["ckpt_path"], "{}.pth.tar".format(step), )
-                    rmpath = os.path.join(train_config["path"]["ckpt_path"], "{}.pth.tar".format(step-3*save_step), )
+                    savepath = os.path.join(
+                        train_config["path"]["ckpt_path"],
+                        "{}.pth.tar".format(step),
+                    )
+                    rmpath = os.path.join(
+                        train_config["path"]["ckpt_path"],
+                        "{}.pth.tar".format(step - 3 * save_step),
+                    )
                     os.system(f"rm {rmpath}")
                     torch.save(
                         {
@@ -207,22 +226,40 @@ if __name__ == "__main__":
     else:
         raise NotImplementedError
     path_tag = "_{}".format(args.path_tag) if args.path_tag != "" else args.path_tag
-    train_config["path"]["ckpt_path"] = train_config["path"]["ckpt_path"]+"_{}{}".format(train_tag, path_tag)
-    train_config["path"]["log_path"] = train_config["path"]["log_path"]+"_{}{}".format(train_tag, path_tag)
-    train_config["path"]["result_path"] = train_config["path"]["result_path"]+"_{}{}".format(args.model, path_tag)
+    train_config["path"]["ckpt_path"] = train_config["path"][
+        "ckpt_path"
+    ] + "_{}{}".format(train_tag, path_tag)
+    train_config["path"]["log_path"] = train_config["path"][
+        "log_path"
+    ] + "_{}{}".format(train_tag, path_tag)
+    train_config["path"]["result_path"] = train_config["path"][
+        "result_path"
+    ] + "_{}{}".format(args.model, path_tag)
     if preprocess_config["preprocessing"]["pitch"]["pitch_type"] == "cwt":
         from utils.pitch_tools import get_lf0_cwt
-        preprocess_config["preprocessing"]["pitch"]["cwt_scales"] = get_lf0_cwt(np.ones(10))[1]
+
+        preprocess_config["preprocessing"]["pitch"]["cwt_scales"] = get_lf0_cwt(
+            np.ones(10)
+        )[1]
 
     # Log Configuration
-    print("\n==================================== Training Configuration ====================================")
+    print(
+        "\n==================================== Training Configuration ===================================="
+    )
     print(" ---> Type of Modeling:", args.model)
     print(" ---> Total Batch Size:", int(train_config["optimizer"]["batch_size"]))
-    print(" ---> Use Pitch Embed:", model_config["variance_embedding"]["use_pitch_embed"])
-    print(" ---> Use Energy Embed:", model_config["variance_embedding"]["use_energy_embed"])
+    print(
+        " ---> Use Pitch Embed:", model_config["variance_embedding"]["use_pitch_embed"]
+    )
+    print(
+        " ---> Use Energy Embed:",
+        model_config["variance_embedding"]["use_energy_embed"],
+    )
     print(" ---> Path of ckpt:", train_config["path"]["ckpt_path"])
     print(" ---> Path of log:", train_config["path"]["log_path"])
     print(" ---> Path of result:", train_config["path"]["result_path"])
-    print("================================================================================================")
+    print(
+        "================================================================================================"
+    )
 
     main(args, configs)

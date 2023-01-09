@@ -1,14 +1,16 @@
+import json
+import os
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import os
-import json
-from utils.tools import ssim
+
 from utils.pitch_tools import cwt2f0_norm
+from utils.tools import ssim
 
 
 class DiffSingerLoss(nn.Module):
-    """ DiffSinger Loss """
+    """DiffSinger Loss"""
 
     def __init__(self, args, preprocess_config, model_config, train_config):
         super(DiffSingerLoss, self).__init__()
@@ -45,7 +47,7 @@ class DiffSingerLoss(nn.Module):
         self.src_masks = ~src_masks
         mel_masks = ~mel_masks
         mel_targets = mel_targets[:, : mel_masks.shape[1], :]
-        self.mel_masks = mel_masks[:, :mel_masks.shape[1]]
+        self.mel_masks = mel_masks[:, : mel_masks.shape[1]]
         self.mel_masks_fill = ~self.mel_masks
 
         total_loss = torch.zeros(1).to(mel_targets.device)
@@ -67,7 +69,9 @@ class DiffSingerLoss(nn.Module):
         )
 
     def get_mel_loss(self, mel_predictions, mel_targets):
-        mel_predictions = mel_predictions.masked_fill(self.mel_masks_fill.unsqueeze(-1), 0)
+        mel_predictions = mel_predictions.masked_fill(
+            self.mel_masks_fill.unsqueeze(-1), 0
+        )
         mel_targets = mel_targets.masked_fill(self.mel_masks_fill.unsqueeze(-1), 0)
         mel_loss = self.l1_loss(mel_predictions, mel_targets)
         return mel_loss
@@ -97,7 +101,6 @@ class DiffSingerLoss(nn.Module):
         dim = target.size(-1)
         return target.abs().sum(-1, keepdim=True).ne(0).float().repeat(1, 1, dim)
 
-
     def get_pitch_loss(self, pitch_predictions, pitch_targets):
         losses = {}
         for _, pitch_target in pitch_targets.items():
@@ -105,10 +108,21 @@ class DiffSingerLoss(nn.Module):
                 pitch_target.requires_grad = False
         if self.pitch_type == "ph":
             nonpadding = self.src_masks.float()
-            pitch_loss_fn = F.l1_loss if self.loss_config["pitch_loss"] == "l1" else F.mse_loss
-            losses["f0"] = (pitch_loss_fn(pitch_predictions["pitch_pred"][:, :, 0], pitch_targets["f0"],
-                                          reduction="none") * nonpadding).sum() \
-                           / nonpadding.sum() * self.loss_config["lambda_f0"]
+            pitch_loss_fn = (
+                F.l1_loss if self.loss_config["pitch_loss"] == "l1" else F.mse_loss
+            )
+            losses["f0"] = (
+                (
+                    pitch_loss_fn(
+                        pitch_predictions["pitch_pred"][:, :, 0],
+                        pitch_targets["f0"],
+                        reduction="none",
+                    )
+                    * nonpadding
+                ).sum()
+                / nonpadding.sum()
+                * self.loss_config["lambda_f0"]
+            )
         else:
             mel2ph = self.mel2phs  # [B, T_s]
             f0 = pitch_targets["f0"]
@@ -121,35 +135,67 @@ class DiffSingerLoss(nn.Module):
                 cwt_pred = pitch_predictions["cwt"][:, :, :10]
                 f0_mean_pred = pitch_predictions["f0_mean"]
                 f0_std_pred = pitch_predictions["f0_std"]
-                losses["C"] = self.cwt_loss(cwt_pred, cwt_spec) * self.loss_config["lambda_f0"]
+                losses["C"] = (
+                    self.cwt_loss(cwt_pred, cwt_spec) * self.loss_config["lambda_f0"]
+                )
                 if self.pitch_config["use_uv"]:
                     assert pitch_predictions["cwt"].shape[-1] == 11
                     uv_pred = pitch_predictions["cwt"][:, :, -1]
-                    losses["uv"] = (F.binary_cross_entropy_with_logits(uv_pred, uv, reduction="none") * nonpadding) \
-                                    .sum() / nonpadding.sum() * self.loss_config["lambda_uv"]
-                losses["f0_mean"] = F.l1_loss(f0_mean_pred, f0_mean) * self.loss_config["lambda_f0"]
-                losses["f0_std"] = F.l1_loss(f0_std_pred, f0_std) * self.loss_config["lambda_f0"]
+                    losses["uv"] = (
+                        (
+                            F.binary_cross_entropy_with_logits(
+                                uv_pred, uv, reduction="none"
+                            )
+                            * nonpadding
+                        ).sum()
+                        / nonpadding.sum()
+                        * self.loss_config["lambda_uv"]
+                    )
+                losses["f0_mean"] = (
+                    F.l1_loss(f0_mean_pred, f0_mean) * self.loss_config["lambda_f0"]
+                )
+                losses["f0_std"] = (
+                    F.l1_loss(f0_std_pred, f0_std) * self.loss_config["lambda_f0"]
+                )
                 # if self.loss_config["cwt_add_f0_loss"]:
                 #     f0_cwt_ = cwt2f0_norm(cwt_pred, f0_mean_pred, f0_std_pred, mel2ph, self.pitch_config)
                 #     self.add_f0_loss(f0_cwt_[:, :, None], f0, uv, losses, nonpadding=nonpadding)
             elif self.pitch_type == "frame":
-                self.add_f0_loss(pitch_predictions["pitch_pred"], f0, uv, losses, nonpadding=nonpadding)
+                self.add_f0_loss(
+                    pitch_predictions["pitch_pred"],
+                    f0,
+                    uv,
+                    losses,
+                    nonpadding=nonpadding,
+                )
         return losses
 
     def add_f0_loss(self, p_pred, f0, uv, losses, nonpadding):
         assert p_pred[..., 0].shape == f0.shape
         if self.pitch_config["use_uv"]:
             assert p_pred[..., 1].shape == uv.shape
-            losses["uv"] = (F.binary_cross_entropy_with_logits(
-                p_pred[:, :, 1], uv, reduction="none") * nonpadding).sum() \
-                           / nonpadding.sum() * self.loss_config["lambda_uv"]
+            losses["uv"] = (
+                (
+                    F.binary_cross_entropy_with_logits(
+                        p_pred[:, :, 1], uv, reduction="none"
+                    )
+                    * nonpadding
+                ).sum()
+                / nonpadding.sum()
+                * self.loss_config["lambda_uv"]
+            )
             nonpadding = nonpadding * (uv == 0).float()
 
         f0_pred = p_pred[:, :, 0]
         if self.loss_config["pitch_loss"] in ["l1", "l2"]:
-            pitch_loss_fn = F.l1_loss if self.loss_config["pitch_loss"] == "l1" else F.mse_loss
-            losses["f0"] = (pitch_loss_fn(f0_pred, f0, reduction="none") * nonpadding).sum() \
-                           / nonpadding.sum() * self.loss_config["lambda_f0"]
+            pitch_loss_fn = (
+                F.l1_loss if self.loss_config["pitch_loss"] == "l1" else F.mse_loss
+            )
+            losses["f0"] = (
+                (pitch_loss_fn(f0_pred, f0, reduction="none") * nonpadding).sum()
+                / nonpadding.sum()
+                * self.loss_config["lambda_f0"]
+            )
         elif self.loss_config["pitch_loss"] == "ssim":
             return NotImplementedError
 

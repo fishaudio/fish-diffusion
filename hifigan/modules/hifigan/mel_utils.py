@@ -49,30 +49,44 @@ def mel_spectrogram(y, hparams, center=False, complex=False):
     # fmax: 10000  # To be increased/reduced depending on data.
     # fft_size: 2048  # Extra window size is filled with 0 paddings to match this parameter
     # n_fft, num_mels, sampling_rate, hop_size, win_size, fmin, fmax,
-    n_fft = hparams['fft_size']
-    num_mels = hparams['audio_num_mel_bins']
-    sampling_rate = hparams['audio_sample_rate']
-    hop_size = hparams['hop_size']
-    win_size = hparams['win_size']
-    fmin = hparams['fmin']
-    fmax = hparams['fmax']
-    y = y.clamp(min=-1., max=1.)
+    n_fft = hparams["fft_size"]
+    num_mels = hparams["audio_num_mel_bins"]
+    sampling_rate = hparams["audio_sample_rate"]
+    hop_size = hparams["hop_size"]
+    win_size = hparams["win_size"]
+    fmin = hparams["fmin"]
+    fmax = hparams["fmax"]
+    y = y.clamp(min=-1.0, max=1.0)
     global mel_basis, hann_window
     if fmax not in mel_basis:
         mel = librosa_mel_fn(sampling_rate, n_fft, num_mels, fmin, fmax)
-        mel_basis[str(fmax) + '_' + str(y.device)] = torch.from_numpy(mel).float().to(y.device)
+        mel_basis[str(fmax) + "_" + str(y.device)] = (
+            torch.from_numpy(mel).float().to(y.device)
+        )
         hann_window[str(y.device)] = torch.hann_window(win_size).to(y.device)
 
-    y = torch.nn.functional.pad(y.unsqueeze(1), (int((n_fft - hop_size) / 2), int((n_fft - hop_size) / 2)),
-                                mode='reflect')
+    y = torch.nn.functional.pad(
+        y.unsqueeze(1),
+        (int((n_fft - hop_size) / 2), int((n_fft - hop_size) / 2)),
+        mode="reflect",
+    )
     y = y.squeeze(1)
 
-    spec = torch.stft(y, n_fft, hop_length=hop_size, win_length=win_size, window=hann_window[str(y.device)],
-                      center=center, pad_mode='reflect', normalized=False, onesided=True)
+    spec = torch.stft(
+        y,
+        n_fft,
+        hop_length=hop_size,
+        win_length=win_size,
+        window=hann_window[str(y.device)],
+        center=center,
+        pad_mode="reflect",
+        normalized=False,
+        onesided=True,
+    )
 
     if not complex:
         spec = torch.sqrt(spec.pow(2).sum(-1) + (1e-9))
-        spec = torch.matmul(mel_basis[str(fmax) + '_' + str(y.device)], spec)
+        spec = torch.matmul(mel_basis[str(fmax) + "_" + str(y.device)], spec)
         spec = spectral_normalize_torch(spec)
     else:
         B, C, T, _ = spec.shape

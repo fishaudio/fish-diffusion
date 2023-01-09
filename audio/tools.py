@@ -1,5 +1,5 @@
-import torch
 import numpy as np
+import torch
 from scipy.io.wavfile import write
 
 from audio.audio_processing import griffin_lim

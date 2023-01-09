@@ -1,16 +1,16 @@
 import argparse
-import os
 import json
+import os
 
-import torch
-import yaml
 import numpy as np
+import torch
 import torch.nn as nn
+import yaml
 from torch.utils.data import DataLoader
 
-from utils.tools import to_device, log, synth_one_sample
-from model import DiffSingerLoss
 from data_utils import Dataset
+from model import DiffSingerLoss
+from utils.tools import log, synth_one_sample, to_device
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -20,7 +20,11 @@ def evaluate(args, model, step, configs, logger=None, vocoder=None, losses=None)
 
     # Get dataset
     dataset = Dataset(
-        preprocess_config["path"]["val_filelist"], preprocess_config, train_config, sort=False, drop_last=False
+        preprocess_config["path"]["val_filelist"],
+        preprocess_config,
+        train_config,
+        sort=False,
+        drop_last=False,
     )
     batch_size = train_config["optimizer"]["batch_size"]
     loader = DataLoader(
@@ -31,9 +35,13 @@ def evaluate(args, model, step, configs, logger=None, vocoder=None, losses=None)
     )
 
     # Get loss function
-    Loss = DiffSingerLoss(args, preprocess_config, model_config, train_config).to(device)
+    Loss = DiffSingerLoss(args, preprocess_config, model_config, train_config).to(
+        device
+    )
 
-    loss_sums = [{k:0 for k in loss.keys()} if isinstance(loss, dict) else 0 for loss in losses]
+    loss_sums = [
+        {k: 0 for k in loss.keys()} if isinstance(loss, dict) else 0 for loss in losses
+    ]
     for batchs in loader:
         for batch in batchs:
             batch = to_device(batch, device)
@@ -56,7 +64,7 @@ def evaluate(args, model, step, configs, logger=None, vocoder=None, losses=None)
     loss_means_ = []
     for loss_sum in loss_sums:
         if isinstance(loss_sum, dict):
-            loss_mean = {k:v / len(dataset) for k, v in loss_sum.items()}
+            loss_mean = {k: v / len(dataset) for k, v in loss_sum.items()}
             loss_means.append(loss_mean)
             loss_means_.append(sum(loss_mean.values()))
         else:
@@ -92,14 +100,14 @@ def evaluate(args, model, step, configs, logger=None, vocoder=None, losses=None)
             audio=wav_reconstruction,
             sampling_rate=sampling_rate,
             tag="Validation/{}_reconstructed".format(tag),
-            step=step
+            step=step,
         )
         log(
             logger,
             audio=wav_prediction,
             sampling_rate=sampling_rate,
             tag="Validation/{}_synthesized".format(tag),
-            step=step
+            step=step,
         )
 
     return message

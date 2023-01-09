@@ -1,4 +1,2 @@
-./dataset/yunhao/000026.wav
-./dataset/jishuang/000003.wav
-./dataset/yunhao/000912.wav
-./dataset/jishuang/000005.wav
+dataset/32k/aria/斯卡布罗干音_0000/0014.wav
+dataset/32k/aria/斯卡布罗干音_0000/0026.wav

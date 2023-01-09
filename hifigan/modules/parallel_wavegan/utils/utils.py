@@ -88,12 +88,15 @@ def write_hdf5(hdf5_name, hdf5_path, write_data, is_overwrite=True):
         # check dataset existence
         if hdf5_path in hdf5_file:
             if is_overwrite:
-                logging.warning("Dataset in hdf5 file already exists. "
-                                "recreate dataset in hdf5.")
+                logging.warning(
+                    "Dataset in hdf5 file already exists. " "recreate dataset in hdf5."
+                )
                 hdf5_file.__delitem__(hdf5_path)
             else:
-                logging.error("Dataset in hdf5 file already exists. "
-                              "if you want to overwrite, please set is_overwrite = True.")
+                logging.error(
+                    "Dataset in hdf5 file already exists. "
+                    "if you want to overwrite, please set is_overwrite = True."
+                )
                 hdf5_file.close()
                 sys.exit(1)
     else:
@@ -137,7 +140,7 @@ class HDF5ScpLoader(object):
 
         """
         self.default_hdf5_path = default_hdf5_path
-        with open(feats_scp, encoding='utf-8') as f:
+        with open(feats_scp, encoding="utf-8") as f:
             lines = [line.replace("\n", "") for line in f.readlines()]
         self.data = {}
         for line in lines:

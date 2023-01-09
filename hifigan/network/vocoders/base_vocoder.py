@@ -1,4 +1,5 @@
 import importlib
+
 VOCODERS = {}
 
 
@@ -9,10 +10,10 @@ def register_vocoder(cls):
 
 
 def get_vocoder_cls(hparams):
-    if hparams['vocoder'] in VOCODERS:
-        return VOCODERS[hparams['vocoder']]
+    if hparams["vocoder"] in VOCODERS:
+        return VOCODERS[hparams["vocoder"]]
     else:
-        vocoder_cls = hparams['vocoder']
+        vocoder_cls = hparams["vocoder"]
         pkg = ".".join(vocoder_cls.split(".")[:-1])
         cls_name = vocoder_cls.split(".")[-1]
         vocoder_cls = getattr(importlib.import_module(pkg), cls_name)

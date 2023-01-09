@@ -1,0 +1,10 @@
+dataset/32k/aria/樱花草干音_0000/0008.wav
+dataset/32k/aria/鱼 干音_0000/0016.wav
+dataset/32k/aria/姗姗干音1_0000/0002.wav
+dataset/32k/aria/樱花草干音_0000/0007.wav
+dataset/32k/aria/夜航星+心中想的还是他干音_0000/0018.wav
+dataset/32k/aria/春天的芭蕾 干音_0000/0013.wav
+dataset/32k/aria/空心干音（有一段唱错了_0000/0007.wav
+dataset/32k/aria/夜航星+心中想的还是他干音_0000/0008.wav
+dataset/32k/aria/夜航星+心中想的还是他干音_0000/0028.wav
+dataset/32k/aria/鱼主旋律_0000/0005.wav

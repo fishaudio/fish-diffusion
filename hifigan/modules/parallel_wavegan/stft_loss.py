@@ -7,14 +7,24 @@
 import librosa
 import torch
 
-from modules.parallel_wavegan.losses import LogSTFTMagnitudeLoss, SpectralConvergengeLoss, stft
+from modules.parallel_wavegan.losses import (
+    LogSTFTMagnitudeLoss,
+    SpectralConvergengeLoss,
+    stft,
+)
 
 
 class STFTLoss(torch.nn.Module):
     """STFT loss module."""
 
-    def __init__(self, fft_size=1024, shift_size=120, win_length=600, window="hann_window",
-                 use_mel_loss=False):
+    def __init__(
+        self,
+        fft_size=1024,
+        shift_size=120,
+        win_length=600,
+        window="hann_window",
+        use_mel_loss=False,
+    ):
         """Initialize STFT loss module."""
         super(STFTLoss, self).__init__()
         self.fft_size = fft_size
@@ -42,7 +52,11 @@ class STFTLoss(torch.nn.Module):
         y_mag = stft(y, self.fft_size, self.shift_size, self.win_length, self.window)
         if self.use_mel_loss:
             if self.mel_basis is None:
-                self.mel_basis = torch.from_numpy(librosa.filters.mel(22050, self.fft_size, 80)).cuda().T
+                self.mel_basis = (
+                    torch.from_numpy(librosa.filters.mel(22050, self.fft_size, 80))
+                    .cuda()
+                    .T
+                )
             x_mag = x_mag @ self.mel_basis
             y_mag = y_mag @ self.mel_basis
 
@@ -55,12 +69,14 @@ class STFTLoss(torch.nn.Module):
 class MultiResolutionSTFTLoss(torch.nn.Module):
     """Multi resolution STFT loss module."""
 
-    def __init__(self,
-                 fft_sizes=[1024, 2048, 512],
-                 hop_sizes=[120, 240, 50],
-                 win_lengths=[600, 1200, 240],
-                 window="hann_window",
-                 use_mel_loss=False):
+    def __init__(
+        self,
+        fft_sizes=[1024, 2048, 512],
+        hop_sizes=[120, 240, 50],
+        win_lengths=[600, 1200, 240],
+        window="hann_window",
+        use_mel_loss=False,
+    ):
         """Initialize Multi resolution STFT loss module.
 
         Args:

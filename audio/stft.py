@@ -1,9 +1,9 @@
+import numpy as np
 import torch
 import torch.nn.functional as F
-import numpy as np
-from scipy.signal import get_window
-from librosa.util import pad_center, tiny
 from librosa.filters import mel as librosa_mel_fn
+from librosa.util import pad_center, tiny
+from scipy.signal import get_window
 
 from audio.audio_processing import (
     dynamic_range_compression,
@@ -75,7 +75,7 @@ class STFT(torch.nn.Module):
         real_part = forward_transform[:, :cutoff, :]
         imag_part = forward_transform[:, cutoff:, :]
 
-        magnitude = torch.sqrt(real_part ** 2 + imag_part ** 2)
+        magnitude = torch.sqrt(real_part**2 + imag_part**2)
         phase = torch.autograd.Variable(torch.atan2(imag_part.data, real_part.data))
 
         return magnitude, phase

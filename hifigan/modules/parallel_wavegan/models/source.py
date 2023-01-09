@@ -5,7 +5,7 @@ import torch.nn.functional as torch_nn_func
 
 
 class SineGen(torch.nn.Module):
-    """ Definition of sine generator
+    """Definition of sine generator
     SineGen(samp_rate, harmonic_num = 0,
             sine_amp = 0.1, noise_std = 0.003,
             voiced_threshold = 0,
@@ -22,10 +22,15 @@ class SineGen(torch.nn.Module):
         segment is always sin(np.pi) or cos(0)
     """
 
-    def __init__(self, samp_rate, harmonic_num=0,
-                 sine_amp=0.1, noise_std=0.003,
-                 voiced_threshold=0,
-                 flag_for_pulse=False):
+    def __init__(
+        self,
+        samp_rate,
+        harmonic_num=0,
+        sine_amp=0.1,
+        noise_std=0.003,
+        voiced_threshold=0,
+        flag_for_pulse=False,
+    ):
         super(SineGen, self).__init__()
         self.sine_amp = sine_amp
         self.noise_std = noise_std
@@ -42,16 +47,17 @@ class SineGen(torch.nn.Module):
         return uv
 
     def _f02sine(self, f0_values):
-        """ f0_values: (batchsize, length, dim)
-            where dim indicates fundamental tone and overtones
+        """f0_values: (batchsize, length, dim)
+        where dim indicates fundamental tone and overtones
         """
         # convert to F0 in rad. The interger part n can be ignored
         # because 2 * np.pi * n doesn't affect phase
         rad_values = (f0_values / self.sampling_rate) % 1
 
         # initial phase noise (no noise for fundamental component)
-        rand_ini = torch.rand(f0_values.shape[0], f0_values.shape[2], \
-                              device=f0_values.device)
+        rand_ini = torch.rand(
+            f0_values.shape[0], f0_values.shape[2], device=f0_values.device
+        )
         rand_ini[:, 0] = 0
         rad_values[:, 0, :] = rad_values[:, 0, :] + rand_ini
 
@@ -64,13 +70,13 @@ class SineGen(torch.nn.Module):
             # Buffer tmp_over_one_idx indicates the time step to add -1.
             # This will not change F0 of sine because (x-1) * 2*pi = x * 2*pi
             tmp_over_one = torch.cumsum(rad_values, 1) % 1
-            tmp_over_one_idx = (tmp_over_one[:, 1:, :] -
-                                tmp_over_one[:, :-1, :]) < 0
+            tmp_over_one_idx = (tmp_over_one[:, 1:, :] - tmp_over_one[:, :-1, :]) < 0
             cumsum_shift = torch.zeros_like(rad_values)
             cumsum_shift[:, 1:, :] = tmp_over_one_idx * -1.0
 
-            sines = torch.sin(torch.cumsum(rad_values + cumsum_shift, dim=1)
-                              * 2 * np.pi)
+            sines = torch.sin(
+                torch.cumsum(rad_values + cumsum_shift, dim=1) * 2 * np.pi
+            )
         else:
             # If necessary, make sure that the first time step of every
             # voiced segments is sin(pi) or cos(0)
@@ -102,15 +108,14 @@ class SineGen(torch.nn.Module):
         return sines
 
     def forward(self, f0):
-        """ sine_tensor, uv = forward(f0)
+        """sine_tensor, uv = forward(f0)
         input F0: tensor(batchsize=1, length, dim=1)
                   f0 for unvoiced steps should be 0
         output sine_tensor: tensor(batchsize=1, length, dim)
         output uv: tensor(batchsize=1, length, 1)
         """
         with torch.no_grad():
-            f0_buf = torch.zeros(f0.shape[0], f0.shape[1], self.dim,
-                                 device=f0.device)
+            f0_buf = torch.zeros(f0.shape[0], f0.shape[1], self.dim, device=f0.device)
             # fundamental component
             f0_buf[:, :, 0] = f0[:, :, 0]
             for idx in np.arange(self.harmonic_num):
@@ -138,25 +143,29 @@ class SineGen(torch.nn.Module):
 
 
 class PulseGen(torch.nn.Module):
-    """ Definition of Pulse train generator
+    """Definition of Pulse train generator
 
     There are many ways to implement pulse generator.
     Here, PulseGen is based on SinGen. For a perfect
     """
-    def __init__(self, samp_rate, pulse_amp = 0.1,
-                 noise_std = 0.003, voiced_threshold = 0):
+
+    def __init__(self, samp_rate, pulse_amp=0.1, noise_std=0.003, voiced_threshold=0):
         super(PulseGen, self).__init__()
         self.pulse_amp = pulse_amp
         self.sampling_rate = samp_rate
         self.voiced_threshold = voiced_threshold
         self.noise_std = noise_std
-        self.l_sinegen = SineGen(self.sampling_rate, harmonic_num=0, \
-                                 sine_amp=self.pulse_amp, noise_std=0, \
-                                 voiced_threshold=self.voiced_threshold, \
-                                 flag_for_pulse=True)
+        self.l_sinegen = SineGen(
+            self.sampling_rate,
+            harmonic_num=0,
+            sine_amp=self.pulse_amp,
+            noise_std=0,
+            voiced_threshold=self.voiced_threshold,
+            flag_for_pulse=True,
+        )
 
     def forward(self, f0):
-        """ Pulse train generator
+        """Pulse train generator
         pulse_train, uv = forward(f0)
         input F0: tensor(batchsize=1, length, dim=1)
                   f0 for unvoiced steps should be 0
@@ -186,9 +195,9 @@ class PulseGen(torch.nn.Module):
             uv_2 = torch.roll(uv, shifts=-1, dims=1)
             uv_2[:, -1, :] = 0
 
-            loc = (pure_sine > sine_1) * (pure_sine > sine_2) \
-                  * (uv_1 > 0) * (uv_2 > 0) * (uv > 0) \
-                  + (uv_1 < 1) * (uv > 0)
+            loc = (pure_sine > sine_1) * (pure_sine > sine_2) * (uv_1 > 0) * (
+                uv_2 > 0
+            ) * (uv > 0) + (uv_1 < 1) * (uv > 0)
 
             # pulse train without noise
             pulse_train = pure_sine * loc
@@ -203,7 +212,7 @@ class PulseGen(torch.nn.Module):
 
 
 class SignalsConv1d(torch.nn.Module):
-    """ Filtering input signal with time invariant filter
+    """Filtering input signal with time invariant filter
     Note: FIRFilter conducted filtering given fixed FIR weight
           SignalsConv1d convolves two signals
     Note: this is based on torch.nn.functional.conv1d
@@ -214,7 +223,7 @@ class SignalsConv1d(torch.nn.Module):
         super(SignalsConv1d, self).__init__()
 
     def forward(self, signal, system_ir):
-        """ output = forward(signal, system_ir)
+        """output = forward(signal, system_ir)
 
         signal:    (batchsize, length1, dim)
         system_ir: (length2, dim)
@@ -232,37 +241,37 @@ class SignalsConv1d(torch.nn.Module):
         groups = signal.shape[-1]
 
         # pad signal on the left
-        signal_pad = torch_nn_func.pad(signal.permute(0, 2, 1), \
-                                       (padding_length, 0))
+        signal_pad = torch_nn_func.pad(signal.permute(0, 2, 1), (padding_length, 0))
         # prepare system impulse response as (dim, 1, length2)
         # also flip the impulse response
-        ir = torch.flip(system_ir.unsqueeze(1).permute(2, 1, 0), \
-                        dims=[2])
+        ir = torch.flip(system_ir.unsqueeze(1).permute(2, 1, 0), dims=[2])
         # convolute
         output = torch_nn_func.conv1d(signal_pad, ir, groups=groups)
         return output.permute(0, 2, 1)
 
 
 class CyclicNoiseGen_v1(torch.nn.Module):
-    """ CyclicnoiseGen_v1
+    """CyclicnoiseGen_v1
     Cyclic noise with a single parameter of beta.
     Pytorch v1 implementation assumes f_t is also fixed
     """
 
-    def __init__(self, samp_rate,
-                 noise_std=0.003, voiced_threshold=0):
+    def __init__(self, samp_rate, noise_std=0.003, voiced_threshold=0):
         super(CyclicNoiseGen_v1, self).__init__()
         self.samp_rate = samp_rate
         self.noise_std = noise_std
         self.voiced_threshold = voiced_threshold
 
-        self.l_pulse = PulseGen(samp_rate, pulse_amp=1.0,
-                                noise_std=noise_std,
-                                voiced_threshold=voiced_threshold)
+        self.l_pulse = PulseGen(
+            samp_rate,
+            pulse_amp=1.0,
+            noise_std=noise_std,
+            voiced_threshold=voiced_threshold,
+        )
         self.l_conv = SignalsConv1d()
 
     def noise_decay(self, beta, f0mean):
-        """ decayed_noise = noise_decay(beta, f0mean)
+        """decayed_noise = noise_decay(beta, f0mean)
         decayed_noise =  n[t]exp(-t * f_mean / beta / samp_rate)
 
         beta: (dim=1) or (batchsize=1, 1, dim=1)
@@ -286,8 +295,7 @@ class CyclicNoiseGen_v1(torch.nn.Module):
         return noise * self.noise_std * decay
 
     def forward(self, f0s, beta):
-        """ Producde cyclic-noise
-        """
+        """Producde cyclic-noise"""
         # pulse train
         pulse_train, sine_wav, uv, noise = self.l_pulse(f0s)
         pure_pulse = pulse_train - noise
@@ -309,7 +317,7 @@ class CyclicNoiseGen_v1(torch.nn.Module):
 
 
 class SineGen(torch.nn.Module):
-    """ Definition of sine generator
+    """Definition of sine generator
     SineGen(samp_rate, harmonic_num = 0,
             sine_amp = 0.1, noise_std = 0.003,
             voiced_threshold = 0,
@@ -326,10 +334,15 @@ class SineGen(torch.nn.Module):
         segment is always sin(np.pi) or cos(0)
     """
 
-    def __init__(self, samp_rate, harmonic_num=0,
-                 sine_amp=0.1, noise_std=0.003,
-                 voiced_threshold=0,
-                 flag_for_pulse=False):
+    def __init__(
+        self,
+        samp_rate,
+        harmonic_num=0,
+        sine_amp=0.1,
+        noise_std=0.003,
+        voiced_threshold=0,
+        flag_for_pulse=False,
+    ):
         super(SineGen, self).__init__()
         self.sine_amp = sine_amp
         self.noise_std = noise_std
@@ -346,16 +359,17 @@ class SineGen(torch.nn.Module):
         return uv
 
     def _f02sine(self, f0_values):
-        """ f0_values: (batchsize, length, dim)
-            where dim indicates fundamental tone and overtones
+        """f0_values: (batchsize, length, dim)
+        where dim indicates fundamental tone and overtones
         """
         # convert to F0 in rad. The interger part n can be ignored
         # because 2 * np.pi * n doesn't affect phase
         rad_values = (f0_values / self.sampling_rate) % 1
 
         # initial phase noise (no noise for fundamental component)
-        rand_ini = torch.rand(f0_values.shape[0], f0_values.shape[2], \
-                              device=f0_values.device)
+        rand_ini = torch.rand(
+            f0_values.shape[0], f0_values.shape[2], device=f0_values.device
+        )
         rand_ini[:, 0] = 0
         rad_values[:, 0, :] = rad_values[:, 0, :] + rand_ini
 
@@ -368,13 +382,13 @@ class SineGen(torch.nn.Module):
             # Buffer tmp_over_one_idx indicates the time step to add -1.
             # This will not change F0 of sine because (x-1) * 2*pi = x * 2*pi
             tmp_over_one = torch.cumsum(rad_values, 1) % 1
-            tmp_over_one_idx = (tmp_over_one[:, 1:, :] -
-                                tmp_over_one[:, :-1, :]) < 0
+            tmp_over_one_idx = (tmp_over_one[:, 1:, :] - tmp_over_one[:, :-1, :]) < 0
             cumsum_shift = torch.zeros_like(rad_values)
             cumsum_shift[:, 1:, :] = tmp_over_one_idx * -1.0
 
-            sines = torch.sin(torch.cumsum(rad_values + cumsum_shift, dim=1)
-                              * 2 * np.pi)
+            sines = torch.sin(
+                torch.cumsum(rad_values + cumsum_shift, dim=1) * 2 * np.pi
+            )
         else:
             # If necessary, make sure that the first time step of every
             # voiced segments is sin(pi) or cos(0)
@@ -406,15 +420,14 @@ class SineGen(torch.nn.Module):
         return sines
 
     def forward(self, f0):
-        """ sine_tensor, uv = forward(f0)
+        """sine_tensor, uv = forward(f0)
         input F0: tensor(batchsize=1, length, dim=1)
                   f0 for unvoiced steps should be 0
         output sine_tensor: tensor(batchsize=1, length, dim)
         output uv: tensor(batchsize=1, length, 1)
         """
         with torch.no_grad():
-            f0_buf = torch.zeros(f0.shape[0], f0.shape[1], self.dim, \
-                                 device=f0.device)
+            f0_buf = torch.zeros(f0.shape[0], f0.shape[1], self.dim, device=f0.device)
             # fundamental component
             f0_buf[:, :, 0] = f0[:, :, 0]
             for idx in np.arange(self.harmonic_num):
@@ -442,7 +455,7 @@ class SineGen(torch.nn.Module):
 
 
 class SourceModuleCycNoise_v1(torch.nn.Module):
-    """ SourceModuleCycNoise_v1
+    """SourceModuleCycNoise_v1
     SourceModule(sampling_rate, noise_std=0.003, voiced_threshod=0)
     sampling_rate: sampling_rate in Hz
 
@@ -461,8 +474,7 @@ class SourceModuleCycNoise_v1(torch.nn.Module):
         super(SourceModuleCycNoise_v1, self).__init__()
         self.sampling_rate = sampling_rate
         self.noise_std = noise_std
-        self.l_cyc_gen = CyclicNoiseGen_v1(sampling_rate, noise_std,
-                                           voiced_threshod)
+        self.l_cyc_gen = CyclicNoiseGen_v1(sampling_rate, noise_std, voiced_threshod)
 
     def forward(self, f0_upsamped, beta):
         """
@@ -482,7 +494,7 @@ class SourceModuleCycNoise_v1(torch.nn.Module):
 
 
 class SourceModuleHnNSF(torch.nn.Module):
-    """ SourceModule for hn-nsf
+    """SourceModule for hn-nsf
     SourceModule(sampling_rate, harmonic_num=0, sine_amp=0.1,
                  add_noise_std=0.003, voiced_threshod=0)
     sampling_rate: sampling_rate in Hz
@@ -500,16 +512,23 @@ class SourceModuleHnNSF(torch.nn.Module):
     uv (batchsize, length, 1)
     """
 
-    def __init__(self, sampling_rate, harmonic_num=0, sine_amp=0.1,
-                 add_noise_std=0.003, voiced_threshod=0):
+    def __init__(
+        self,
+        sampling_rate,
+        harmonic_num=0,
+        sine_amp=0.1,
+        add_noise_std=0.003,
+        voiced_threshod=0,
+    ):
         super(SourceModuleHnNSF, self).__init__()
 
         self.sine_amp = sine_amp
         self.noise_std = add_noise_std
 
         # to produce sine waveforms
-        self.l_sin_gen = SineGen(sampling_rate, harmonic_num,
-                                 sine_amp, add_noise_std, voiced_threshod)
+        self.l_sin_gen = SineGen(
+            sampling_rate, harmonic_num, sine_amp, add_noise_std, voiced_threshod
+        )
 
         # to merge source harmonics into a single excitation
         self.l_linear = torch.nn.Linear(harmonic_num + 1, 1)
@@ -531,8 +550,6 @@ class SourceModuleHnNSF(torch.nn.Module):
         return sine_merge, noise, uv
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     source = SourceModuleCycNoise_v1(24000)
     x = torch.randn(16, 25600, 1)
-
-

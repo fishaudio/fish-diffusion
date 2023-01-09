@@ -3,12 +3,12 @@ import math
 import os
 import random
 
-import torch
 import numpy as np
+import torch
 from torch.utils.data import Dataset
 
+from utils.pitch_tools import get_lf0_cwt, norm_interp_f0
 from utils.tools import pad_1D, pad_2D
-from utils.pitch_tools import norm_interp_f0, get_lf0_cwt
 
 
 class Dataset(Dataset):
@@ -21,9 +21,7 @@ class Dataset(Dataset):
         self.cleaners = preprocess_config["preprocessing"]["text"]["text_cleaners"]
         self.batch_size = train_config["optimizer"]["batch_size"]
 
-        self.wavpaths = self.process_meta(
-            filename
-        )
+        self.wavpaths = self.process_meta(filename)
         with open(os.path.join("dataset", "speakers.json")) as f:
             self.speaker_map = json.load(f)
         self.sort = sort
@@ -45,7 +43,7 @@ class Dataset(Dataset):
 
         mel_path = wavpath + ".mel.npy"
         mel = np.load(mel_path).T
-        i = random.randint(0, self.n_sr-1)
+        i = random.randint(0, self.n_sr - 1)
         c_path = wavpath + f".{i}.soft.npy"
         c = np.load(c_path).T
         pitch_path = wavpath + ".f0.npy"
@@ -62,9 +60,7 @@ class Dataset(Dataset):
         return sample
 
     def process_meta(self, filename):
-        with open(
-            filename, "r", encoding="utf-8"
-        ) as f:
+        with open(filename, "r", encoding="utf-8") as f:
             wavpaths = []
             for line in f.readlines():
                 wavpath = line.strip("\n")
@@ -113,6 +109,7 @@ class Dataset(Dataset):
             output.append(self.reprocess(data, idx))
 
         return output
+
 
 #
 # class TextDataset(Dataset):
