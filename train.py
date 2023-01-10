@@ -3,7 +3,7 @@ import pytorch_lightning as pl
 import torch
 from diff_svc.datasets.simple_dataset import SimpleDataset
 
-from diff_svc.schedulers.lambda_warmup_cosine_scheduler import (
+from diff_svc.schedulers.cosine_scheduler import (
     LambdaCosineScheduler,
 )
 from torch.optim.lr_scheduler import LambdaLR, StepLR

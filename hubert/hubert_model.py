@@ -220,3 +220,7 @@ def hubert_soft(
     hubert.load_state_dict(checkpoint)
     hubert.eval()
     return hubert
+
+
+if __name__ == "__main__":
+    pass

@@ -26,6 +26,6 @@ class ChineseHubert(BaseFeatureExtractor):
 
         with torch.no_grad():
             outputs = self.model(input_values)
-        
+
         # (B, D, T) -> (B, T, D)
         return outputs.last_hidden_state.transpose(1, 2)
