@@ -24,6 +24,7 @@ from diff_svc.vocoders import NsfHifiGAN
 class DiffSVC(pl.LightningModule):
     def __init__(self, args, preprocess_config, model_config, train_config):
         super().__init__()
+        self.save_hyperparameters()
 
         self.model = DiffSinger(args, preprocess_config, model_config, train_config)
         self.loss = DiffSingerLoss(args, preprocess_config, model_config, train_config)
