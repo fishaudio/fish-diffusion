@@ -1,13 +1,12 @@
 import argparse
-import numpy as np
 import pytorch_lightning as pl
 import torch
 from diff_svc.datasets.simple_dataset import SimpleDataset
 
 from diff_svc.schedulers.lambda_warmup_cosine_scheduler import (
-    LambdaWarmUpCosineScheduler,
+    LambdaCosineScheduler,
 )
-from torch.optim.lr_scheduler import LambdaLR
+from torch.optim.lr_scheduler import LambdaLR, StepLR
 from torch.optim import AdamW
 from model.loss import DiffSingerLoss
 
@@ -34,19 +33,17 @@ class DiffSVC(pl.LightningModule):
         self.vocoder.freeze()
 
     def configure_optimizers(self):
-        optimizer = AdamW(self.parameters(), lr=0.001, betas=(0.9, 0.98), eps=1e-9)
+        optimizer = AdamW(self.parameters(), lr=1.0, betas=(0.9, 0.98), eps=1e-9)
 
-        lambda_func = LambdaWarmUpCosineScheduler(
-            warm_up_steps=1000,
-            lr_min=0.0001,
-            lr_max=0.001,
-            lr_start=0.0001,
+        lambda_func = LambdaCosineScheduler(
+            lr_min=1e-5,
+            lr_max=8e-4,
             max_decay_steps=150000,
         )
 
         scheduler = LambdaLR(optimizer, lr_lambda=lambda_func)
 
-        return [optimizer], [dict(scheduler=scheduler, interval="step")]
+        return [optimizer], dict(scheduler=scheduler, interval="step")
 
     def _step(self, batch, batch_idx, mode):
         assert batch["pitches"].shape[1] == batch["mels"].shape[1]
@@ -168,7 +165,7 @@ if __name__ == "__main__":
 
     valid_loader = DataLoader(
         valid_dataset,
-        batch_size=4,
+        batch_size=2,
         shuffle=False,
         collate_fn=valid_dataset.collate_fn,
     )
@@ -178,10 +175,10 @@ if __name__ == "__main__":
         devices=-1,
         strategy=DDPStrategy(find_unused_parameters=False),
         gradient_clip_val=0.5,
-        accumulate_grad_batches=4,
+        log_every_n_steps=10,
         val_check_interval=1000,
         check_val_every_n_epoch=None,
-        max_steps=200000,
+        max_steps=160000,
         precision=16,
         logger=WandbLogger(project="diff-svc", log_model="all"),
         callbacks=[
