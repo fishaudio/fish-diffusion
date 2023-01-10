@@ -11,7 +11,7 @@ from torch.optim import AdamW
 from model.loss import DiffSingerLoss
 
 from model.diffsinger import DiffSinger
-from utils.tools import get_configs_of, synth_one_sample
+from utils.tools import get_configs_of, viz_synth_sample
 from torch.utils.data import DataLoader
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
@@ -74,41 +74,41 @@ class DiffSVC(pl.LightningModule):
         )
 
         if mode == "valid":
-            figs, wav_reconstruction, wav_prediction = synth_one_sample(
-                args,
-                batch,
-                pitches,
-                output,
-                self.vocoder,
-                model_config,
-                preprocess_config,
-                self.model.diffusion,
-            )
+            for gt_mel, gt_pitch, predict_mel, predict_mel_len in zip(
+                batch["mels"], pitches, output[0], output[7]
+            ):
+                mel_fig, wav_reconstruction, wav_prediction = viz_synth_sample(
+                    gt_mel=gt_mel,
+                    gt_pitch=gt_pitch,
+                    predict_mel=predict_mel,
+                    predict_mel_len=predict_mel_len,
+                    vocoder=self.vocoder,
+                )
 
-            # WanDB logger
-            self.logger.experiment.log(
-                {
-                    "reconstruction_mel": [
-                        wandb.Image(figs["mel"], caption="reconstruction_mel"),
-                    ],
-                    "target_wav": [
-                        wandb.Audio(
-                            wav_reconstruction.to(torch.float32).cpu().numpy(),
-                            sample_rate=44100,
-                            caption="reconstruction_wav",
-                        ),
-                    ],
-                    "prediction_wav": [
-                        wandb.Audio(
-                            wav_prediction.to(torch.float32).cpu().numpy(),
-                            sample_rate=44100,
-                            caption="prediction_wav",
-                        ),
-                    ],
-                }
-            )
+                # WanDB logger
+                self.logger.experiment.log(
+                    {
+                        "reconstruction_mel": [
+                            wandb.Image(mel_fig, caption="reconstruction_mel"),
+                        ],
+                        "target_wav": [
+                            wandb.Audio(
+                                wav_reconstruction.to(torch.float32).cpu().numpy(),
+                                sample_rate=44100,
+                                caption="reconstruction_wav",
+                            ),
+                        ],
+                        "prediction_wav": [
+                            wandb.Audio(
+                                wav_prediction.to(torch.float32).cpu().numpy(),
+                                sample_rate=44100,
+                                caption="prediction_wav",
+                            ),
+                        ],
+                    }
+                )
 
-            plt.close(figs["mel"])
+                plt.close(mel_fig)
 
         return total_loss
 

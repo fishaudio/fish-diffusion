@@ -42,9 +42,6 @@ class DiffSingerLoss(nn.Module):
         self.mel_masks = mel_masks[:, : mel_masks.shape[1]]
         self.mel_masks_fill = ~self.mel_masks
 
-        # TODO: check why there is two noise loss
-        noise_loss = torch.mean(noise_loss)
-
         total_loss = torch.zeros(1).to(mel_targets.device)
 
         if self.model == "aux":

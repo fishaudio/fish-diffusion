@@ -172,7 +172,10 @@ class FastspeechEncoder(FFTBlocks):
             self.padding_idx,
             init_size=max_seq_len,
         )
-        self.proj = nn.Conv1d(256, hidden_size, 1)
+        # self.proj = nn.Conv1d(256, hidden_size, 1)
+
+        # CN Hubert large feature size: 1024
+        self.proj = nn.Linear(1024, hidden_size)
 
     def forward(self, contents, encoder_padding_mask, spk_emb):
         """
@@ -183,7 +186,8 @@ class FastspeechEncoder(FFTBlocks):
             "encoder_out": [T x B x C]
         }
         """
-        x = self.proj(contents.transpose(1, 2)).transpose(1, 2)
+        # x = self.proj(contents.transpose(1, 2)).transpose(1, 2)
+        x = self.proj(contents)
         x += spk_emb
         x = super(FastspeechEncoder, self).forward(x, encoder_padding_mask)
         return x

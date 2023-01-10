@@ -192,104 +192,30 @@ def expand(values, durations):
     return np.array(out)
 
 
-def synth_one_sample(
-    args,
-    targets,
-    pitches,
-    predictions,
+def viz_synth_sample(
+    gt_mel,
+    gt_pitch,
+    predict_mel,
+    predict_mel_len,
     vocoder,
-    model_config,
-    preprocess_config,
-    diffusion,
 ):
-    mel_len = predictions[7][0].item()
-    pitch = pitches[0][:mel_len]
-    mel_target = targets["mels"][0, :mel_len].float().detach().transpose(0, 1)
-    figs = {}
+    mel_len = predict_mel_len.item()
+    pitch = gt_pitch[:mel_len]
+    mel_target = gt_mel[:mel_len].float().detach().T
+    mel_prediction = predict_mel[:mel_len].float().detach().T
 
-    # TODO: 搞清楚这里的 bug
-    mel_prediction = predictions[0][0, :mel_len].float().detach().transpose(0, 1)
-
-    # if args.model == "aux":
-    #     mel_prediction = predictions[0][0, :mel_len].float().detach().transpose(0, 1)
-    # else:
-    #     # diffusion_step = predictions[3][0].item()
-    #     # noisy_mels = predictions[0][0, :mel_len].detach().transpose(0, 1)
-    #     # noise_prediction = predictions[1][0, :mel_len].detach().transpose(0, 1)
-    #     mel_prediction = diffusion.sampling()[0, :mel_len].detach().transpose(0, 1)
-    #     diffusion.aux_mel = None
-
-    figs["mel"] = plot_mel(
+    fig_mels = plot_mel(
         [
-            # noisy_mels.cpu().numpy(),
-            # noise_prediction.cpu().numpy(),
             mel_prediction.cpu().numpy(),
             mel_target.cpu().numpy(),
         ],
-        # [f"Diffused Spectrogram at {diffusion_step}-step", f"Epsilon Prediction from {diffusion_step}-step", "Sampled Spectrogram", "Ground-Truth Spectrogram"],
         ["Sampled Spectrogram", "Ground-Truth Spectrogram"],
     )
 
-    if vocoder is not None:
-        wav_reconstruction = vocoder.spec2wav(mel_target, pitch)
-        wav_prediction = vocoder.spec2wav(mel_prediction, pitch)
-    else:
-        wav_reconstruction = wav_prediction = None
+    wav_reconstruction = vocoder.spec2wav(mel_target, pitch)
+    wav_prediction = vocoder.spec2wav(mel_prediction, pitch)
 
-    return figs, wav_reconstruction, wav_prediction
-
-
-def synth_samples(
-    targets, predictions, vocoder, model_config, preprocess_config, path, args
-):
-
-    multi_speaker = model_config["multi_speaker"]
-    teacher_forced_tag = "_teacher_forced" if args.teacher_forced else ""
-    basenames = targets[0]
-    for i in range(len(predictions[0])):
-        basename = basenames[i]
-        src_len = predictions[10][i].item()
-        mel_len = predictions[11][i].item()
-        mel_prediction = predictions[0][i, :mel_len].detach().transpose(0, 1)
-        duration = predictions[7][i, :src_len].detach().cpu().numpy()
-
-        fig_save_dir = os.path.join(
-            path,
-            str(args.restore_step),
-            "{}_{}{}.png".format(basename, args.speaker_id, teacher_forced_tag)
-            if multi_speaker and args.mode == "single"
-            else "{}{}.png".format(basename, teacher_forced_tag),
-        )
-        fig = plot_mel(
-            [
-                mel_prediction.cpu().numpy(),
-            ],
-            ["Synthetized Spectrogram"],
-        )
-        plt.savefig(fig_save_dir)
-        plt.close()
-
-    from .model import vocoder_infer
-
-    mel_predictions = predictions[0].transpose(1, 2)
-    lengths = predictions[11] * preprocess_config["preprocessing"]["stft"]["hop_length"]
-    wav_predictions = vocoder_infer(
-        mel_predictions, vocoder, model_config, preprocess_config, lengths=lengths
-    )
-
-    sampling_rate = preprocess_config["preprocessing"]["audio"]["sampling_rate"]
-    for wav, basename in zip(wav_predictions, basenames):
-        wavfile.write(
-            os.path.join(
-                path,
-                str(args.restore_step),
-                "{}_{}{}.wav".format(basename, args.speaker_id, teacher_forced_tag)
-                if multi_speaker and args.mode == "single"
-                else "{}{}.wav".format(basename, teacher_forced_tag),
-            ),
-            sampling_rate,
-            wav,
-        )
+    return fig_mels, wav_reconstruction, wav_prediction
 
 
 def plot_mel(data, titles=None):
