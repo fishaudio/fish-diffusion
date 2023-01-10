@@ -1,2 +1,4 @@
-dataset/32k/aria/斯卡布罗干音_0000/0014.wav
-dataset/32k/aria/斯卡布罗干音_0000/0026.wav
+dataset/aria/百利甜干音_0000/0006.wav
+dataset/aria1/身世干音_0000/0007.wav
+dataset/aria/红莓花儿开 干音_0000/0009.wav
+dataset/aria1/红莓花儿开 干音_0000/0007.wav

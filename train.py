@@ -101,6 +101,7 @@ def main(args, configs):
                     optimizer.zero_grad()
 
                 if step % log_step == 0:
+                    print(losses)
                     losses_ = [
                         sum(l.values()).item() if isinstance(l, dict) else l.item()
                         for l in losses

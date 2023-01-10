@@ -29,6 +29,6 @@ step:
   total_step_naive: 160000
   total_step_shallow: 320000
   log_step: 100
-  synth_step: 1000
+  synth_step: 100
   val_step: 1000
   save_step: 200

@@ -1,427 +1,854 @@
-dataset/32k/aria/体面干音_0000/0007.wav
-dataset/32k/aria/身世干音_0000/0021.wav
-dataset/32k/aria/斯卡布罗干音_0000/0017.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0020.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0002.wav
-dataset/32k/aria/歌者 干音(2)_0000/0014.wav
-dataset/32k/aria/鱼 干音_0000/0002.wav
-dataset/32k/aria/红莓花儿开 干音_0000/0000.wav
-dataset/32k/aria/孽海记 完整干音_0000/0001.wav
-dataset/32k/aria/告白气球干音_0000/0012.wav
-dataset/32k/aria/鱼 干音_0000/0006.wav
-dataset/32k/aria/红莓花儿开 干音_0000/0005.wav
-dataset/32k/aria/姗姗干音2_0000/0002.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0001.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0019.wav
-dataset/32k/aria/阿蕊娅 干音2_0000/0005.wav
-dataset/32k/aria/鱼 干音_0000/0014.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0004.wav
-dataset/32k/aria/红莓花儿开 干音_0000/0003.wav
-dataset/32k/aria/空心干音_0000/0002.wav
-dataset/32k/aria/christmas鱼干音_0000/0000.wav
-dataset/32k/aria/christmas鱼干音_0000/0003.wav
-dataset/32k/aria/斯卡布罗干音_0000/0013.wav
-dataset/32k/aria/姗姗干音1_0000/0006.wav
-dataset/32k/aria/身世干音_0000/0022.wav
-dataset/32k/aria/鱼 干音_0000/0018.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0006.wav
-dataset/32k/aria/可乐干音_0000/0009.wav
-dataset/32k/aria/鱼 干音_0000/0007.wav
-dataset/32k/aria/斯卡布罗干音_0000/0020.wav
-dataset/32k/aria/灯火里的中国干音（有唱错_0000/0007.wav
-dataset/32k/aria/雾里干音1_0000/0006.wav
-dataset/32k/aria/告白气球干音_0000/0007.wav
-dataset/32k/aria/雾里干音1_0000/0013.wav
-dataset/32k/aria/鱼主旋律_0000/0003.wav
-dataset/32k/aria/霞光 干音2_0000/0001.wav
-dataset/32k/aria/百利甜干音_0000/0006.wav
-dataset/32k/aria/空心干音（有一段唱错了_0000/0002.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0021.wav
-dataset/32k/aria/孽海记 完整干音_0000/0000.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0006.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0024.wav
-dataset/32k/aria/红莓花儿开 干音_0000/0001.wav
-dataset/32k/aria/炫境干音_0000/0020.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0005.wav
-dataset/32k/aria/鱼主旋律_0000/0006.wav
-dataset/32k/aria/歌者 干音(2)_0000/0004.wav
-dataset/32k/aria/霞光 干音2_0000/0005.wav
-dataset/32k/aria/call of silence 干音_0000/0002.wav
-dataset/32k/aria/斯卡布罗干音_0000/0018.wav
-dataset/32k/aria/鱼 干音_0000/0008.wav
-dataset/32k/aria/炫境干音_0000/0012.wav
-dataset/32k/aria/空心干音（有一段唱错了_0000/0010.wav
-dataset/32k/aria/身世干音_0000/0020.wav
-dataset/32k/aria/终于等到你干音_0000/0000.wav
-dataset/32k/aria/炫境干音_0000/0001.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0030.wav
-dataset/32k/aria/灯火里的中国干音（有唱错_0000/0000.wav
-dataset/32k/aria/霞光干音_0000/0004.wav
-dataset/32k/aria/call of silence 干音_0000/0011.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0008.wav
-dataset/32k/aria/身世干音_0000/0004.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0011.wav
-dataset/32k/aria/空心干音（有一段唱错了_0000/0014.wav
-dataset/32k/aria/雪落下的声音 干音_0000/0004.wav
-dataset/32k/aria/可乐干音_0000/0004.wav
-dataset/32k/aria/霞光 干音1_0000/0004.wav
-dataset/32k/aria/可乐干音_0000/0000.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0025.wav
-dataset/32k/aria/call of silence 干音_0000/0010.wav
-dataset/32k/aria/体面干音_0000/0002.wav
-dataset/32k/aria/空心干音（有一段唱错了_0000/0015.wav
-dataset/32k/aria/体面干音_0000/0001.wav
-dataset/32k/aria/可乐干音_0000/0005.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0010.wav
-dataset/32k/aria/call of silence 干音_0000/0003.wav
-dataset/32k/aria/灯火里的中国干音（有唱错_0000/0002.wav
-dataset/32k/aria/炫境干音_0000/0007.wav
-dataset/32k/aria/炫境干音_0000/0011.wav
-dataset/32k/aria/雾里干音1_0000/0001.wav
-dataset/32k/aria/身世干音_0000/0023.wav
-dataset/32k/aria/红莓花儿开 干音_0000/0008.wav
-dataset/32k/aria/鱼和声（基本全是和声 夹带了一两句旋律的分轨）_0000/0003.wav
-dataset/32k/aria/身世干音_0000/0013.wav
-dataset/32k/aria/TruE-干音_0000/0001.wav
-dataset/32k/aria/大教堂干音1_0000/0006.wav
-dataset/32k/aria/身世干音_0000/0006.wav
-dataset/32k/aria/鱼 干音_0000/0021.wav
-dataset/32k/aria/斯卡布罗干音_0000/0002.wav
-dataset/32k/aria/空心干音（有一段唱错了_0000/0012.wav
-dataset/32k/aria/大教堂干音1_0000/0010.wav
-dataset/32k/aria/姗姗干音1_0000/0001.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0011.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0014.wav
-dataset/32k/aria/炫境干音_0000/0015.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0004.wav
-dataset/32k/aria/斯卡布罗干音_0000/0000.wav
-dataset/32k/aria/雾里干音1_0000/0005.wav
-dataset/32k/aria/鱼和声（基本全是和声 夹带了一两句旋律的分轨）_0000/0002.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0017.wav
-dataset/32k/aria/终于等到你干音_0000/0003.wav
-dataset/32k/aria/斯卡布罗干音_0000/0022.wav
-dataset/32k/aria/歌者 干音(2)_0000/0005.wav
-dataset/32k/aria/身世干音_0000/0010.wav
-dataset/32k/aria/空心干音_0000/0017.wav
-dataset/32k/aria/大教堂干音1_0000/0000.wav
-dataset/32k/aria/阿蕊娅 干音3-最后的副歌_0000/0000.wav
-dataset/32k/aria/斯卡布罗干音_0000/0003.wav
-dataset/32k/aria/鱼 干音_0000/0004.wav
-dataset/32k/aria/鱼 干音_0000/0010.wav
-dataset/32k/aria/雪落下的声音 干音_0000/0002.wav
-dataset/32k/aria/炫境干音_0000/0009.wav
-dataset/32k/aria/孽海记 完整干音_0000/0003.wav
-dataset/32k/aria/灯火里的中国干音（有唱错_0000/0006.wav
-dataset/32k/aria/终于等到你干音_0000/0001.wav
-dataset/32k/aria/空心干音_0000/0007.wav
-dataset/32k/aria/身世干音_0000/0001.wav
-dataset/32k/aria/炫境干音_0000/0010.wav
-dataset/32k/aria/樱花草干音_0000/0004.wav
-dataset/32k/aria/斯卡布罗干音_0000/0025.wav
-dataset/32k/aria/空心干音_0000/0000.wav
-dataset/32k/aria/空心干音（有一段唱错了_0000/0005.wav
-dataset/32k/aria/红莓花儿开 干音_0000/0014.wav
-dataset/32k/aria/歌者 干音(2)_0000/0001.wav
-dataset/32k/aria/孽海记 完整干音_0000/0006.wav
-dataset/32k/aria/红莓花儿开 干音_0000/0002.wav
-dataset/32k/aria/大教堂干音1_0000/0004.wav
-dataset/32k/aria/体面干音_0000/0004.wav
-dataset/32k/aria/姗姗干音2_0000/0000.wav
-dataset/32k/aria/雪落下的声音 干音_0000/0007.wav
-dataset/32k/aria/歌者 干音(2)_0000/0010.wav
-dataset/32k/aria/空心干音（有一段唱错了_0000/0000.wav
-dataset/32k/aria/孽海记 完整干音_0000/0007.wav
-dataset/32k/aria/斯卡布罗干音_0000/0027.wav
-dataset/32k/aria/姗姗干音1_0000/0004.wav
-dataset/32k/aria/鱼和声（基本全是和声 夹带了一两句旋律的分轨）_0000/0000.wav
-dataset/32k/aria/炫境干音_0000/0016.wav
-dataset/32k/aria/告白气球干音_0000/0015.wav
-dataset/32k/aria/身世干音_0000/0015.wav
-dataset/32k/aria/可乐干音_0000/0001.wav
-dataset/32k/aria/雪落下的声音 干音_0000/0009.wav
-dataset/32k/aria/大教堂干音1_0000/0003.wav
-dataset/32k/aria/雾里干音1_0000/0003.wav
-dataset/32k/aria/灯火里的中国干音（有唱错_0000/0010.wav
-dataset/32k/aria/体面干音_0000/0005.wav
-dataset/32k/aria/阿蕊娅 干音2_0000/0002.wav
-dataset/32k/aria/空心干音（有一段唱错了_0000/0013.wav
-dataset/32k/aria/姗姗干音2_0000/0003.wav
-dataset/32k/aria/斯卡布罗干音_0000/0024.wav
-dataset/32k/aria/雾里干音1_0000/0002.wav
-dataset/32k/aria/可乐干音_0000/0006.wav
-dataset/32k/aria/斯卡布罗干音_0000/0010.wav
-dataset/32k/aria/空心干音（有一段唱错了_0000/0008.wav
-dataset/32k/aria/call of silence 干音_0000/0007.wav
-dataset/32k/aria/百利甜干音_0000/0001.wav
-dataset/32k/aria/TruE-干音_0000/0004.wav
-dataset/32k/aria/可乐干音_0000/0007.wav
-dataset/32k/aria/炫境干音_0000/0018.wav
-dataset/32k/aria/空心干音_0000/0016.wav
-dataset/32k/aria/霞光干音_0000/0002.wav
-dataset/32k/aria/樱花草干音_0000/0005.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0023.wav
-dataset/32k/aria/空心干音_0000/0018.wav
-dataset/32k/aria/孽海记 完整干音_0000/0008.wav
-dataset/32k/aria/身世干音_0000/0002.wav
-dataset/32k/aria/空心干音_0000/0015.wav
-dataset/32k/aria/告白气球干音_0000/0005.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0010.wav
-dataset/32k/aria/斯卡布罗干音_0000/0019.wav
-dataset/32k/aria/霞光 干音1_0000/0006.wav
-dataset/32k/aria/体面干音_0000/0003.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0000.wav
-dataset/32k/aria/孽海记 完整干音_0000/0013.wav
-dataset/32k/aria/歌者 干音(2)_0000/0000.wav
-dataset/32k/aria/终于等到你干音_0000/0007.wav
-dataset/32k/aria/空心干音（有一段唱错了_0000/0011.wav
-dataset/32k/aria/斯卡布罗干音_0000/0012.wav
-dataset/32k/aria/告白气球干音_0000/0006.wav
-dataset/32k/aria/鱼 干音_0000/0000.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0015.wav
-dataset/32k/aria/炫境干音_0000/0017.wav
-dataset/32k/aria/歌者 干音(2)_0000/0012.wav
-dataset/32k/aria/百利甜干音_0000/0002.wav
-dataset/32k/aria/姗姗干音1_0000/0000.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0007.wav
-dataset/32k/aria/终于等到你干音_0000/0006.wav
-dataset/32k/aria/鱼 干音_0000/0020.wav
-dataset/32k/aria/鱼 干音_0000/0022.wav
-dataset/32k/aria/christmas鱼干音_0000/0007.wav
-dataset/32k/aria/灯火里的中国干音（有唱错_0000/0005.wav
-dataset/32k/aria/空心干音_0000/0013.wav
-dataset/32k/aria/斯卡布罗干音_0000/0016.wav
-dataset/32k/aria/雾里干音1_0000/0012.wav
-dataset/32k/aria/灯火里的中国干音（有唱错_0000/0003.wav
-dataset/32k/aria/雾里干音1_0000/0000.wav
-dataset/32k/aria/歌者 干音(2)_0000/0015.wav
-dataset/32k/aria/终于等到你干音_0000/0002.wav
-dataset/32k/aria/炫境干音_0000/0019.wav
-dataset/32k/aria/空心干音_0000/0009.wav
-dataset/32k/aria/告白气球干音_0000/0013.wav
-dataset/32k/aria/身世干音_0000/0005.wav
-dataset/32k/aria/空心干音_0000/0011.wav
-dataset/32k/aria/雾里干音1_0000/0014.wav
-dataset/32k/aria/雾里干音1_0000/0010.wav
-dataset/32k/aria/阿蕊娅 干音1_0000/0002.wav
-dataset/32k/aria/空心干音_0000/0010.wav
-dataset/32k/aria/大教堂干音1_0000/0001.wav
-dataset/32k/aria/单相思-干音_0000/0001.wav
-dataset/32k/aria/阿蕊娅 干音1_0000/0007.wav
-dataset/32k/aria/雾里干音1_0000/0009.wav
-dataset/32k/aria/红莓花儿开 干音_0000/0013.wav
-dataset/32k/aria/孽海记 完整干音_0000/0002.wav
-dataset/32k/aria/空心干音_0000/0006.wav
-dataset/32k/aria/christmas鱼干音_0000/0005.wav
-dataset/32k/aria/红莓花儿开 干音_0000/0007.wav
-dataset/32k/aria/告白气球干音_0000/0004.wav
-dataset/32k/aria/阿蕊娅 干音1_0000/0005.wav
-dataset/32k/aria/灯火里的中国干音（有唱错_0000/0008.wav
-dataset/32k/aria/TruE-干音_0000/0003.wav
-dataset/32k/aria/鱼 干音_0000/0017.wav
-dataset/32k/aria/霞光 干音1_0000/0005.wav
-dataset/32k/aria/雪落下的声音 干音_0000/0001.wav
-dataset/32k/aria/姗姗干音1_0000/0005.wav
-dataset/32k/aria/雪落下的声音 干音_0000/0003.wav
-dataset/32k/aria/斯卡布罗干音_0000/0004.wav
-dataset/32k/aria/灯火里的中国干音（有唱错_0000/0004.wav
-dataset/32k/aria/告白气球干音_0000/0003.wav
-dataset/32k/aria/嘉宾后半首干音_0000/0001.wav
-dataset/32k/aria/空心干音_0000/0001.wav
-dataset/32k/aria/雾里干音1_0000/0007.wav
-dataset/32k/aria/告白气球干音_0000/0011.wav
-dataset/32k/aria/霞光 干音1_0000/0000.wav
-dataset/32k/aria/阿蕊娅 干音1_0000/0004.wav
-dataset/32k/aria/雪落下的声音 干音_0000/0010.wav
-dataset/32k/aria/终于等到你干音_0000/0008.wav
-dataset/32k/aria/霞光干音_0000/0003.wav
-dataset/32k/aria/告白气球干音_0000/0002.wav
-dataset/32k/aria/灯火里的中国干音（有唱错_0000/0001.wav
-dataset/32k/aria/斯卡布罗干音_0000/0011.wav
-dataset/32k/aria/歌者 干音(2)_0000/0009.wav
-dataset/32k/aria/单相思-干音_0000/0006.wav
-dataset/32k/aria/歌者 干音(2)_0000/0011.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0012.wav
-dataset/32k/aria/霞光 干音1_0000/0003.wav
-dataset/32k/aria/TruE-干音_0000/0007.wav
-dataset/32k/aria/身世干音_0000/0008.wav
-dataset/32k/aria/霞光 干音2_0000/0003.wav
-dataset/32k/aria/姗姗干音1_0000/0007.wav
-dataset/32k/aria/斯卡布罗干音_0000/0021.wav
-dataset/32k/aria/灯火里的中国干音（有唱错_0000/0009.wav
-dataset/32k/aria/christmas鱼干音_0000/0004.wav
-dataset/32k/aria/炫境干音_0000/0014.wav
-dataset/32k/aria/终于等到你干音_0000/0005.wav
-dataset/32k/aria/嘉宾后半首干音_0000/0000.wav
-dataset/32k/aria/炫境干音_0000/0006.wav
-dataset/32k/aria/可乐干音_0000/0003.wav
-dataset/32k/aria/孽海记 完整干音_0000/0005.wav
-dataset/32k/aria/鱼 干音_0000/0013.wav
-dataset/32k/aria/樱花草干音_0000/0003.wav
-dataset/32k/aria/大教堂干音1_0000/0002.wav
-dataset/32k/aria/身世干音_0000/0017.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0009.wav
-dataset/32k/aria/告白气球干音_0000/0001.wav
-dataset/32k/aria/单相思-干音_0000/0002.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0015.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0002.wav
-dataset/32k/aria/红莓花儿开 干音_0000/0006.wav
-dataset/32k/aria/嘉宾后半首干音_0000/0004.wav
-dataset/32k/aria/雪落下的声音 干音_0000/0005.wav
-dataset/32k/aria/鱼 干音_0000/0015.wav
-dataset/32k/aria/christmas鱼干音_0000/0002.wav
-dataset/32k/aria/鱼 干音_0000/0005.wav
-dataset/32k/aria/霞光 干音2_0000/0004.wav
-dataset/32k/aria/单相思-干音_0000/0000.wav
-dataset/32k/aria/斯卡布罗干音_0000/0007.wav
-dataset/32k/aria/炫境干音_0000/0003.wav
-dataset/32k/aria/雾里干音1_0000/0008.wav
-dataset/32k/aria/歌者 干音(2)_0000/0003.wav
-dataset/32k/aria/孽海记 完整干音_0000/0004.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0003.wav
-dataset/32k/aria/斯卡布罗干音_0000/0015.wav
-dataset/32k/aria/鱼主旋律_0000/0002.wav
-dataset/32k/aria/雾里干音1_0000/0004.wav
-dataset/32k/aria/歌者 干音(2)_0000/0013.wav
-dataset/32k/aria/阿蕊娅 干音1_0000/0006.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0001.wav
-dataset/32k/aria/call of silence 干音_0000/0004.wav
-dataset/32k/aria/空心干音（有一段唱错了_0000/0001.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0027.wav
-dataset/32k/aria/身世干音_0000/0016.wav
-dataset/32k/aria/樱花草干音_0000/0006.wav
-dataset/32k/aria/空心干音（有一段唱错了_0000/0004.wav
-dataset/32k/aria/鱼主旋律_0000/0000.wav
-dataset/32k/aria/红莓花儿开 干音_0000/0010.wav
-dataset/32k/aria/姗姗干音1_0000/0003.wav
-dataset/32k/aria/斯卡布罗干音_0000/0009.wav
-dataset/32k/aria/炫境干音_0000/0022.wav
-dataset/32k/aria/霞光 干音1_0000/0001.wav
-dataset/32k/aria/空心干音_0000/0008.wav
-dataset/32k/aria/斯卡布罗干音_0000/0006.wav
-dataset/32k/aria/阿蕊娅 干音2_0000/0003.wav
-dataset/32k/aria/炫境干音_0000/0000.wav
-dataset/32k/aria/身世干音_0000/0011.wav
-dataset/32k/aria/call of silence 干音_0000/0005.wav
-dataset/32k/aria/终于等到你干音_0000/0004.wav
-dataset/32k/aria/身世干音_0000/0003.wav
-dataset/32k/aria/红莓花儿开 干音_0000/0009.wav
-dataset/32k/aria/雾里干音1_0000/0011.wav
-dataset/32k/aria/call of silence 干音_0000/0006.wav
-dataset/32k/aria/歌者 干音(2)_0000/0007.wav
-dataset/32k/aria/歌者 干音(2)_0000/0016.wav
-dataset/32k/aria/空心干音_0000/0005.wav
-dataset/32k/aria/樱花草干音_0000/0002.wav
-dataset/32k/aria/雪落下的声音 干音_0000/0008.wav
-dataset/32k/aria/call of silence 干音_0000/0001.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0003.wav
-dataset/32k/aria/空心干音（有一段唱错了_0000/0009.wav
-dataset/32k/aria/大教堂干音1_0000/0008.wav
-dataset/32k/aria/体面干音_0000/0008.wav
-dataset/32k/aria/告白气球干音_0000/0000.wav
-dataset/32k/aria/百利甜干音_0000/0005.wav
-dataset/32k/aria/鱼和声（基本全是和声 夹带了一两句旋律的分轨）_0000/0001.wav
-dataset/32k/aria/嘉宾后半首干音_0000/0002.wav
-dataset/32k/aria/体面干音_0000/0000.wav
-dataset/32k/aria/霞光 干音1_0000/0002.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0026.wav
-dataset/32k/aria/单相思-干音_0000/0003.wav
-dataset/32k/aria/红莓花儿开 干音_0000/0004.wav
-dataset/32k/aria/空心干音_0000/0014.wav
-dataset/32k/aria/身世干音_0000/0018.wav
-dataset/32k/aria/雾里干音2_0000/0001.wav
-dataset/32k/aria/阿蕊娅 干音2_0000/0004.wav
-dataset/32k/aria/鱼 干音_0000/0019.wav
-dataset/32k/aria/阿蕊娅 干音2_0000/0006.wav
-dataset/32k/aria/身世干音_0000/0012.wav
-dataset/32k/aria/孽海记 完整干音_0000/0010.wav
-dataset/32k/aria/TruE-干音_0000/0002.wav
-dataset/32k/aria/红莓花儿开 干音_0000/0011.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0022.wav
-dataset/32k/aria/身世干音_0000/0019.wav
-dataset/32k/aria/可乐干音_0000/0010.wav
-dataset/32k/aria/炫境干音_0000/0021.wav
-dataset/32k/aria/雾里干音2_0000/0000.wav
-dataset/32k/aria/阿蕊娅 干音3-最后的副歌_0000/0001.wav
-dataset/32k/aria/霞光 干音2_0000/0002.wav
-dataset/32k/aria/空心干音_0000/0012.wav
-dataset/32k/aria/鱼 干音_0000/0001.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0016.wav
-dataset/32k/aria/call of silence 干音_0000/0000.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0012.wav
-dataset/32k/aria/炫境干音_0000/0004.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0013.wav
-dataset/32k/aria/身世干音_0000/0000.wav
-dataset/32k/aria/孽海记 完整干音_0000/0009.wav
-dataset/32k/aria/体面干音_0000/0006.wav
-dataset/32k/aria/鱼 干音_0000/0003.wav
-dataset/32k/aria/call of silence 干音_0000/0008.wav
-dataset/32k/aria/告白气球干音_0000/0014.wav
-dataset/32k/aria/大教堂干音1_0000/0007.wav
-dataset/32k/aria/单相思-干音_0000/0004.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0009.wav
-dataset/32k/aria/TruE-干音_0000/0006.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0029.wav
-dataset/32k/aria/歌者 干音(2)_0000/0002.wav
-dataset/32k/aria/姗姗干音2_0000/0001.wav
-dataset/32k/aria/TruE-干音_0000/0005.wav
-dataset/32k/aria/call of silence 干音_0000/0009.wav
-dataset/32k/aria/鱼主旋律_0000/0004.wav
-dataset/32k/aria/红莓花儿开 干音_0000/0012.wav
-dataset/32k/aria/霞光干音_0000/0001.wav
-dataset/32k/aria/炫境干音_0000/0013.wav
-dataset/32k/aria/阿蕊娅 干音1_0000/0001.wav
-dataset/32k/aria/孽海记 完整干音_0000/0012.wav
-dataset/32k/aria/christmas鱼干音_0000/0001.wav
-dataset/32k/aria/炫境干音_0000/0002.wav
-dataset/32k/aria/单相思-干音_0000/0005.wav
-dataset/32k/aria/樱花草干音_0000/0000.wav
-dataset/32k/aria/霞光 干音2_0000/0000.wav
-dataset/32k/aria/阿蕊娅 干音1_0000/0000.wav
-dataset/32k/aria/可乐干音_0000/0008.wav
-dataset/32k/aria/霞光干音_0000/0005.wav
-dataset/32k/aria/鱼 干音_0000/0009.wav
-dataset/32k/aria/歌者 干音(2)_0000/0006.wav
-dataset/32k/aria/空心干音（有一段唱错了_0000/0003.wav
-dataset/32k/aria/百利甜干音_0000/0004.wav
-dataset/32k/aria/身世干音_0000/0014.wav
-dataset/32k/aria/炫境干音_0000/0005.wav
-dataset/32k/aria/雪落下的声音 干音_0000/0006.wav
-dataset/32k/aria/空心干音_0000/0003.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0000.wav
-dataset/32k/aria/告白气球干音_0000/0008.wav
-dataset/32k/aria/阿蕊娅 干音2_0000/0000.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0014.wav
-dataset/32k/aria/鱼主旋律_0000/0001.wav
-dataset/32k/aria/阿蕊娅 干音1_0000/0003.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0007.wav
-dataset/32k/aria/身世干音_0000/0009.wav
-dataset/32k/aria/空心干音_0000/0004.wav
-dataset/32k/aria/百利甜干音_0000/0000.wav
-dataset/32k/aria/斯卡布罗干音_0000/0023.wav
-dataset/32k/aria/阿蕊娅 干音2_0000/0007.wav
-dataset/32k/aria/鱼 干音_0000/0011.wav
-dataset/32k/aria/斯卡布罗干音_0000/0005.wav
-dataset/32k/aria/christmas鱼干音_0000/0006.wav
-dataset/32k/aria/斯卡布罗干音_0000/0001.wav
-dataset/32k/aria/告白气球干音_0000/0009.wav
-dataset/32k/aria/炫境干音_0000/0008.wav
-dataset/32k/aria/雪落下的声音 干音_0000/0000.wav
-dataset/32k/aria/樱花草干音_0000/0001.wav
-dataset/32k/aria/TruE-干音_0000/0000.wav
-dataset/32k/aria/阿蕊娅 干音2_0000/0001.wav
-dataset/32k/aria/夜航星+心中想的还是他干音_0000/0005.wav
-dataset/32k/aria/身世干音_0000/0007.wav
-dataset/32k/aria/空心干音（有一段唱错了_0000/0006.wav
-dataset/32k/aria/可乐干音_0000/0002.wav
-dataset/32k/aria/斯卡布罗干音_0000/0008.wav
-dataset/32k/aria/嘉宾后半首干音_0000/0003.wav
-dataset/32k/aria/春天的芭蕾 干音_0000/0016.wav
-dataset/32k/aria/嘉宾后半首干音_0000/0005.wav
-dataset/32k/aria/孽海记 完整干音_0000/0011.wav
-dataset/32k/aria/歌者 干音(2)_0000/0008.wav
-dataset/32k/aria/告白气球干音_0000/0010.wav
-dataset/32k/aria/百利甜干音_0000/0003.wav
-dataset/32k/aria/大教堂干音1_0000/0009.wav
-dataset/32k/aria/霞光干音_0000/0000.wav
-dataset/32k/aria/鱼 干音_0000/0012.wav
-dataset/32k/aria/大教堂干音1_0000/0005.wav
+dataset/aria/红莓花儿开 干音_0000/0008.wav
+dataset/aria1/姗姗干音1_0000/0006.wav
+dataset/aria/嘉宾后半首干音_0000/0005.wav
+dataset/aria1/春天的芭蕾 干音_0000/0011.wav
+dataset/aria/大教堂干音1_0000/0007.wav
+dataset/aria/鱼和声（基本全是和声 夹带了一两句旋律的分轨）_0000/0000.wav
+dataset/aria1/雾里干音1_0000/0005.wav
+dataset/aria/单相思-干音_0000/0005.wav
+dataset/aria1/炫境干音_0000/0006.wav
+dataset/aria/身世干音_0000/0011.wav
+dataset/aria/TruE-干音_0000/0000.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0019.wav
+dataset/aria/樱花草干音_0000/0002.wav
+dataset/aria/红莓花儿开 干音_0000/0003.wav
+dataset/aria/可乐干音_0000/0010.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0003.wav
+dataset/aria/霞光 干音2_0000/0003.wav
+dataset/aria/鱼主旋律_0000/0000.wav
+dataset/aria/百利甜干音_0000/0005.wav
+dataset/aria/身世干音_0000/0005.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0003.wav
+dataset/aria1/身世干音_0000/0013.wav
+dataset/aria/春天的芭蕾 干音_0000/0011.wav
+dataset/aria/鱼 干音_0000/0020.wav
+dataset/aria1/樱花草干音_0000/0001.wav
+dataset/aria1/空心干音_0000/0011.wav
+dataset/aria1/身世干音_0000/0015.wav
+dataset/aria/斯卡布罗干音_0000/0002.wav
+dataset/aria/鱼 干音_0000/0012.wav
+dataset/aria1/春天的芭蕾 干音_0000/0002.wav
+dataset/aria1/炫境干音_0000/0018.wav
+dataset/aria/樱花草干音_0000/0003.wav
+dataset/aria1/斯卡布罗干音_0000/0020.wav
+dataset/aria1/百利甜干音_0000/0006.wav
+dataset/aria/孽海记 完整干音_0000/0004.wav
+dataset/aria1/百利甜干音_0000/0000.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0014.wav
+dataset/aria1/call of silence 干音_0000/0002.wav
+dataset/aria1/可乐干音_0000/0003.wav
+dataset/aria1/炫境干音_0000/0004.wav
+dataset/aria/告白气球干音_0000/0012.wav
+dataset/aria1/斯卡布罗干音_0000/0017.wav
+dataset/aria1/大教堂干音1_0000/0009.wav
+dataset/aria1/雪落下的声音 干音_0000/0005.wav
+dataset/aria1/可乐干音_0000/0004.wav
+dataset/aria/阿蕊娅 干音1_0000/0003.wav
+dataset/aria1/雾里干音2_0000/0000.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0020.wav
+dataset/aria/春天的芭蕾 干音_0000/0012.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0004.wav
+dataset/aria1/christmas鱼干音_0000/0003.wav
+dataset/aria1/雪落下的声音 干音_0000/0000.wav
+dataset/aria1/空心干音_0000/0006.wav
+dataset/aria1/孽海记 完整干音_0000/0002.wav
+dataset/aria/空心干音_0000/0012.wav
+dataset/aria/空心干音（有一段唱错了_0000/0006.wav
+dataset/aria/红莓花儿开 干音_0000/0001.wav
+dataset/aria1/灯火里的中国干音（有唱错_0000/0006.wav
+dataset/aria/歌者 干音(2)_0000/0015.wav
+dataset/aria/姗姗干音1_0000/0005.wav
+dataset/aria1/歌者 干音(2)_0000/0002.wav
+dataset/aria/身世干音_0000/0023.wav
+dataset/aria1/阿蕊娅 干音2_0000/0004.wav
+dataset/aria/鱼 干音_0000/0016.wav
+dataset/aria1/空心干音_0000/0002.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0005.wav
+dataset/aria1/斯卡布罗干音_0000/0021.wav
+dataset/aria1/鱼 干音_0000/0018.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0018.wav
+dataset/aria1/姗姗干音1_0000/0002.wav
+dataset/aria/告白气球干音_0000/0007.wav
+dataset/aria/歌者 干音(2)_0000/0001.wav
+dataset/aria/身世干音_0000/0015.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0001.wav
+dataset/aria1/空心干音_0000/0001.wav
+dataset/aria/雪落下的声音 干音_0000/0004.wav
+dataset/aria1/鱼 干音_0000/0011.wav
+dataset/aria1/鱼主旋律_0000/0001.wav
+dataset/aria/鱼主旋律_0000/0006.wav
+dataset/aria1/斯卡布罗干音_0000/0026.wav
+dataset/aria/空心干音（有一段唱错了_0000/0000.wav
+dataset/aria1/孽海记 完整干音_0000/0006.wav
+dataset/aria1/姗姗干音1_0000/0003.wav
+dataset/aria1/嘉宾后半首干音_0000/0005.wav
+dataset/aria/大教堂干音1_0000/0006.wav
+dataset/aria1/斯卡布罗干音_0000/0013.wav
+dataset/aria1/歌者 干音(2)_0000/0010.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0015.wav
+dataset/aria/鱼 干音_0000/0008.wav
+dataset/aria1/霞光 干音2_0000/0002.wav
+dataset/aria/身世干音_0000/0019.wav
+dataset/aria1/告白气球干音_0000/0011.wav
+dataset/aria/歌者 干音(2)_0000/0016.wav
+dataset/aria1/可乐干音_0000/0001.wav
+dataset/aria/嘉宾后半首干音_0000/0003.wav
+dataset/aria/空心干音（有一段唱错了_0000/0003.wav
+dataset/aria1/TruE-干音_0000/0001.wav
+dataset/aria/雾里干音1_0000/0014.wav
+dataset/aria/终于等到你干音_0000/0000.wav
+dataset/aria1/歌者 干音(2)_0000/0007.wav
+dataset/aria1/call of silence 干音_0000/0010.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0000.wav
+dataset/aria1/christmas鱼干音_0000/0006.wav
+dataset/aria1/雪落下的声音 干音_0000/0002.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0002.wav
+dataset/aria1/雪落下的声音 干音_0000/0004.wav
+dataset/aria1/红莓花儿开 干音_0000/0005.wav
+dataset/aria1/孽海记 完整干音_0000/0012.wav
+dataset/aria1/空心干音_0000/0005.wav
+dataset/aria1/大教堂干音1_0000/0000.wav
+dataset/aria/孽海记 完整干音_0000/0011.wav
+dataset/aria1/霞光 干音2_0000/0001.wav
+dataset/aria1/炫境干音_0000/0019.wav
+dataset/aria1/炫境干音_0000/0007.wav
+dataset/aria/身世干音_0000/0022.wav
+dataset/aria1/霞光 干音1_0000/0003.wav
+dataset/aria1/红莓花儿开 干音_0000/0006.wav
+dataset/aria1/终于等到你干音_0000/0008.wav
+dataset/aria/告白气球干音_0000/0009.wav
+dataset/aria1/春天的芭蕾 干音_0000/0006.wav
+dataset/aria/孽海记 完整干音_0000/0009.wav
+dataset/aria/christmas鱼干音_0000/0006.wav
+dataset/aria1/春天的芭蕾 干音_0000/0005.wav
+dataset/aria/斯卡布罗干音_0000/0021.wav
+dataset/aria/斯卡布罗干音_0000/0010.wav
+dataset/aria/春天的芭蕾 干音_0000/0000.wav
+dataset/aria/空心干音_0000/0002.wav
+dataset/aria1/单相思-干音_0000/0000.wav
+dataset/aria1/炫境干音_0000/0022.wav
+dataset/aria/炫境干音_0000/0003.wav
+dataset/aria/空心干音_0000/0013.wav
+dataset/aria1/大教堂干音1_0000/0001.wav
+dataset/aria1/百利甜干音_0000/0001.wav
+dataset/aria/鱼主旋律_0000/0003.wav
+dataset/aria1/TruE-干音_0000/0006.wav
+dataset/aria1/斯卡布罗干音_0000/0011.wav
+dataset/aria1/阿蕊娅 干音2_0000/0003.wav
+dataset/aria/空心干音（有一段唱错了_0000/0009.wav
+dataset/aria/call of silence 干音_0000/0010.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0026.wav
+dataset/aria/春天的芭蕾 干音_0000/0002.wav
+dataset/aria/炫境干音_0000/0011.wav
+dataset/aria/灯火里的中国干音（有唱错_0000/0009.wav
+dataset/aria1/可乐干音_0000/0008.wav
+dataset/aria/炫境干音_0000/0007.wav
+dataset/aria1/樱花草干音_0000/0002.wav
+dataset/aria1/孽海记 完整干音_0000/0005.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0022.wav
+dataset/aria/身世干音_0000/0014.wav
+dataset/aria1/体面干音_0000/0000.wav
+dataset/aria1/歌者 干音(2)_0000/0009.wav
+dataset/aria1/灯火里的中国干音（有唱错_0000/0008.wav
+dataset/aria/空心干音（有一段唱错了_0000/0010.wav
+dataset/aria/空心干音（有一段唱错了_0000/0012.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0008.wav
+dataset/aria1/鱼主旋律_0000/0000.wav
+dataset/aria/体面干音_0000/0006.wav
+dataset/aria/红莓花儿开 干音_0000/0004.wav
+dataset/aria1/TruE-干音_0000/0003.wav
+dataset/aria1/孽海记 完整干音_0000/0003.wav
+dataset/aria1/春天的芭蕾 干音_0000/0012.wav
+dataset/aria/身世干音_0000/0001.wav
+dataset/aria1/姗姗干音2_0000/0000.wav
+dataset/aria/空心干音_0000/0014.wav
+dataset/aria/鱼主旋律_0000/0004.wav
+dataset/aria/霞光 干音1_0000/0002.wav
+dataset/aria/空心干音_0000/0016.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0011.wav
+dataset/aria1/孽海记 完整干音_0000/0008.wav
+dataset/aria/阿蕊娅 干音2_0000/0006.wav
+dataset/aria/炫境干音_0000/0005.wav
+dataset/aria1/孽海记 完整干音_0000/0007.wav
+dataset/aria1/樱花草干音_0000/0007.wav
+dataset/aria1/空心干音_0000/0016.wav
+dataset/aria1/炫境干音_0000/0012.wav
+dataset/aria1/告白气球干音_0000/0012.wav
+dataset/aria/空心干音_0000/0009.wav
+dataset/aria/call of silence 干音_0000/0005.wav
+dataset/aria1/斯卡布罗干音_0000/0022.wav
+dataset/aria/歌者 干音(2)_0000/0007.wav
+dataset/aria1/鱼 干音_0000/0022.wav
+dataset/aria/鱼主旋律_0000/0001.wav
+dataset/aria1/鱼 干音_0000/0006.wav
+dataset/aria/姗姗干音1_0000/0003.wav
+dataset/aria/斯卡布罗干音_0000/0024.wav
+dataset/aria1/TruE-干音_0000/0002.wav
+dataset/aria1/斯卡布罗干音_0000/0016.wav
+dataset/aria1/炫境干音_0000/0013.wav
+dataset/aria1/告白气球干音_0000/0007.wav
+dataset/aria1/春天的芭蕾 干音_0000/0013.wav
+dataset/aria1/斯卡布罗干音_0000/0018.wav
+dataset/aria/鱼 干音_0000/0000.wav
+dataset/aria1/阿蕊娅 干音3-最后的副歌_0000/0001.wav
+dataset/aria1/灯火里的中国干音（有唱错_0000/0001.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0022.wav
+dataset/aria/姗姗干音2_0000/0002.wav
+dataset/aria1/阿蕊娅 干音2_0000/0006.wav
+dataset/aria1/歌者 干音(2)_0000/0014.wav
+dataset/aria1/斯卡布罗干音_0000/0023.wav
+dataset/aria1/身世干音_0000/0003.wav
+dataset/aria1/雾里干音1_0000/0007.wav
+dataset/aria1/身世干音_0000/0010.wav
+dataset/aria/斯卡布罗干音_0000/0013.wav
+dataset/aria/斯卡布罗干音_0000/0008.wav
+dataset/aria1/鱼 干音_0000/0021.wav
+dataset/aria/身世干音_0000/0006.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0009.wav
+dataset/aria/歌者 干音(2)_0000/0010.wav
+dataset/aria1/阿蕊娅 干音1_0000/0007.wav
+dataset/aria/歌者 干音(2)_0000/0013.wav
+dataset/aria1/斯卡布罗干音_0000/0025.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0004.wav
+dataset/aria/歌者 干音(2)_0000/0008.wav
+dataset/aria1/姗姗干音1_0000/0000.wav
+dataset/aria/孽海记 完整干音_0000/0001.wav
+dataset/aria/姗姗干音2_0000/0003.wav
+dataset/aria/红莓花儿开 干音_0000/0005.wav
+dataset/aria/告白气球干音_0000/0006.wav
+dataset/aria/斯卡布罗干音_0000/0001.wav
+dataset/aria/霞光 干音1_0000/0000.wav
+dataset/aria/灯火里的中国干音（有唱错_0000/0010.wav
+dataset/aria1/单相思-干音_0000/0006.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0011.wav
+dataset/aria/斯卡布罗干音_0000/0007.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0023.wav
+dataset/aria1/春天的芭蕾 干音_0000/0014.wav
+dataset/aria/炫境干音_0000/0004.wav
+dataset/aria/樱花草干音_0000/0004.wav
+dataset/aria1/鱼 干音_0000/0016.wav
+dataset/aria/炫境干音_0000/0015.wav
+dataset/aria1/樱花草干音_0000/0006.wav
+dataset/aria/鱼 干音_0000/0022.wav
+dataset/aria1/call of silence 干音_0000/0004.wav
+dataset/aria1/体面干音_0000/0002.wav
+dataset/aria1/雪落下的声音 干音_0000/0001.wav
+dataset/aria1/红莓花儿开 干音_0000/0011.wav
+dataset/aria1/鱼 干音_0000/0013.wav
+dataset/aria/斯卡布罗干音_0000/0004.wav
+dataset/aria/歌者 干音(2)_0000/0009.wav
+dataset/aria/鱼 干音_0000/0004.wav
+dataset/aria/红莓花儿开 干音_0000/0006.wav
+dataset/aria1/孽海记 完整干音_0000/0000.wav
+dataset/aria/雾里干音1_0000/0012.wav
+dataset/aria/空心干音（有一段唱错了_0000/0011.wav
+dataset/aria1/樱花草干音_0000/0003.wav
+dataset/aria1/霞光 干音1_0000/0006.wav
+dataset/aria1/炫境干音_0000/0016.wav
+dataset/aria1/身世干音_0000/0023.wav
+dataset/aria/樱花草干音_0000/0005.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0015.wav
+dataset/aria1/霞光 干音2_0000/0000.wav
+dataset/aria1/斯卡布罗干音_0000/0010.wav
+dataset/aria/斯卡布罗干音_0000/0005.wav
+dataset/aria1/体面干音_0000/0007.wav
+dataset/aria1/鱼 干音_0000/0017.wav
+dataset/aria/空心干音（有一段唱错了_0000/0015.wav
+dataset/aria1/TruE-干音_0000/0005.wav
+dataset/aria/霞光 干音1_0000/0004.wav
+dataset/aria1/大教堂干音1_0000/0010.wav
+dataset/aria1/雾里干音1_0000/0013.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0015.wav
+dataset/aria1/身世干音_0000/0005.wav
+dataset/aria/终于等到你干音_0000/0003.wav
+dataset/aria/孽海记 完整干音_0000/0007.wav
+dataset/aria/终于等到你干音_0000/0002.wav
+dataset/aria1/雾里干音1_0000/0009.wav
+dataset/aria/嘉宾后半首干音_0000/0004.wav
+dataset/aria1/身世干音_0000/0016.wav
+dataset/aria1/体面干音_0000/0003.wav
+dataset/aria/歌者 干音(2)_0000/0006.wav
+dataset/aria1/雾里干音1_0000/0011.wav
+dataset/aria/孽海记 完整干音_0000/0000.wav
+dataset/aria/红莓花儿开 干音_0000/0000.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0014.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0005.wav
+dataset/aria/体面干音_0000/0005.wav
+dataset/aria1/斯卡布罗干音_0000/0006.wav
+dataset/aria/灯火里的中国干音（有唱错_0000/0001.wav
+dataset/aria/雾里干音1_0000/0002.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0027.wav
+dataset/aria1/炫境干音_0000/0015.wav
+dataset/aria1/终于等到你干音_0000/0006.wav
+dataset/aria1/阿蕊娅 干音1_0000/0002.wav
+dataset/aria1/红莓花儿开 干音_0000/0010.wav
+dataset/aria/身世干音_0000/0021.wav
+dataset/aria/霞光干音_0000/0000.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0030.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0009.wav
+dataset/aria/call of silence 干音_0000/0000.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0020.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0016.wav
+dataset/aria1/灯火里的中国干音（有唱错_0000/0003.wav
+dataset/aria/阿蕊娅 干音1_0000/0002.wav
+dataset/aria1/鱼 干音_0000/0003.wav
+dataset/aria/雾里干音1_0000/0005.wav
+dataset/aria/春天的芭蕾 干音_0000/0009.wav
+dataset/aria1/空心干音_0000/0000.wav
+dataset/aria1/歌者 干音(2)_0000/0004.wav
+dataset/aria1/鱼 干音_0000/0019.wav
+dataset/aria/christmas鱼干音_0000/0002.wav
+dataset/aria1/身世干音_0000/0012.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0012.wav
+dataset/aria1/斯卡布罗干音_0000/0000.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0010.wav
+dataset/aria/歌者 干音(2)_0000/0011.wav
+dataset/aria/鱼 干音_0000/0005.wav
+dataset/aria1/春天的芭蕾 干音_0000/0010.wav
+dataset/aria/孽海记 完整干音_0000/0006.wav
+dataset/aria1/孽海记 完整干音_0000/0011.wav
+dataset/aria/大教堂干音1_0000/0004.wav
+dataset/aria1/阿蕊娅 干音1_0000/0000.wav
+dataset/aria/春天的芭蕾 干音_0000/0006.wav
+dataset/aria/灯火里的中国干音（有唱错_0000/0000.wav
+dataset/aria/雾里干音1_0000/0003.wav
+dataset/aria/空心干音（有一段唱错了_0000/0007.wav
+dataset/aria/春天的芭蕾 干音_0000/0001.wav
+dataset/aria1/霞光干音_0000/0001.wav
+dataset/aria/红莓花儿开 干音_0000/0012.wav
+dataset/aria1/春天的芭蕾 干音_0000/0008.wav
+dataset/aria1/雾里干音1_0000/0010.wav
+dataset/aria1/霞光干音_0000/0000.wav
+dataset/aria1/身世干音_0000/0014.wav
+dataset/aria/雪落下的声音 干音_0000/0001.wav
+dataset/aria/阿蕊娅 干音2_0000/0005.wav
+dataset/aria1/炫境干音_0000/0001.wav
+dataset/aria1/可乐干音_0000/0002.wav
+dataset/aria/斯卡布罗干音_0000/0019.wav
+dataset/aria/斯卡布罗干音_0000/0017.wav
+dataset/aria/阿蕊娅 干音3-最后的副歌_0000/0001.wav
+dataset/aria/call of silence 干音_0000/0006.wav
+dataset/aria1/空心干音_0000/0010.wav
+dataset/aria1/空心干音_0000/0007.wav
+dataset/aria1/樱花草干音_0000/0000.wav
+dataset/aria1/雾里干音1_0000/0003.wav
+dataset/aria1/鱼 干音_0000/0002.wav
+dataset/aria/阿蕊娅 干音3-最后的副歌_0000/0000.wav
+dataset/aria1/告白气球干音_0000/0010.wav
+dataset/aria/歌者 干音(2)_0000/0005.wav
+dataset/aria/鱼 干音_0000/0015.wav
+dataset/aria1/炫境干音_0000/0008.wav
+dataset/aria1/christmas鱼干音_0000/0001.wav
+dataset/aria1/嘉宾后半首干音_0000/0002.wav
+dataset/aria/斯卡布罗干音_0000/0023.wav
+dataset/aria/樱花草干音_0000/0006.wav
+dataset/aria/雪落下的声音 干音_0000/0010.wav
+dataset/aria1/空心干音_0000/0018.wav
+dataset/aria/大教堂干音1_0000/0008.wav
+dataset/aria/可乐干音_0000/0001.wav
+dataset/aria/christmas鱼干音_0000/0000.wav
+dataset/aria/身世干音_0000/0003.wav
+dataset/aria/可乐干音_0000/0007.wav
+dataset/aria1/鱼 干音_0000/0007.wav
+dataset/aria/春天的芭蕾 干音_0000/0014.wav
+dataset/aria/鱼 干音_0000/0003.wav
+dataset/aria/歌者 干音(2)_0000/0003.wav
+dataset/aria1/炫境干音_0000/0014.wav
+dataset/aria/christmas鱼干音_0000/0001.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0007.wav
+dataset/aria/姗姗干音1_0000/0007.wav
+dataset/aria1/空心干音_0000/0009.wav
+dataset/aria1/炫境干音_0000/0021.wav
+dataset/aria1/霞光 干音1_0000/0004.wav
+dataset/aria/身世干音_0000/0002.wav
+dataset/aria/炫境干音_0000/0001.wav
+dataset/aria/灯火里的中国干音（有唱错_0000/0007.wav
+dataset/aria/鱼 干音_0000/0017.wav
+dataset/aria/单相思-干音_0000/0000.wav
+dataset/aria/告白气球干音_0000/0015.wav
+dataset/aria1/嘉宾后半首干音_0000/0000.wav
+dataset/aria1/鱼 干音_0000/0000.wav
+dataset/aria/歌者 干音(2)_0000/0002.wav
+dataset/aria/单相思-干音_0000/0002.wav
+dataset/aria/孽海记 完整干音_0000/0010.wav
+dataset/aria/终于等到你干音_0000/0007.wav
+dataset/aria/可乐干音_0000/0008.wav
+dataset/aria1/雪落下的声音 干音_0000/0008.wav
+dataset/aria/TruE-干音_0000/0002.wav
+dataset/aria1/红莓花儿开 干音_0000/0008.wav
+dataset/aria1/百利甜干音_0000/0003.wav
+dataset/aria/孽海记 完整干音_0000/0003.wav
+dataset/aria/雾里干音1_0000/0011.wav
+dataset/aria/空心干音_0000/0005.wav
+dataset/aria1/孽海记 完整干音_0000/0013.wav
+dataset/aria1/雪落下的声音 干音_0000/0006.wav
+dataset/aria1/大教堂干音1_0000/0005.wav
+dataset/aria/炫境干音_0000/0022.wav
+dataset/aria1/嘉宾后半首干音_0000/0003.wav
+dataset/aria1/百利甜干音_0000/0005.wav
+dataset/aria1/斯卡布罗干音_0000/0005.wav
+dataset/aria1/阿蕊娅 干音2_0000/0001.wav
+dataset/aria/姗姗干音1_0000/0000.wav
+dataset/aria/雾里干音1_0000/0000.wav
+dataset/aria1/斯卡布罗干音_0000/0019.wav
+dataset/aria1/告白气球干音_0000/0015.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0002.wav
+dataset/aria/炫境干音_0000/0012.wav
+dataset/aria/春天的芭蕾 干音_0000/0010.wav
+dataset/aria1/阿蕊娅 干音1_0000/0001.wav
+dataset/aria1/嘉宾后半首干音_0000/0001.wav
+dataset/aria1/霞光 干音1_0000/0002.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0008.wav
+dataset/aria/告白气球干音_0000/0002.wav
+dataset/aria/christmas鱼干音_0000/0003.wav
+dataset/aria1/鱼主旋律_0000/0003.wav
+dataset/aria/雪落下的声音 干音_0000/0006.wav
+dataset/aria1/歌者 干音(2)_0000/0000.wav
+dataset/aria1/鱼和声（基本全是和声 夹带了一两句旋律的分轨）_0000/0002.wav
+dataset/aria/霞光 干音2_0000/0004.wav
+dataset/aria1/红莓花儿开 干音_0000/0001.wav
+dataset/aria1/体面干音_0000/0005.wav
+dataset/aria/可乐干音_0000/0003.wav
+dataset/aria1/christmas鱼干音_0000/0007.wav
+dataset/aria/雪落下的声音 干音_0000/0009.wav
+dataset/aria1/斯卡布罗干音_0000/0003.wav
+dataset/aria1/大教堂干音1_0000/0006.wav
+dataset/aria/灯火里的中国干音（有唱错_0000/0008.wav
+dataset/aria1/鱼 干音_0000/0005.wav
+dataset/aria/鱼主旋律_0000/0005.wav
+dataset/aria/春天的芭蕾 干音_0000/0007.wav
+dataset/aria1/炫境干音_0000/0003.wav
+dataset/aria1/空心干音_0000/0013.wav
+dataset/aria1/TruE-干音_0000/0004.wav
+dataset/aria/孽海记 完整干音_0000/0005.wav
+dataset/aria/call of silence 干音_0000/0003.wav
+dataset/aria1/雪落下的声音 干音_0000/0009.wav
+dataset/aria1/雾里干音1_0000/0002.wav
+dataset/aria/身世干音_0000/0020.wav
+dataset/aria/可乐干音_0000/0002.wav
+dataset/aria/斯卡布罗干音_0000/0022.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0025.wav
+dataset/aria/雾里干音2_0000/0000.wav
+dataset/aria1/鱼主旋律_0000/0006.wav
+dataset/aria/大教堂干音1_0000/0000.wav
+dataset/aria/告白气球干音_0000/0014.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0001.wav
+dataset/aria/红莓花儿开 干音_0000/0011.wav
+dataset/aria/可乐干音_0000/0004.wav
+dataset/aria1/身世干音_0000/0018.wav
+dataset/aria/樱花草干音_0000/0000.wav
+dataset/aria1/身世干音_0000/0002.wav
+dataset/aria/告白气球干音_0000/0001.wav
+dataset/aria/炫境干音_0000/0020.wav
+dataset/aria/单相思-干音_0000/0001.wav
+dataset/aria/炫境干音_0000/0016.wav
+dataset/aria/斯卡布罗干音_0000/0006.wav
+dataset/aria/斯卡布罗干音_0000/0020.wav
+dataset/aria/TruE-干音_0000/0007.wav
+dataset/aria/空心干音_0000/0010.wav
+dataset/aria/斯卡布罗干音_0000/0026.wav
+dataset/aria/樱花草干音_0000/0008.wav
+dataset/aria/斯卡布罗干音_0000/0015.wav
+dataset/aria/call of silence 干音_0000/0002.wav
+dataset/aria/姗姗干音1_0000/0001.wav
+dataset/aria/歌者 干音(2)_0000/0012.wav
+dataset/aria1/call of silence 干音_0000/0005.wav
+dataset/aria/终于等到你干音_0000/0005.wav
+dataset/aria/姗姗干音1_0000/0006.wav
+dataset/aria1/炫境干音_0000/0000.wav
+dataset/aria/斯卡布罗干音_0000/0000.wav
+dataset/aria1/身世干音_0000/0020.wav
+dataset/aria1/灯火里的中国干音（有唱错_0000/0004.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0029.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0019.wav
+dataset/aria/空心干音_0000/0011.wav
+dataset/aria/炫境干音_0000/0021.wav
+dataset/aria1/歌者 干音(2)_0000/0005.wav
+dataset/aria/鱼 干音_0000/0018.wav
+dataset/aria/孽海记 完整干音_0000/0008.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0028.wav
+dataset/aria/炫境干音_0000/0000.wav
+dataset/aria/体面干音_0000/0001.wav
+dataset/aria1/歌者 干音(2)_0000/0013.wav
+dataset/aria/斯卡布罗干音_0000/0012.wav
+dataset/aria1/可乐干音_0000/0010.wav
+dataset/aria1/终于等到你干音_0000/0003.wav
+dataset/aria1/可乐干音_0000/0009.wav
+dataset/aria1/告白气球干音_0000/0009.wav
+dataset/aria/call of silence 干音_0000/0011.wav
+dataset/aria1/灯火里的中国干音（有唱错_0000/0000.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0004.wav
+dataset/aria/阿蕊娅 干音2_0000/0004.wav
+dataset/aria1/阿蕊娅 干音3-最后的副歌_0000/0000.wav
+dataset/aria1/红莓花儿开 干音_0000/0002.wav
+dataset/aria1/雾里干音1_0000/0012.wav
+dataset/aria/阿蕊娅 干音1_0000/0000.wav
+dataset/aria/终于等到你干音_0000/0006.wav
+dataset/aria1/空心干音_0000/0003.wav
+dataset/aria1/歌者 干音(2)_0000/0006.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0009.wav
+dataset/aria/雾里干音1_0000/0013.wav
+dataset/aria1/终于等到你干音_0000/0007.wav
+dataset/aria/炫境干音_0000/0013.wav
+dataset/aria/告白气球干音_0000/0010.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0008.wav
+dataset/aria1/终于等到你干音_0000/0002.wav
+dataset/aria/雾里干音1_0000/0004.wav
+dataset/aria1/体面干音_0000/0004.wav
+dataset/aria1/姗姗干音1_0000/0004.wav
+dataset/aria1/鱼和声（基本全是和声 夹带了一两句旋律的分轨）_0000/0003.wav
+dataset/aria/孽海记 完整干音_0000/0002.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0013.wav
+dataset/aria1/call of silence 干音_0000/0009.wav
+dataset/aria/雪落下的声音 干音_0000/0002.wav
+dataset/aria1/身世干音_0000/0001.wav
+dataset/aria/百利甜干音_0000/0004.wav
+dataset/aria/霞光 干音2_0000/0005.wav
+dataset/aria/鱼 干音_0000/0014.wav
+dataset/aria/终于等到你干音_0000/0004.wav
+dataset/aria/炫境干音_0000/0008.wav
+dataset/aria/歌者 干音(2)_0000/0004.wav
+dataset/aria/孽海记 完整干音_0000/0012.wav
+dataset/aria/炫境干音_0000/0017.wav
+dataset/aria1/阿蕊娅 干音2_0000/0002.wav
+dataset/aria1/空心干音_0000/0008.wav
+dataset/aria1/空心干音_0000/0014.wav
+dataset/aria1/单相思-干音_0000/0003.wav
+dataset/aria/红莓花儿开 干音_0000/0007.wav
+dataset/aria1/call of silence 干音_0000/0007.wav
+dataset/aria1/空心干音_0000/0012.wav
+dataset/aria/雾里干音1_0000/0007.wav
+dataset/aria/可乐干音_0000/0009.wav
+dataset/aria1/可乐干音_0000/0007.wav
+dataset/aria/大教堂干音1_0000/0003.wav
+dataset/aria1/阿蕊娅 干音2_0000/0007.wav
+dataset/aria1/雪落下的声音 干音_0000/0003.wav
+dataset/aria/阿蕊娅 干音2_0000/0003.wav
+dataset/aria/鱼 干音_0000/0006.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0007.wav
+dataset/aria1/斯卡布罗干音_0000/0014.wav
+dataset/aria1/单相思-干音_0000/0001.wav
+dataset/aria1/红莓花儿开 干音_0000/0003.wav
+dataset/aria/红莓花儿开 干音_0000/0002.wav
+dataset/aria1/阿蕊娅 干音1_0000/0006.wav
+dataset/aria/斯卡布罗干音_0000/0016.wav
+dataset/aria1/斯卡布罗干音_0000/0001.wav
+dataset/aria1/斯卡布罗干音_0000/0012.wav
+dataset/aria/霞光 干音1_0000/0006.wav
+dataset/aria/体面干音_0000/0000.wav
+dataset/aria/大教堂干音1_0000/0010.wav
+dataset/aria1/鱼主旋律_0000/0005.wav
+dataset/aria1/灯火里的中国干音（有唱错_0000/0005.wav
+dataset/aria/空心干音（有一段唱错了_0000/0005.wav
+dataset/aria/百利甜干音_0000/0000.wav
+dataset/aria/TruE-干音_0000/0001.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0010.wav
+dataset/aria1/单相思-干音_0000/0005.wav
+dataset/aria1/告白气球干音_0000/0005.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0021.wav
+dataset/aria1/阿蕊娅 干音1_0000/0003.wav
+dataset/aria1/霞光干音_0000/0004.wav
+dataset/aria/单相思-干音_0000/0004.wav
+dataset/aria/空心干音（有一段唱错了_0000/0001.wav
+dataset/aria1/姗姗干音1_0000/0001.wav
+dataset/aria/红莓花儿开 干音_0000/0013.wav
+dataset/aria/鱼 干音_0000/0021.wav
+dataset/aria/身世干音_0000/0013.wav
+dataset/aria/身世干音_0000/0000.wav
+dataset/aria1/身世干音_0000/0000.wav
+dataset/aria1/炫境干音_0000/0002.wav
+dataset/aria/斯卡布罗干音_0000/0003.wav
+dataset/aria1/歌者 干音(2)_0000/0011.wav
+dataset/aria/雪落下的声音 干音_0000/0000.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0000.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0025.wav
+dataset/aria/春天的芭蕾 干音_0000/0015.wav
+dataset/aria/大教堂干音1_0000/0001.wav
+dataset/aria/雾里干音2_0000/0001.wav
+dataset/aria1/斯卡布罗干音_0000/0027.wav
+dataset/aria/灯火里的中国干音（有唱错_0000/0003.wav
+dataset/aria/灯火里的中国干音（有唱错_0000/0004.wav
+dataset/aria1/体面干音_0000/0001.wav
+dataset/aria/空心干音（有一段唱错了_0000/0008.wav
+dataset/aria/炫境干音_0000/0018.wav
+dataset/aria1/歌者 干音(2)_0000/0001.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0028.wav
+dataset/aria1/孽海记 完整干音_0000/0010.wav
+dataset/aria/christmas鱼干音_0000/0007.wav
+dataset/aria1/告白气球干音_0000/0006.wav
+dataset/aria/鱼 干音_0000/0019.wav
+dataset/aria1/红莓花儿开 干音_0000/0009.wav
+dataset/aria/空心干音_0000/0000.wav
+dataset/aria/鱼和声（基本全是和声 夹带了一两句旋律的分轨）_0000/0002.wav
+dataset/aria1/TruE-干音_0000/0000.wav
+dataset/aria1/单相思-干音_0000/0002.wav
+dataset/aria1/告白气球干音_0000/0002.wav
+dataset/aria1/大教堂干音1_0000/0003.wav
+dataset/aria/斯卡布罗干音_0000/0025.wav
+dataset/aria/孽海记 完整干音_0000/0013.wav
+dataset/aria/春天的芭蕾 干音_0000/0013.wav
+dataset/aria1/霞光 干音2_0000/0004.wav
+dataset/aria/春天的芭蕾 干音_0000/0005.wav
+dataset/aria/体面干音_0000/0004.wav
+dataset/aria1/身世干音_0000/0019.wav
+dataset/aria1/身世干音_0000/0008.wav
+dataset/aria/雾里干音1_0000/0001.wav
+dataset/aria/call of silence 干音_0000/0008.wav
+dataset/aria1/炫境干音_0000/0020.wav
+dataset/aria1/christmas鱼干音_0000/0000.wav
+dataset/aria/身世干音_0000/0012.wav
+dataset/aria1/春天的芭蕾 干音_0000/0000.wav
+dataset/aria/阿蕊娅 干音1_0000/0006.wav
+dataset/aria1/告白气球干音_0000/0003.wav
+dataset/aria1/雾里干音1_0000/0001.wav
+dataset/aria/call of silence 干音_0000/0004.wav
+dataset/aria/终于等到你干音_0000/0001.wav
+dataset/aria/空心干音_0000/0017.wav
+dataset/aria/阿蕊娅 干音1_0000/0001.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0006.wav
+dataset/aria/单相思-干音_0000/0003.wav
+dataset/aria/斯卡布罗干音_0000/0014.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0029.wav
+dataset/aria/嘉宾后半首干音_0000/0001.wav
+dataset/aria/霞光 干音1_0000/0003.wav
+dataset/aria1/阿蕊娅 干音1_0000/0005.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0018.wav
+dataset/aria/雪落下的声音 干音_0000/0007.wav
+dataset/aria1/身世干音_0000/0009.wav
+dataset/aria1/阿蕊娅 干音2_0000/0005.wav
+dataset/aria1/炫境干音_0000/0005.wav
+dataset/aria1/终于等到你干音_0000/0005.wav
+dataset/aria/炫境干音_0000/0009.wav
+dataset/aria1/身世干音_0000/0017.wav
+dataset/aria/空心干音_0000/0004.wav
+dataset/aria/雪落下的声音 干音_0000/0005.wav
+dataset/aria/鱼 干音_0000/0001.wav
+dataset/aria/告白气球干音_0000/0005.wav
+dataset/aria/霞光干音_0000/0002.wav
+dataset/aria/嘉宾后半首干音_0000/0000.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0005.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0001.wav
+dataset/aria/身世干音_0000/0016.wav
+dataset/aria/告白气球干音_0000/0008.wav
+dataset/aria1/霞光 干音2_0000/0005.wav
+dataset/aria1/告白气球干音_0000/0001.wav
+dataset/aria1/call of silence 干音_0000/0003.wav
+dataset/aria1/春天的芭蕾 干音_0000/0016.wav
+dataset/aria/雪落下的声音 干音_0000/0003.wav
+dataset/aria/身世干音_0000/0004.wav
+dataset/aria/歌者 干音(2)_0000/0014.wav
+dataset/aria/炫境干音_0000/0006.wav
+dataset/aria/告白气球干音_0000/0004.wav
+dataset/aria/阿蕊娅 干音1_0000/0005.wav
+dataset/aria/姗姗干音1_0000/0004.wav
+dataset/aria1/春天的芭蕾 干音_0000/0007.wav
+dataset/aria/空心干音_0000/0018.wav
+dataset/aria/鱼和声（基本全是和声 夹带了一两句旋律的分轨）_0000/0001.wav
+dataset/aria1/身世干音_0000/0006.wav
+dataset/aria/空心干音（有一段唱错了_0000/0013.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0017.wav
+dataset/aria1/斯卡布罗干音_0000/0007.wav
+dataset/aria/阿蕊娅 干音2_0000/0002.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0006.wav
+dataset/aria/阿蕊娅 干音2_0000/0000.wav
+dataset/aria/红莓花儿开 干音_0000/0010.wav
+dataset/aria1/christmas鱼干音_0000/0005.wav
+dataset/aria1/雪落下的声音 干音_0000/0007.wav
+dataset/aria1/百利甜干音_0000/0004.wav
+dataset/aria/体面干音_0000/0007.wav
+dataset/aria/灯火里的中国干音（有唱错_0000/0005.wav
+dataset/aria/灯火里的中国干音（有唱错_0000/0002.wav
+dataset/aria/身世干音_0000/0007.wav
+dataset/aria1/christmas鱼干音_0000/0004.wav
+dataset/aria/歌者 干音(2)_0000/0000.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0013.wav
+dataset/aria/红莓花儿开 干音_0000/0014.wav
+dataset/aria1/鱼 干音_0000/0004.wav
+dataset/aria1/空心干音_0000/0004.wav
+dataset/aria/斯卡布罗干音_0000/0027.wav
+dataset/aria1/身世干音_0000/0021.wav
+dataset/aria/体面干音_0000/0003.wav
+dataset/aria/告白气球干音_0000/0011.wav
+dataset/aria1/姗姗干音2_0000/0002.wav
+dataset/aria/可乐干音_0000/0000.wav
+dataset/aria1/阿蕊娅 干音1_0000/0004.wav
+dataset/aria1/雾里干音1_0000/0004.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0013.wav
+dataset/aria1/孽海记 完整干音_0000/0009.wav
+dataset/aria1/体面干音_0000/0006.wav
+dataset/aria/可乐干音_0000/0005.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0016.wav
+dataset/aria/霞光干音_0000/0001.wav
+dataset/aria/嘉宾后半首干音_0000/0002.wav
+dataset/aria1/鱼 干音_0000/0012.wav
+dataset/aria1/樱花草干音_0000/0008.wav
+dataset/aria1/红莓花儿开 干音_0000/0013.wav
+dataset/aria1/灯火里的中国干音（有唱错_0000/0010.wav
+dataset/aria1/身世干音_0000/0011.wav
+dataset/aria1/斯卡布罗干音_0000/0008.wav
+dataset/aria/雾里干音1_0000/0008.wav
+dataset/aria1/霞光 干音2_0000/0003.wav
+dataset/aria/TruE-干音_0000/0006.wav
+dataset/aria1/炫境干音_0000/0017.wav
+dataset/aria/百利甜干音_0000/0003.wav
+dataset/aria/告白气球干音_0000/0000.wav
+dataset/aria/空心干音_0000/0008.wav
+dataset/aria1/终于等到你干音_0000/0004.wav
+dataset/aria1/樱花草干音_0000/0005.wav
+dataset/aria1/樱花草干音_0000/0004.wav
+dataset/aria/鱼和声（基本全是和声 夹带了一两句旋律的分轨）_0000/0003.wav
+dataset/aria1/红莓花儿开 干音_0000/0000.wav
+dataset/aria1/雪落下的声音 干音_0000/0010.wav
+dataset/aria1/斯卡布罗干音_0000/0004.wav
+dataset/aria/百利甜干音_0000/0002.wav
+dataset/aria1/斯卡布罗干音_0000/0024.wav
+dataset/aria1/空心干音_0000/0017.wav
+dataset/aria/鱼 干音_0000/0013.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0006.wav
+dataset/aria/阿蕊娅 干音1_0000/0007.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0026.wav
+dataset/aria/鱼 干音_0000/0010.wav
+dataset/aria/大教堂干音1_0000/0009.wav
+dataset/aria/炫境干音_0000/0019.wav
+dataset/aria1/百利甜干音_0000/0002.wav
+dataset/aria/身世干音_0000/0010.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0007.wav
+dataset/aria1/灯火里的中国干音（有唱错_0000/0007.wav
+dataset/aria1/霞光 干音1_0000/0005.wav
+dataset/aria/春天的芭蕾 干音_0000/0003.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0024.wav
+dataset/aria1/告白气球干音_0000/0008.wav
+dataset/aria1/雾里干音1_0000/0014.wav
+dataset/aria1/call of silence 干音_0000/0011.wav
+dataset/aria/鱼 干音_0000/0002.wav
+dataset/aria/雾里干音1_0000/0010.wav
+dataset/aria1/灯火里的中国干音（有唱错_0000/0009.wav
+dataset/aria/炫境干音_0000/0002.wav
+dataset/aria1/鱼和声（基本全是和声 夹带了一两句旋律的分轨）_0000/0000.wav
+dataset/aria/体面干音_0000/0002.wav
+dataset/aria1/姗姗干音2_0000/0001.wav
+dataset/aria1/红莓花儿开 干音_0000/0004.wav
+dataset/aria/斯卡布罗干音_0000/0011.wav
+dataset/aria/樱花草干音_0000/0007.wav
+dataset/aria/雪落下的声音 干音_0000/0008.wav
+dataset/aria1/告白气球干音_0000/0014.wav
+dataset/aria/霞光 干音2_0000/0000.wav
+dataset/aria1/歌者 干音(2)_0000/0008.wav
+dataset/aria1/炫境干音_0000/0010.wav
+dataset/aria1/霞光干音_0000/0002.wav
+dataset/aria1/告白气球干音_0000/0004.wav
+dataset/aria/大教堂干音1_0000/0005.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0024.wav
+dataset/aria1/春天的芭蕾 干音_0000/0003.wav
+dataset/aria/春天的芭蕾 干音_0000/0008.wav
+dataset/aria1/christmas鱼干音_0000/0002.wav
+dataset/aria1/春天的芭蕾 干音_0000/0009.wav
+dataset/aria/空心干音_0000/0007.wav
+dataset/aria1/可乐干音_0000/0000.wav
+dataset/aria/霞光干音_0000/0003.wav
+dataset/aria/空心干音（有一段唱错了_0000/0002.wav
+dataset/aria/call of silence 干音_0000/0009.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0014.wav
+dataset/aria/空心干音_0000/0001.wav
+dataset/aria/call of silence 干音_0000/0001.wav
+dataset/aria1/体面干音_0000/0008.wav
+dataset/aria1/鱼主旋律_0000/0004.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0012.wav
+dataset/aria/炫境干音_0000/0014.wav
+dataset/aria1/TruE-干音_0000/0007.wav
+dataset/aria1/歌者 干音(2)_0000/0016.wav
+dataset/aria1/大教堂干音1_0000/0002.wav
+dataset/aria/身世干音_0000/0008.wav
+dataset/aria1/鱼 干音_0000/0001.wav
+dataset/aria/斯卡布罗干音_0000/0018.wav
+dataset/aria/空心干音_0000/0015.wav
+dataset/aria1/姗姗干音1_0000/0007.wav
+dataset/aria/霞光 干音1_0000/0005.wav
+dataset/aria1/终于等到你干音_0000/0001.wav
+dataset/aria1/阿蕊娅 干音2_0000/0000.wav
+dataset/aria1/霞光干音_0000/0003.wav
+dataset/aria/炫境干音_0000/0010.wav
+dataset/aria/霞光 干音2_0000/0001.wav
+dataset/aria1/炫境干音_0000/0009.wav
+dataset/aria1/call of silence 干音_0000/0008.wav
+dataset/aria/雾里干音1_0000/0006.wav
+dataset/aria/雾里干音1_0000/0009.wav
+dataset/aria1/大教堂干音1_0000/0004.wav
+dataset/aria/姗姗干音2_0000/0000.wav
+dataset/aria/灯火里的中国干音（有唱错_0000/0006.wav
+dataset/aria1/告白气球干音_0000/0000.wav
+dataset/aria1/雾里干音1_0000/0006.wav
+dataset/aria/霞光 干音2_0000/0002.wav
+dataset/aria1/鱼和声（基本全是和声 夹带了一两句旋律的分轨）_0000/0001.wav
+dataset/aria1/歌者 干音(2)_0000/0015.wav
+dataset/aria1/姗姗干音1_0000/0005.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0030.wav
+dataset/aria1/告白气球干音_0000/0013.wav
+dataset/aria1/可乐干音_0000/0006.wav
+dataset/aria/霞光 干音1_0000/0001.wav
+dataset/aria/阿蕊娅 干音2_0000/0001.wav
+dataset/aria1/身世干音_0000/0022.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0027.wav
+dataset/aria1/可乐干音_0000/0005.wav
+dataset/aria/终于等到你干音_0000/0008.wav
+dataset/aria/单相思-干音_0000/0006.wav
+dataset/aria1/灯火里的中国干音（有唱错_0000/0002.wav
+dataset/aria1/call of silence 干音_0000/0006.wav
+dataset/aria1/炫境干音_0000/0011.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0000.wav
+dataset/aria1/身世干音_0000/0004.wav
+dataset/aria/阿蕊娅 干音2_0000/0007.wav
+dataset/aria/鱼 干音_0000/0007.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0017.wav
+dataset/aria1/孽海记 完整干音_0000/0004.wav
+dataset/aria/call of silence 干音_0000/0007.wav
+dataset/aria/身世干音_0000/0018.wav
+dataset/aria1/雾里干音1_0000/0000.wav
+dataset/aria/春天的芭蕾 干音_0000/0004.wav
+dataset/aria1/春天的芭蕾 干音_0000/0004.wav
+dataset/aria1/霞光 干音1_0000/0001.wav
+dataset/aria1/斯卡布罗干音_0000/0002.wav
+dataset/aria/身世干音_0000/0009.wav
+dataset/aria1/空心干音（有一段唱错了_0000/0003.wav
+dataset/aria1/雾里干音2_0000/0001.wav
+dataset/aria1/鱼 干音_0000/0010.wav
+dataset/aria/鱼 干音_0000/0011.wav
+dataset/aria/霞光干音_0000/0004.wav
+dataset/aria/体面干音_0000/0008.wav
+dataset/aria/空心干音_0000/0003.wav
+dataset/aria1/嘉宾后半首干音_0000/0004.wav
+dataset/aria/鱼主旋律_0000/0002.wav
+dataset/aria/TruE-干音_0000/0003.wav
+dataset/aria1/斯卡布罗干音_0000/0009.wav
+dataset/aria1/姗姗干音2_0000/0003.wav
+dataset/aria1/歌者 干音(2)_0000/0012.wav
+dataset/aria1/空心干音_0000/0015.wav
+dataset/aria/空心干音（有一段唱错了_0000/0004.wav
+dataset/aria1/单相思-干音_0000/0004.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0002.wav
+dataset/aria/TruE-干音_0000/0004.wav
+dataset/aria/春天的芭蕾 干音_0000/0016.wav
+dataset/aria1/斯卡布罗干音_0000/0015.wav
+dataset/aria/告白气球干音_0000/0003.wav
+dataset/aria/大教堂干音1_0000/0002.wav
+dataset/aria/斯卡布罗干音_0000/0009.wav
+dataset/aria1/霞光干音_0000/0005.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0023.wav
+dataset/aria1/春天的芭蕾 干音_0000/0001.wav
+dataset/aria/空心干音（有一段唱错了_0000/0014.wav
+dataset/aria/身世干音_0000/0017.wav
+dataset/aria1/孽海记 完整干音_0000/0001.wav
+dataset/aria1/红莓花儿开 干音_0000/0012.wav
+dataset/aria/樱花草干音_0000/0001.wav
+dataset/aria/姗姗干音2_0000/0001.wav
+dataset/aria/空心干音_0000/0006.wav
+dataset/aria1/霞光 干音1_0000/0000.wav
+dataset/aria/夜航星+心中想的还是他干音_0000/0011.wav
+dataset/aria1/鱼主旋律_0000/0002.wav
+dataset/aria1/夜航星+心中想的还是他干音_0000/0012.wav
+dataset/aria/christmas鱼干音_0000/0004.wav
+dataset/aria1/大教堂干音1_0000/0007.wav
+dataset/aria1/鱼 干音_0000/0020.wav
+dataset/aria1/终于等到你干音_0000/0000.wav
+dataset/aria/TruE-干音_0000/0005.wav
+dataset/aria1/鱼 干音_0000/0008.wav

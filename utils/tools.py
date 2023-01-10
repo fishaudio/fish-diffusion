@@ -28,7 +28,7 @@ def load_cn_model(n=None):
     from fairseq import checkpoint_utils
 
     models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task(
-        ["hubert/chinese-hubert-large-fairseq-ckpt.pt"],
+        ["hubert/chinese-hubert-base-fairseq-ckpt.pt"],
         suffix="",
     )
     model = models[0]
@@ -209,14 +209,17 @@ def synth_one_sample(
     mel_target = targets[5][0, :mel_len].float().detach().transpose(0, 1)
     figs = {}
 
-    if args.model == "aux":
-        mel_prediction = predictions[0][0, :mel_len].float().detach().transpose(0, 1)
-    else:
-        # diffusion_step = predictions[3][0].item()
-        # noisy_mels = predictions[0][0, :mel_len].detach().transpose(0, 1)
-        # noise_prediction = predictions[1][0, :mel_len].detach().transpose(0, 1)
-        mel_prediction = diffusion.sampling()[0, :mel_len].detach().transpose(0, 1)
-        diffusion.aux_mel = None
+    # TODO: 搞清楚这里的 bug
+    mel_prediction = predictions[0][0, :mel_len].float().detach().transpose(0, 1)
+
+    # if args.model == "aux":
+    #     mel_prediction = predictions[0][0, :mel_len].float().detach().transpose(0, 1)
+    # else:
+    #     # diffusion_step = predictions[3][0].item()
+    #     # noisy_mels = predictions[0][0, :mel_len].detach().transpose(0, 1)
+    #     # noise_prediction = predictions[1][0, :mel_len].detach().transpose(0, 1)
+    #     mel_prediction = diffusion.sampling()[0, :mel_len].detach().transpose(0, 1)
+    #     diffusion.aux_mel = None
 
     figs["mel"] = plot_mel(
         [

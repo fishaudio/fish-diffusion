@@ -39,7 +39,8 @@ class Dataset(Dataset):
     def __getitem__(self, idx):
         wavpath = self.wavpaths[idx]
         speaker = wavpath.split(os.sep)[-2]
-        speaker_id = self.speaker_map[speaker]
+        # speaker_id = self.speaker_map[speaker]
+        speaker_id = self.speaker_map["aria"]
 
         mel_path = wavpath + ".mel.npy"
         mel = np.load(mel_path).T
