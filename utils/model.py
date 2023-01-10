@@ -1,10 +1,10 @@
 import json
 import os
 
+import hifigan
 import numpy as np
 import torch
 
-import hifigan
 from model import DiffSinger, ScheduledOptim
 
 

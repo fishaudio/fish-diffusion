@@ -9,7 +9,6 @@ from diff_svc.schedulers.lambda_warmup_cosine_scheduler import (
 )
 from torch.optim.lr_scheduler import LambdaLR
 from torch.optim import AdamW
-from hifigan.network.vocoders.nsf_hifigan import NsfHifiGAN
 from model.loss import DiffSingerLoss
 
 from model.diffsinger import DiffSinger
@@ -20,6 +19,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 import wandb
 import matplotlib.pyplot as plt
 from pytorch_lightning.strategies import DDPStrategy
+from diff_svc.vocoders import NsfHifiGAN
 
 
 class DiffSVC(pl.LightningModule):
@@ -31,6 +31,7 @@ class DiffSVC(pl.LightningModule):
 
         # 音频编码器, 将梅尔谱转换为音频
         self.vocoder = NsfHifiGAN()
+        self.vocoder.freeze()
 
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=0.001, betas=(0.9, 0.98), eps=1e-9)
@@ -76,8 +77,7 @@ class DiffSVC(pl.LightningModule):
         )
 
         if mode == "valid":
-            self.vocoder.model.to(self.device)
-            figs, wav_reconstruction, wav_prediction, tag = synth_one_sample(
+            figs, wav_reconstruction, wav_prediction = synth_one_sample(
                 args,
                 batch,
                 pitches,
@@ -96,14 +96,14 @@ class DiffSVC(pl.LightningModule):
                     ],
                     "target_wav": [
                         wandb.Audio(
-                            wav_reconstruction.astype(np.float32),
+                            wav_reconstruction.to(torch.float32).cpu().numpy(),
                             sample_rate=44100,
                             caption="reconstruction_wav",
                         ),
                     ],
                     "prediction_wav": [
                         wandb.Audio(
-                            wav_prediction.astype(np.float32),
+                            wav_prediction.to(torch.float32).cpu().numpy(),
                             sample_rate=44100,
                             caption="prediction_wav",
                         ),

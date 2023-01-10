@@ -204,7 +204,7 @@ def synth_one_sample(
 ):
     mel_len = predictions[7][0].item()
     pitch = pitches[0][:mel_len]
-    mel_target = targets[5][0, :mel_len].float().detach().transpose(0, 1)
+    mel_target = targets["mels"][0, :mel_len].float().detach().transpose(0, 1)
     figs = {}
 
     # TODO: 搞清楚这里的 bug
@@ -231,12 +231,8 @@ def synth_one_sample(
     )
 
     if vocoder is not None:
-        wav_reconstruction = vocoder.spec2wav(
-            mel_target.cpu().numpy().T, f0=pitch.cpu().numpy()
-        )
-        wav_prediction = vocoder.spec2wav(
-            mel_prediction.cpu().numpy().T, f0=pitch.cpu().numpy()
-        )
+        wav_reconstruction = vocoder.spec2wav(mel_target, pitch)
+        wav_prediction = vocoder.spec2wav(mel_prediction, pitch)
     else:
         wav_reconstruction = wav_prediction = None
 

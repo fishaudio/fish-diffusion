@@ -1,16 +1,8 @@
-import math
-import os
-
-os.environ["LRU_CACHE_CAPACITY"] = "3"
-import random
-import torch
-import torch.utils.data
-import numpy as np
 import librosa
-from librosa.util import normalize
-from librosa.filters import mel as librosa_mel_fn
-from scipy.io.wavfile import read
+import numpy as np
 import soundfile as sf
+import torch
+from librosa.filters import mel as librosa_mel_fn
 
 
 def load_wav_to_torch(full_path, target_sr=None, return_empty_on_exception=False):
@@ -143,20 +135,12 @@ class STFT:
             pad_mode="reflect",
             normalized=False,
             onesided=True,
+            return_complex=True,
         )
-        # print(111,spec)
+
+        spec = torch.view_as_real(spec)
         spec = torch.sqrt(spec.pow(2).sum(-1) + (1e-9))
-        # print(222,spec)
         spec = torch.matmul(self.mel_basis[str(fmax) + "_" + str(y.device)], spec)
-        # print(333,spec)
         spec = dynamic_range_compression_torch(spec, clip_val=clip_val)
-        # print(444,spec)
+
         return spec
-
-    def __call__(self, audiopath):
-        audio, sr = load_wav_to_torch(audiopath, target_sr=self.target_sr)
-        spect = self.get_mel(audio.unsqueeze(0)).squeeze(0)
-        return spect
-
-
-stft = STFT()
