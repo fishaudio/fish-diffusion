@@ -25,15 +25,7 @@ class DiffSingerLoss(nn.Module):
         ]
 
     def forward(self, inputs, predictions):
-        (
-            _,
-            _,
-            _,
-            mel_targets,
-            _,
-            _,
-            _,
-        ) = inputs[2:]
+        mel_targets = inputs["mels"]
         (
             mel_predictions,
             _,

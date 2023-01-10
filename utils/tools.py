@@ -202,8 +202,6 @@ def synth_one_sample(
     preprocess_config,
     diffusion,
 ):
-    basename = targets[0][0].split(os.sep)[-1].split(".")[0]
-
     mel_len = predictions[7][0].item()
     pitch = pitches[0][:mel_len]
     mel_target = targets[5][0, :mel_len].float().detach().transpose(0, 1)
@@ -242,7 +240,7 @@ def synth_one_sample(
     else:
         wav_reconstruction = wav_prediction = None
 
-    return figs, wav_reconstruction, wav_prediction, basename
+    return figs, wav_reconstruction, wav_prediction
 
 
 def synth_samples(

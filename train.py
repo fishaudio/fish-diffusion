@@ -1,205 +1,130 @@
 import argparse
-import os
-
 import numpy as np
+import pytorch_lightning as pl
 import torch
-import torch.nn as nn
-import yaml
+from diff_svc.datasets.simple_dataset import SimpleDataset
+
+from diff_svc.schedulers.lambda_warmup_cosine_scheduler import (
+    LambdaWarmUpCosineScheduler,
+)
+from torch.optim.lr_scheduler import LambdaLR
+from torch.optim import AdamW
+from hifigan.network.vocoders.nsf_hifigan import NsfHifiGAN
+from model.loss import DiffSingerLoss
+
+from model.diffsinger import DiffSinger
+from utils.tools import get_configs_of, synth_one_sample
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
-from tqdm import tqdm
-
-from data_utils import Dataset
-from evaluate import evaluate
-from model import DiffSingerLoss
-from utils.model import get_model, get_param_num, get_vocoder
-from utils.tools import get_configs_of, log, synth_one_sample, to_device
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
+import wandb
+import matplotlib.pyplot as plt
+from pytorch_lightning.strategies import DDPStrategy
 
 
-def main(args, configs):
-    print("Prepare training ...")
+class DiffSVC(pl.LightningModule):
+    def __init__(self, args, preprocess_config, model_config, train_config):
+        super().__init__()
 
-    preprocess_config, model_config, train_config = configs
+        self.model = DiffSinger(args, preprocess_config, model_config, train_config)
+        self.loss = DiffSingerLoss(args, preprocess_config, model_config, train_config)
 
-    # Get dataset
-    dataset = Dataset(
-        preprocess_config["path"]["train_filelist"],
-        preprocess_config,
-        train_config,
-        sort=True,
-        drop_last=True,
-    )
-    batch_size = train_config["optimizer"]["batch_size"]
-    loader = DataLoader(
-        dataset,
-        batch_size=batch_size,
-        shuffle=True,
-        collate_fn=dataset.collate_fn,
-    )
+        # 音频编码器, 将梅尔谱转换为音频
+        self.vocoder = NsfHifiGAN()
 
-    # Prepare model
-    model, optimizer = get_model(args, configs, device, train=True)
-    model = nn.DataParallel(model)
-    num_param = get_param_num(model)
-    Loss = DiffSingerLoss(args, preprocess_config, model_config, train_config).to(
-        device
-    )
-    print("Number of DiffSinger Parameters:", num_param)
+    def configure_optimizers(self):
+        optimizer = AdamW(self.parameters(), lr=0.001, betas=(0.9, 0.98), eps=1e-9)
 
-    # Load vocoder
-    vocoder = get_vocoder(model_config, device)
+        lambda_func = LambdaWarmUpCosineScheduler(
+            warm_up_steps=1000,
+            lr_min=0.0001,
+            lr_max=0.001,
+            lr_start=0.0001,
+            max_decay_steps=150000,
+        )
 
-    # Init logger
-    for p in train_config["path"].values():
-        os.makedirs(p, exist_ok=True)
-    train_log_path = os.path.join(train_config["path"]["log_path"], "train")
-    val_log_path = os.path.join(train_config["path"]["log_path"], "val")
-    os.makedirs(train_log_path, exist_ok=True)
-    os.makedirs(val_log_path, exist_ok=True)
-    train_logger = SummaryWriter(train_log_path)
-    val_logger = SummaryWriter(val_log_path)
+        scheduler = LambdaLR(optimizer, lr_lambda=lambda_func)
 
-    # Training
-    step = args.restore_step + 1
-    epoch = 1
-    grad_acc_step = train_config["optimizer"]["grad_acc_step"]
-    grad_clip_thresh = train_config["optimizer"]["grad_clip_thresh"]
-    total_step = train_config["step"]["total_step_{}".format(args.model)]
-    log_step = train_config["step"]["log_step"]
-    save_step = train_config["step"]["save_step"]
-    synth_step = train_config["step"]["synth_step"]
-    val_step = train_config["step"]["val_step"]
+        return [optimizer], [dict(scheduler=scheduler, interval="step")]
 
-    outer_bar = tqdm(total=total_step, desc="Training", position=0)
-    outer_bar.n = args.restore_step
-    outer_bar.update()
+    def _step(self, batch, batch_idx, mode):
+        assert batch["pitches"].shape[1] == batch["mels"].shape[1]
 
-    while True:
-        inner_bar = tqdm(total=len(loader), desc="Epoch {}".format(epoch), position=1)
-        for batchs in loader:
-            for batch in batchs:
-                batch = to_device(batch, device)
-                pitches = batch[8].clone()
-                assert batch[8][0].shape[0] == batch[5][0].shape[0]
-                # Forward
-                output = model(*(batch[1:]))
-                # Cal Loss
-                losses = Loss(batch, output)
-                total_loss = losses[0]
+        pitches = batch["pitches"].clone()
+        batch_size = batch["speakers"].shape[0]
 
-                # Backward
-                total_loss = total_loss / grad_acc_step
-                total_loss.backward()
-                if step % grad_acc_step == 0:
-                    # Clipping gradients to avoid gradient explosion
-                    nn.utils.clip_grad_norm_(model.parameters(), grad_clip_thresh)
+        output = self.model(
+            speakers=batch["speakers"],
+            contents=batch["contents"],
+            src_lens=batch["content_lens"],
+            max_src_len=batch["max_content_len"],
+            mels=batch["mels"],
+            mel_lens=batch["mel_lens"],
+            max_mel_len=batch["max_mel_len"],
+            pitches=batch["pitches"],
+        )
+        losses = self.loss(batch, output)
+        total_loss, mel_loss, noise_loss = losses
 
-                    # Update weights
-                    lr = optimizer.step_and_update_lr()
-                    optimizer.zero_grad()
+        self.log(f"{mode}_loss", total_loss, batch_size=batch_size, sync_dist=True)
+        self.log(f"{mode}_mel_loss", mel_loss, batch_size=batch_size, sync_dist=True)
+        self.log(
+            f"{mode}_noise_loss",
+            noise_loss,
+            batch_size=batch_size,
+            sync_dist=True,
+        )
 
-                if step % log_step == 0:
-                    print(losses)
-                    losses_ = [
-                        sum(l.values()).item() if isinstance(l, dict) else l.item()
-                        for l in losses
-                    ]
-                    message1 = "Step {}/{}, ".format(step, total_step)
-                    message2 = "Total Loss: {:.4f}, Mel Loss: {:.4f}, Noise Loss: {:.4f}".format(
-                        *losses_
-                    )
+        if mode == "valid":
+            self.vocoder.model.to(self.device)
+            figs, wav_reconstruction, wav_prediction, tag = synth_one_sample(
+                args,
+                batch,
+                pitches,
+                output,
+                self.vocoder,
+                model_config,
+                preprocess_config,
+                self.model.diffusion,
+            )
 
-                    with open(os.path.join(train_log_path, "log.txt"), "a") as f:
-                        f.write(message1 + message2 + "\n")
+            # WanDB logger
+            self.logger.experiment.log(
+                {
+                    "reconstruction_mel": [
+                        wandb.Image(figs["mel"], caption="reconstruction_mel"),
+                    ],
+                    "target_wav": [
+                        wandb.Audio(
+                            wav_reconstruction.astype(np.float32),
+                            sample_rate=44100,
+                            caption="reconstruction_wav",
+                        ),
+                    ],
+                    "prediction_wav": [
+                        wandb.Audio(
+                            wav_prediction.astype(np.float32),
+                            sample_rate=44100,
+                            caption="prediction_wav",
+                        ),
+                    ],
+                }
+            )
 
-                    outer_bar.write(message1 + message2)
+            plt.close(figs["mel"])
 
-                    log(train_logger, step, losses=losses, lr=lr)
+        return total_loss
 
-                if step % synth_step == 0:
-                    assert batch[8][0].shape[0] == batch[5][0].shape[0], (
-                        batch[8][0].shape,
-                        batch[5][0].shape[0],
-                    )
+    def training_step(self, batch, batch_idx):
+        return self._step(batch, batch_idx, mode="train")
 
-                    figs, wav_reconstruction, wav_prediction, tag = synth_one_sample(
-                        args,
-                        batch,
-                        pitches,
-                        output,
-                        vocoder,
-                        model_config,
-                        preprocess_config,
-                        model.module.diffusion,
-                    )
-                    log(
-                        train_logger,
-                        step,
-                        figs=figs,
-                        tag="Training",
-                    )
-                    sampling_rate = preprocess_config["preprocessing"]["audio"][
-                        "sampling_rate"
-                    ]
-                    log(
-                        train_logger,
-                        audio=wav_reconstruction,
-                        sampling_rate=sampling_rate,
-                        tag="Training/reconstructed",
-                        step=step,
-                    )
-                    log(
-                        train_logger,
-                        audio=wav_prediction,
-                        sampling_rate=sampling_rate,
-                        tag="Training/synthesized",
-                        step=step,
-                    )
-
-                if step % val_step == 0:
-                    model.eval()
-                    message = evaluate(
-                        args, model, step, configs, val_logger, vocoder, losses
-                    )
-                    with open(os.path.join(val_log_path, "log.txt"), "a") as f:
-                        f.write(message + "\n")
-                    outer_bar.write(message)
-
-                    model.train()
-
-                if step % save_step == 0:
-                    savepath = os.path.join(
-                        train_config["path"]["ckpt_path"],
-                        "{}.pth.tar".format(step),
-                    )
-                    rmpath = os.path.join(
-                        train_config["path"]["ckpt_path"],
-                        "{}.pth.tar".format(step - 3 * save_step),
-                    )
-                    os.system(f"rm {rmpath}")
-                    torch.save(
-                        {
-                            "model": model.module.state_dict(),
-                            "optimizer": optimizer._optimizer.state_dict(),
-                        },
-                        savepath,
-                    )
-
-                if step >= total_step:
-                    quit()
-                step += 1
-                outer_bar.update(1)
-
-            inner_bar.update(1)
-        epoch += 1
+    def validation_step(self, batch, batch_idx):
+        return self._step(batch, batch_idx, mode="valid")
 
 
-if __name__ == "__main__":
+def get_config():
+    # This should be removed after finishing editing
     parser = argparse.ArgumentParser()
-    parser.add_argument("--restore_step", type=int, default=0)
-    parser.add_argument("--path_tag", type=str, default="")
     parser.add_argument(
         "--model",
         type=str,
@@ -217,50 +142,55 @@ if __name__ == "__main__":
 
     # Read Config
     preprocess_config, model_config, train_config = get_configs_of(args.dataset)
-    configs = (preprocess_config, model_config, train_config)
-    if args.model == "shallow":
-        assert args.restore_step >= train_config["step"]["total_step_aux"]
-    if args.model in ["aux", "shallow"]:
-        train_tag = "shallow"
-    elif args.model == "naive":
-        train_tag = "naive"
-    else:
-        raise NotImplementedError
-    path_tag = "_{}".format(args.path_tag) if args.path_tag != "" else args.path_tag
-    train_config["path"]["ckpt_path"] = train_config["path"][
-        "ckpt_path"
-    ] + "_{}{}".format(train_tag, path_tag)
-    train_config["path"]["log_path"] = train_config["path"][
-        "log_path"
-    ] + "_{}{}".format(train_tag, path_tag)
-    train_config["path"]["result_path"] = train_config["path"][
-        "result_path"
-    ] + "_{}{}".format(args.model, path_tag)
-    if preprocess_config["preprocessing"]["pitch"]["pitch_type"] == "cwt":
-        from utils.pitch_tools import get_lf0_cwt
 
-        preprocess_config["preprocessing"]["pitch"]["cwt_scales"] = get_lf0_cwt(
-            np.ones(10)
-        )[1]
+    return args, preprocess_config, model_config, train_config
 
-    # Log Configuration
-    print(
-        "\n==================================== Training Configuration ===================================="
+
+if __name__ == "__main__":
+    args, preprocess_config, model_config, train_config = get_config()
+    model = DiffSVC(args, preprocess_config, model_config, train_config)
+
+    train_dataset = SimpleDataset(
+        "filelists/train.txt",
+        preprocess_config["preprocessing"],
     )
-    print(" ---> Type of Modeling:", args.model)
-    print(" ---> Total Batch Size:", int(train_config["optimizer"]["batch_size"]))
-    print(
-        " ---> Use Pitch Embed:", model_config["variance_embedding"]["use_pitch_embed"]
-    )
-    print(
-        " ---> Use Energy Embed:",
-        model_config["variance_embedding"]["use_energy_embed"],
-    )
-    print(" ---> Path of ckpt:", train_config["path"]["ckpt_path"])
-    print(" ---> Path of log:", train_config["path"]["log_path"])
-    print(" ---> Path of result:", train_config["path"]["result_path"])
-    print(
-        "================================================================================================"
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=20,
+        shuffle=True,
+        collate_fn=train_dataset.collate_fn,
     )
 
-    main(args, configs)
+    valid_dataset = SimpleDataset(
+        "filelists/test.txt",
+        preprocess_config["preprocessing"],
+    )
+
+    valid_loader = DataLoader(
+        valid_dataset,
+        batch_size=4,
+        shuffle=False,
+        collate_fn=valid_dataset.collate_fn,
+    )
+
+    trainer = pl.Trainer(
+        accelerator="gpu",
+        devices=-1,
+        strategy=DDPStrategy(find_unused_parameters=False),
+        gradient_clip_val=0.5,
+        accumulate_grad_batches=4,
+        val_check_interval=1000,
+        check_val_every_n_epoch=None,
+        max_steps=200000,
+        precision=16,
+        logger=WandbLogger(project="diff-svc", log_model="all"),
+        callbacks=[
+            ModelCheckpoint(
+                filename="diff-svc-{epoch:02d}-{valid_loss:.2f}",
+                every_n_train_steps=1000,
+            ),
+            LearningRateMonitor(logging_interval="step"),
+        ],
+    )
+
+    trainer.fit(model, train_loader, valid_loader)
