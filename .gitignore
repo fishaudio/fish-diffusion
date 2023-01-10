@@ -139,3 +139,4 @@ lightning_logs
 wandb
 *.ckpt
 checkpoints/nsf_hifigan/model
+filelists
