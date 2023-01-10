@@ -24,4 +24,5 @@ class Wav2Vec2XLSR(BaseFeatureExtractor):
         with torch.no_grad():
             outputs = self.model(input_values, output_hidden_states=True)
 
-        return outputs.hidden_states[-1]
+        # (B, D, T) -> (B, T, D)
+        return outputs.hidden_states[-1].transpose(1, 2)
