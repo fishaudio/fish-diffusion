@@ -140,3 +140,5 @@ wandb
 *.ckpt
 checkpoints/nsf_hifigan/model
 filelists
+raw
+results

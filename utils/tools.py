@@ -15,53 +15,11 @@ from torch.autograd import Variable
 from tqdm import tqdm
 
 import vanilla_hifigan
-from hubert import hubert_model
-from utils.pitch_tools import cwt2f0, denorm_f0, expand_f0_ph
 
 matplotlib.use("Agg")
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-def load_cn_model(n=None):
-    from fairseq import checkpoint_utils
-
-    models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task(
-        ["hubert/chinese-hubert-base-fairseq-ckpt.pt"],
-        suffix="",
-    )
-    model = models[0]
-    model = model.to(device)
-    model.eval()
-    return model
-
-
-def get_cn_hubert_units(con_model, y=None, path=None):
-    if path != None:
-        audio, sampling_rate = librosa.load(path)
-        if len(audio.shape) > 1:
-            audio = librosa.to_mono(audio.transpose(1, 0))
-        if sampling_rate != 16000:
-            audio = librosa.resample(audio, orig_sr=sampling_rate, target_sr=16000)
-        feats = torch.from_numpy(audio).float()
-
-    else:
-        feats = y.squeeze(0)
-    if feats.dim() == 2:  # double channels
-        feats = feats.mean(-1)
-    assert feats.dim() == 1, feats.dim()
-    feats = feats.view(1, -1)
-    padding_mask = torch.BoolTensor(feats.shape).fill_(False)
-    inputs = {
-        "source": feats.to(device),
-        "padding_mask": padding_mask.to(device),
-        "output_layer": 9,  # layer 9
-    }
-    with torch.no_grad():
-        logits = con_model.extract_features(**inputs)
-        feats = con_model.final_proj(logits[0])
-    return feats.transpose(1, 2)
 
 
 def get_vocoder(rank):
@@ -75,28 +33,6 @@ def get_vocoder(rank):
     vocoder.remove_weight_norm()
     vocoder.to(device)
     return vocoder
-
-
-def get_hubert_model(rank=None):
-
-    hubert_soft = hubert_model.hubert_soft("hubert/hubert-soft-0d54a1f4.pt")
-    if rank is not None:
-        hubert_soft = hubert_soft.cuda(rank)
-    return hubert_soft
-
-
-def get_hubert_content(hmodel, y=None, path=None):
-    if path is not None:
-        source, sr = torchaudio.load(path)
-        source = torchaudio.functional.resample(source, sr, 16000)
-        if len(source.shape) == 2 and source.shape[1] >= 2:
-            source = torch.mean(source, dim=0).unsqueeze(0)
-    else:
-        source = y
-    source = source.unsqueeze(0)
-    with torch.inference_mode():
-        units = hmodel.units(source)
-        return units.transpose(1, 2)
 
 
 def get_configs_of(dataset):

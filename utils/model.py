@@ -1,7 +1,6 @@
 import json
 import os
 
-import hifigan
 import numpy as np
 import torch
 

@@ -3,8 +3,7 @@ import torch.nn as nn
 import utils.pitch_tools
 from utils.tools import get_mask_from_lengths
 
-from .diffusion import GaussianDiffusion
-from .modules import FastspeechEncoder
+from diff_svc.diffusions import GaussianDiffusion
 
 
 class DiffSinger(nn.Module):
@@ -39,6 +38,41 @@ class DiffSinger(nn.Module):
             1024, model_config["transformer"]["encoder_hidden"]  # Hubert Embedding Size
         )
 
+    def forward_features(
+        self,
+        speakers,
+        contents,
+        src_lens,
+        max_src_len,
+        mel_lens=None,
+        max_mel_len=None,
+        pitches=None
+    ):
+
+        features = self.features_projection(contents)
+        features = features + self.speaker_emb(speakers).unsqueeze(1).expand(
+            -1, max_src_len, -1
+        )
+        features = features + self.pitch_emb(utils.pitch_tools.f0_to_coarse(pitches))
+
+        src_masks = (
+            get_mask_from_lengths(src_lens, max_src_len)
+            if src_lens is not None
+            else None
+        )
+
+        mel_masks = (
+            get_mask_from_lengths(mel_lens, max_mel_len)
+            if mel_lens is not None
+            else None
+        )
+
+        return dict(
+            features=features,
+            src_masks=src_masks,
+            mel_masks=mel_masks,
+        )
+
     def forward(
         self,
         speakers,
@@ -50,25 +84,23 @@ class DiffSinger(nn.Module):
         max_mel_len=None,
         pitches=None,
     ):
-        features = self.features_projection(contents)
-        features = features + self.speaker_emb(speakers).unsqueeze(1).expand(
-            -1, max_src_len, -1
-        )
-        features = features + self.pitch_emb(utils.pitch_tools.f0_to_coarse(pitches))
-
-        mel_masks = (
-            get_mask_from_lengths(mel_lens, max_mel_len)
-            if mel_lens is not None
-            else None
+        features = self.forward_features(
+            speakers=speakers,
+            contents=contents,
+            src_lens=src_lens,
+            max_src_len=max_src_len,
+            mel_lens=mel_lens,
+            max_mel_len=max_mel_len,
+            pitches=pitches
         )
 
         output_dict = self.diffusion(
-            features,
+            features["features"],
             mels,
-            mel_masks,
+            features["mel_masks"]
         )
 
         # For validation
-        output_dict["features"] = features
+        output_dict["features"] = features["features"]
 
         return output_dict

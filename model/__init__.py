@@ -1,1 +1,0 @@
-from .diffsinger import DiffSinger

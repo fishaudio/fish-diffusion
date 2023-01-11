@@ -9,7 +9,7 @@ from diff_svc.schedulers.cosine_scheduler import (
 from torch.optim.lr_scheduler import LambdaLR, StepLR
 from torch.optim import AdamW
 
-from model.diffsinger import DiffSinger
+from diff_svc.archs.diffsinger import DiffSinger
 from utils.tools import get_configs_of, viz_synth_sample
 from torch.utils.data import DataLoader
 from pytorch_lightning.loggers import WandbLogger
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     )
     train_loader = DataLoader(
         train_dataset,
-        batch_size=40,
+        batch_size=20,
         shuffle=True,
         collate_fn=train_dataset.collate_fn,
         persistent_workers=True,
@@ -175,7 +175,7 @@ if __name__ == "__main__":
         check_val_every_n_epoch=None,
         max_steps=160000,
         precision=16,
-        logger=WandbLogger(project="diff-svc", log_model="all"),
+        logger=WandbLogger(project="diff-svc", save_dir="logs", log_model="all", resume="must", id="2qx3vhvp"),
         callbacks=[
             ModelCheckpoint(
                 filename="diff-svc-{epoch:02d}-{valid_loss:.2f}",
@@ -183,6 +183,7 @@ if __name__ == "__main__":
             ),
             LearningRateMonitor(logging_interval="step"),
         ],
+        resume_from_checkpoint="diff-svc/2qx3vhvp/checkpoints/diff-svc-epoch=571-valid_loss=0.05.ckpt"
     )
 
     trainer.fit(model, train_loader, valid_loader)
