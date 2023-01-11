@@ -18,7 +18,7 @@ class SimpleDataset(Dataset):
         self.wav_paths = list_files(dataset_path, {".wav"}, recursive=True)
         self.dataset_path = Path(dataset_path)
 
-        self.speaker_map = json.loads(Path(speaker_map)).read_text()
+        self.speaker_map = json.loads(Path(speaker_map).read_text())
 
         # pitch stats
         self.pitch_type = config["pitch"]["pitch_type"]
