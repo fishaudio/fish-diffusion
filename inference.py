@@ -57,12 +57,12 @@ if __name__ == "__main__":
 
     preprocess_config, model_config, train_config = get_configs_of(conf_name)
     train_config["path"]["ckpt_path"] = "output/ckpt/cn_hubert_sr"
-    configs = (preprocess_config, model_config, train_config)
     # train_config["path"]["ckpt_path"] = train_config["path"]["ckpt_path"]+"_{}".format(args.model)
 
     vocoder = utils.tools.get_vocoder(0 if torch.cuda.is_available() else None)
     model = DiffSVC.load_from_checkpoint(
-        "diff-svc/2je32oo5/checkpoints/diff-svc-epoch=1714-valid_loss=0.01.ckpt"
+        "logs/diff-svc/2qx3vhvp/checkpoints/diff-svc-epoch=642-valid_loss=0.00.ckpt",
+        model_config=model_config,
     ).to(device)
     model.eval()
     feature_extractor = Wav2Vec2XLSR().to(device)

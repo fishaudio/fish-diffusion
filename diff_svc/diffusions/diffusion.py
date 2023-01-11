@@ -243,9 +243,9 @@ class GaussianDiffusion(nn.Module):
         else:
             raise NotImplementedError()
 
-        noised_mel, epsilon = noised_mel.squeeze().transpose(
-            1, 2
-        ), epsilon.squeeze().transpose(1, 2)
+        noised_mel, epsilon = noised_mel.squeeze(1).transpose(1, 2), epsilon.squeeze(
+            1
+        ).transpose(1, 2)
 
         return noised_mel, epsilon, loss
 
