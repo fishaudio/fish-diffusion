@@ -117,8 +117,8 @@ if __name__ == "__main__":
     model = DiffSVC(model_config)
 
     train_dataset = SimpleDataset(
-        "filelists/train.txt",
         preprocess_config["preprocessing"],
+        "dataset/aria",
     )
     train_loader = DataLoader(
         train_dataset,
@@ -130,8 +130,8 @@ if __name__ == "__main__":
     )
 
     valid_dataset = SimpleDataset(
-        "filelists/test.txt",
         preprocess_config["preprocessing"],
+        "dataset/valid",
     )
 
     valid_loader = DataLoader(

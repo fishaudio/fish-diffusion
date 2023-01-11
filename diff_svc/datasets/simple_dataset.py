@@ -1,32 +1,24 @@
 import json
-import math
-import os
 import random
 
 import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from utils.pitch_tools import get_lf0_cwt, norm_interp_f0
-from utils.tools import pad_1D, pad_2D
+from fish_audio_preprocess.utils.file import list_files
 from pathlib import Path
 
 
 class SimpleDataset(Dataset):
     def __init__(
-        self,
-        filename,
-        config,
-        dataset_path="dataset",
+        self, config, dataset_path="dataset", speaker_map="dataset/speakers.json"
     ):
         self.config = config
 
-        self.wav_paths = self.parse_wav_paths(filename)
+        self.wav_paths = list_files(dataset_path, {".wav"}, recursive=True)
         self.dataset_path = Path(dataset_path)
 
-        self.speaker_map = json.loads(
-            (dataset_path / Path("speakers.json")).read_text()
-        )
+        self.speaker_map = json.loads(Path(speaker_map)).read_text()
 
         # pitch stats
         self.pitch_type = config["pitch"]["pitch_type"]
@@ -39,8 +31,11 @@ class SimpleDataset(Dataset):
 
     def __getitem__(self, idx):
         wav_path: Path = self.wav_paths[idx]
-        speaker = wav_path.relative_to(self.dataset_path).parts[0]
-        speaker_id = self.speaker_map[speaker]
+
+        # speaker = wav_path.relative_to(self.dataset_path).parts[0]
+        # speaker_id = self.speaker_map[speaker]
+
+        speaker_id = 0
         wav_path = str(wav_path)
 
         mel_path = wav_path + ".mel.npy"
