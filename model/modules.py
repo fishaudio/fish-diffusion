@@ -689,13 +689,15 @@ class EnergyPredictor(PitchPredictor):
 class Denoiser(nn.Module):
     """Conditional Diffusion Denoiser"""
 
-    def __init__(self, preprocess_config, model_config):
+    def __init__(
+        self,
+        n_mel_channels=128,
+        d_encoder=256,
+        residual_channels=512,
+        residual_layers=20,
+        dropout=0.2,
+    ):
         super(Denoiser, self).__init__()
-        n_mel_channels = preprocess_config["preprocessing"]["mel"]["n_mel_channels"]
-        d_encoder = model_config["transformer"]["encoder_hidden"]
-        residual_channels = model_config["denoiser"]["residual_channels"]
-        residual_layers = model_config["denoiser"]["residual_layers"]
-        dropout = model_config["denoiser"]["denoiser_dropout"]
 
         self.input_projection = ConvNorm(
             n_mel_channels, residual_channels, kernel_size=1

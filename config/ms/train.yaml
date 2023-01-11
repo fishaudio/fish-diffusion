@@ -14,7 +14,7 @@ optimizer:
   anneal_rate: 0.5
   init_lr: 0.0005
 loss:
-  noise_loss: "l1"
+  noise_loss: "l2"
   dur_loss: "mse"
   pitch_loss: "l1"
   cwt_loss: "l1"

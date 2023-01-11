@@ -8,7 +8,6 @@ from diff_svc.schedulers.cosine_scheduler import (
 )
 from torch.optim.lr_scheduler import LambdaLR, StepLR
 from torch.optim import AdamW
-from model.loss import DiffSingerLoss
 
 from model.diffsinger import DiffSinger
 from utils.tools import get_configs_of, viz_synth_sample
@@ -27,22 +26,23 @@ class DiffSVC(pl.LightningModule):
         self.save_hyperparameters()
 
         self.model = DiffSinger(args, preprocess_config, model_config, train_config)
-        self.loss = DiffSingerLoss(args, preprocess_config, model_config, train_config)
 
         # 音频编码器, 将梅尔谱转换为音频
         self.vocoder = NsfHifiGAN()
         self.vocoder.freeze()
 
     def configure_optimizers(self):
-        optimizer = AdamW(self.parameters(), lr=1.0, betas=(0.9, 0.98), eps=1e-9)
+        optimizer = AdamW(self.parameters(), lr=8e-4, betas=(0.9, 0.98), eps=1e-9)
 
-        lambda_func = LambdaCosineScheduler(
-            lr_min=1e-5,
-            lr_max=8e-4,
-            max_decay_steps=150000,
-        )
+        # lambda_func = LambdaCosineScheduler(
+        #     lr_min=1e-5,
+        #     lr_max=8e-4,
+        #     max_decay_steps=150000,
+        # )
 
-        scheduler = LambdaLR(optimizer, lr_lambda=lambda_func)
+        # scheduler = LambdaLR(optimizer, lr_lambda=lambda_func)
+
+        scheduler = StepLR(optimizer, step_size=40000, gamma=0.5)
 
         return [optimizer], dict(scheduler=scheduler, interval="step")
 
@@ -62,21 +62,13 @@ class DiffSVC(pl.LightningModule):
             max_mel_len=batch["max_mel_len"],
             pitches=batch["pitches"],
         )
-        losses = self.loss(batch, output)
-        total_loss, mel_loss, noise_loss = losses
 
-        self.log(f"{mode}_loss", total_loss, batch_size=batch_size, sync_dist=True)
-        self.log(f"{mode}_mel_loss", mel_loss, batch_size=batch_size, sync_dist=True)
-        self.log(
-            f"{mode}_noise_loss",
-            noise_loss,
-            batch_size=batch_size,
-            sync_dist=True,
-        )
+        self.log(f"{mode}_loss", output["loss"], batch_size=batch_size, sync_dist=True)
 
         if mode == "valid":
+            x = self.model.diffusion.inference(output["features"])
             for gt_mel, gt_pitch, predict_mel, predict_mel_len in zip(
-                batch["mels"], pitches, output[0], output[7]
+                batch["mels"], pitches, x, batch["mel_lens"]
             ):
                 mel_fig, wav_reconstruction, wav_prediction = viz_synth_sample(
                     gt_mel=gt_mel,
@@ -111,7 +103,7 @@ class DiffSVC(pl.LightningModule):
 
                 plt.close(mel_fig)
 
-        return total_loss
+        return output["loss"]
 
     def training_step(self, batch, batch_idx):
         return self._step(batch, batch_idx, mode="train")
@@ -154,9 +146,11 @@ if __name__ == "__main__":
     )
     train_loader = DataLoader(
         train_dataset,
-        batch_size=20,
+        batch_size=40,
         shuffle=True,
         collate_fn=train_dataset.collate_fn,
+        persistent_workers=True,
+        num_workers=2,
     )
 
     valid_dataset = SimpleDataset(

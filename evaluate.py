@@ -26,17 +26,11 @@ def evaluate(args, model, step, configs, logger=None, vocoder=None, losses=None)
         sort=False,
         drop_last=False,
     )
-    batch_size = train_config["optimizer"]["batch_size"]
     loader = DataLoader(
         dataset,
         batch_size=2,
         shuffle=False,
         collate_fn=dataset.collate_fn,
-    )
-
-    # Get loss function
-    Loss = DiffSingerLoss(args, preprocess_config, model_config, train_config).to(
-        device
     )
 
     loss_sums = [

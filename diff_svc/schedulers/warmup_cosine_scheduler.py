@@ -37,4 +37,3 @@ class LambdaWarmUpCosineScheduler:
 
     def __call__(self, n):
         return self.schedule(n)
-
