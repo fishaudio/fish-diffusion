@@ -11,8 +11,6 @@ from tqdm import tqdm
 
 from utils.tools import get_noise_schedule_list
 
-from .modules import Denoiser
-
 
 def extract(a, t, x_shape):
     b, *_ = t.shape
@@ -29,17 +27,24 @@ def noise_like(shape, device, repeat=False):
 
 
 class GaussianDiffusion(nn.Module):
-    def __init__(self, preprocess_config, model_config, train_config):
+    def __init__(
+        self,
+        denosier,
+        mel_channels=128,
+        keep_bins=128,
+        noise_schedule="linear",
+        timesteps=1000,
+        max_beta=0.01,
+        s=0.008,
+        noise_loss="smoothed-l1",
+        spec_stats_path="dataset/stats.json",
+    ):
         super().__init__()
-        self.denoise_fn = Denoiser()
-        self.mel_bins = preprocess_config["preprocessing"]["mel"]["n_mel_channels"]
 
-        betas = get_noise_schedule_list(
-            model_config["denoiser"]["noise_schedule_naive"],
-            model_config["denoiser"]["timesteps"],
-            model_config["denoiser"]["max_beta"],
-            model_config["denoiser"]["s"],
-        )
+        self.denoise_fn = denosier
+        self.mel_bins = mel_channels
+
+        betas = get_noise_schedule_list(noise_schedule, timesteps, max_beta, s)
 
         alphas = 1.0 - betas
         alphas_cumprod = np.cumprod(alphas, axis=0)
@@ -47,7 +52,7 @@ class GaussianDiffusion(nn.Module):
 
         (timesteps,) = betas.shape
         self.num_timesteps = int(timesteps)
-        self.loss_type = train_config["loss"]["noise_loss"]
+        self.noise_loss = noise_loss
 
         to_torch = partial(torch.tensor, dtype=torch.float32)
 
@@ -92,19 +97,15 @@ class GaussianDiffusion(nn.Module):
             ),
         )
 
-        with open(os.path.join("dataset", "stats.json")) as f:
+        with open(spec_stats_path) as f:
             stats = json.load(f)
             self.register_buffer(
                 "spec_min",
-                torch.FloatTensor(stats["spec_min"])[
-                    None, None, : model_config["denoiser"]["keep_bins"]
-                ],
+                torch.FloatTensor(stats["spec_min"])[None, None, :keep_bins],
             )
             self.register_buffer(
                 "spec_max",
-                torch.FloatTensor(stats["spec_max"])[
-                    None, None, : model_config["denoiser"]["keep_bins"]
-                ],
+                torch.FloatTensor(stats["spec_max"])[None, None, :keep_bins],
             )
 
     def q_mean_variance(self, x_start, t):
@@ -231,12 +232,14 @@ class GaussianDiffusion(nn.Module):
             noise = noise.masked_fill(mask, 0.0)
             epsilon = epsilon.masked_fill(mask, 0.0)
 
-        if self.loss_type == "l1":
+        if self.noise_loss == "l1":
             loss = F.l1_loss(noise, epsilon)
-        elif self.loss_type == "smoothed-l1":
+        elif self.noise_loss == "smoothed-l1":
             loss = F.smooth_l1_loss(noise, epsilon)
-        elif self.loss_type == "l2":
+        elif self.noise_loss == "l2":
             loss = F.mse_loss(noise, epsilon)
+        elif callable(self.noise_loss):
+            loss = self.noise_loss(noise, epsilon)
         else:
             raise NotImplementedError()
 

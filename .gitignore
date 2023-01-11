@@ -138,7 +138,7 @@ output
 lightning_logs
 wandb
 *.ckpt
-checkpoints/nsf_hifigan/model
+checkpoints
 filelists
 raw
 results

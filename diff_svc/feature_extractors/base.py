@@ -16,3 +16,7 @@ class BaseFeatureExtractor(nn.Module):
             audio = librosa.resample(audio, orig_sr=sampling_rate, target_sr=16000)
 
         return audio
+
+    @property
+    def device(self):
+        return next(self.parameters()).device

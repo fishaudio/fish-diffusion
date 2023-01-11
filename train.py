@@ -21,11 +21,11 @@ from diff_svc.vocoders import NsfHifiGAN
 
 
 class DiffSVC(pl.LightningModule):
-    def __init__(self, args, preprocess_config, model_config, train_config):
+    def __init__(self, model_config):
         super().__init__()
         self.save_hyperparameters()
 
-        self.model = DiffSinger(args, preprocess_config, model_config, train_config)
+        self.model = DiffSinger(model_config)
 
         # 音频编码器, 将梅尔谱转换为音频
         self.vocoder = NsfHifiGAN()
@@ -112,33 +112,9 @@ class DiffSVC(pl.LightningModule):
         return self._step(batch, batch_idx, mode="valid")
 
 
-def get_config():
-    # This should be removed after finishing editing
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--model",
-        type=str,
-        choices=["naive", "aux", "shallow"],
-        required=True,
-        help="training model type",
-    )
-    parser.add_argument(
-        "--dataset",
-        type=str,
-        required=True,
-        help="name of dataset",
-    )
-    args = parser.parse_args()
-
-    # Read Config
-    preprocess_config, model_config, train_config = get_configs_of(args.dataset)
-
-    return args, preprocess_config, model_config, train_config
-
-
 if __name__ == "__main__":
-    args, preprocess_config, model_config, train_config = get_config()
-    model = DiffSVC(args, preprocess_config, model_config, train_config)
+    preprocess_config, model_config, train_config = get_configs_of("ms")
+    model = DiffSVC(model_config)
 
     train_dataset = SimpleDataset(
         "filelists/train.txt",
@@ -175,7 +151,9 @@ if __name__ == "__main__":
         check_val_every_n_epoch=None,
         max_steps=160000,
         precision=16,
-        logger=WandbLogger(project="diff-svc", save_dir="logs", log_model="all", resume="must", id="2qx3vhvp"),
+        logger=WandbLogger(
+            project="diff-svc", save_dir="logs", log_model="all"
+        ),  # resume="must", id="2qx3vhvp"),
         callbacks=[
             ModelCheckpoint(
                 filename="diff-svc-{epoch:02d}-{valid_loss:.2f}",
@@ -183,7 +161,7 @@ if __name__ == "__main__":
             ),
             LearningRateMonitor(logging_interval="step"),
         ],
-        resume_from_checkpoint="diff-svc/2qx3vhvp/checkpoints/diff-svc-epoch=571-valid_loss=0.05.ckpt"
+        # resume_from_checkpoint="diff-svc/2qx3vhvp/checkpoints/diff-svc-epoch=571-valid_loss=0.05.ckpt"
     )
 
     trainer.fit(model, train_loader, valid_loader)

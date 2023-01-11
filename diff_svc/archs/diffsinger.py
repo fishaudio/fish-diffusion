@@ -1,4 +1,5 @@
 import torch.nn as nn
+from diff_svc.denoisers.wavenet import WaveNetDenoiser
 
 import utils.pitch_tools
 from utils.tools import get_mask_from_lengths
@@ -9,14 +10,29 @@ from diff_svc.diffusions import GaussianDiffusion
 class DiffSinger(nn.Module):
     """DiffSinger"""
 
-    def __init__(self, args, preprocess_config, model_config, train_config):
+    def __init__(self, model_config):
         super(DiffSinger, self).__init__()
-        self.model = args.model
+
         self.model_config = model_config
 
         # self.text_encoder = FastspeechEncoder(model_config)
+        denoiser = WaveNetDenoiser(
+            mel_channels=128,
+            d_encoder=256,
+            residual_channels=512,
+            residual_layers=20,
+            dropout=0.2,
+        )
+
         self.diffusion = GaussianDiffusion(
-            preprocess_config, model_config, train_config
+            denoiser,
+            mel_channels=128,
+            keep_bins=128,
+            noise_schedule="linear",
+            timesteps=1000,
+            max_beta=0.01,
+            s=0.008,
+            noise_loss="smoothed-l1",
         )
 
         self.speaker_emb = None
@@ -35,7 +51,8 @@ class DiffSinger(nn.Module):
         )
 
         self.features_projection = nn.Linear(
-            1024, model_config["transformer"]["encoder_hidden"]  # Hubert Embedding Size
+            model_config["transformer"]["input_featuers"],
+            model_config["transformer"]["encoder_hidden"],  # Hubert Embedding Size
         )
 
     def forward_features(
@@ -46,7 +63,7 @@ class DiffSinger(nn.Module):
         max_src_len,
         mel_lens=None,
         max_mel_len=None,
-        pitches=None
+        pitches=None,
     ):
 
         features = self.features_projection(contents)
@@ -91,14 +108,10 @@ class DiffSinger(nn.Module):
             max_src_len=max_src_len,
             mel_lens=mel_lens,
             max_mel_len=max_mel_len,
-            pitches=pitches
+            pitches=pitches,
         )
 
-        output_dict = self.diffusion(
-            features["features"],
-            mels,
-            features["mel_masks"]
-        )
+        output_dict = self.diffusion(features["features"], mels, features["mel_masks"])
 
         # For validation
         output_dict["features"] = features["features"]

@@ -13,9 +13,11 @@ from scipy.io import wavfile
 from tqdm import tqdm
 import harmof0
 import torchcrepe
+from sklearn.cluster import KMeans
+from audio.tools import get_mel_from_wav
 
-import audio as Audio
-from diff_svc.feature_extractors.wav2vec2_xlsr import Wav2Vec2XLSR
+from diff_svc.utils.stft import TacotronSTFT
+from diff_svc.feature_extractors.chinese_hubert import ChineseHubert
 import utils.tools
 from utils import mel_spectrogram_torch
 from utils.tools import get_configs_of
@@ -30,7 +32,7 @@ dev = "cuda" if torch.cuda.is_available() else "cpu"
 config, *_ = get_configs_of("ms")
 sampling_rate = config["preprocessing"]["audio"]["sampling_rate"]
 hop_length = config["preprocessing"]["stft"]["hop_length"]
-STFT = Audio.stft.TacotronSTFT(
+STFT = TacotronSTFT(
     config["preprocessing"]["stft"]["filter_length"],
     config["preprocessing"]["stft"]["hop_length"],
     config["preprocessing"]["stft"]["win_length"],
@@ -162,26 +164,27 @@ def process(filename):
     if not os.path.exists(mel_path):
         wav, sr = librosa.load(filename, sr=None)
         assert sr == sampling_rate
-        mel_spectrogram, energy = Audio.tools.get_mel_from_wav(wav, STFT)
+        mel_spectrogram, energy = get_mel_from_wav(wav, STFT)
         np.save(mel_path, mel_spectrogram)
     else:
         mel_spectrogram = np.load(mel_path)
 
     save_name = filename + ".soft.npy"
-    # if not os.path.exists(save_name):
-    #     devive = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    #     wav, sr = librosa.load(filename+".16k.wav",sr=None)
-    #     assert sr == 16000
-    #     wav = torch.from_numpy(wav).unsqueeze(0).to(devive)
-    #     c = utils.tools.get_hubert_content(hmodel, wav).cpu().squeeze(0)
-    #     c = utils.tools.repeat_expand_2d(c, mel_spectrogram.shape[-1]).numpy()
-    #     np.save(save_name,c)
-    # else:
-    #     c = np.load(save_name)
+    if not os.path.exists(save_name):
+        devive = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        wav, sr = librosa.load(filename, sr=16000)
+        assert sr == 16000
+        wav = torch.from_numpy(wav).to(devive)
+        with torch.no_grad():
+            c = hmodel(wav, 16000).cpu().squeeze(0)
+        c = utils.tools.repeat_expand_2d(c, mel_spectrogram.shape[-1]).numpy()
+        np.save(save_name, c)
+    else:
+        c = np.load(save_name)
 
-    wav, _ = librosa.load(filename + ".22k.wav", sr=22050)
-    wav = torch.from_numpy(wav).unsqueeze(0).to(dev)
-    sr_mel = mel_spectrogram_torch(wav, 1024, 80, 22050, 256, 1024, 0, 8000)
+    # wav, _ = librosa.load(filename + ".22k.wav", sr=22050)
+    # wav = torch.from_numpy(wav).unsqueeze(0).to(dev)
+    # sr_mel = mel_spectrogram_torch(wav, 1024, 80, 22050, 256, 1024, 0, 8000)
 
     # samples = random.choices(range(68, 92 + 1), k=n_sr)
     # for i in range(n_sr):
@@ -194,7 +197,7 @@ def process(filename):
     #     c = utils.tools.repeat_expand_2d(c, mel_spectrogram.shape[-1]).numpy()
     #     np.save(save_name.replace(".soft.npy", f".{i}.soft.npy"), c)
 
-    c = np.load(save_name.replace(".soft.npy", f".0.soft.npy"))
+    # c = np.load(save_name.replace(".soft.npy", f".0.soft.npy"))
 
     f0path = filename + ".f0.npy"
     if not os.path.exists(f0path) or True:
@@ -214,7 +217,7 @@ if __name__ == "__main__":
     n_sr = int(preprocess_config["preprocessing"]["n_sr"])
     print("Loading hubert for content...")
     # hmodel = utils.tools.load_cn_model(0 if torch.cuda.is_available() else None)
-    hmodel = Wav2Vec2XLSR()
+    hmodel = ChineseHubert(discrete=True)
     hmodel.eval()
     hmodel.to(dev)
 

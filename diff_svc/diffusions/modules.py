@@ -1,8 +1,6 @@
-import copy
 import json
 import math
 import os
-from collections import OrderedDict
 
 import numpy as np
 import torch
@@ -14,14 +12,9 @@ from utils.tools import dur_to_mel2ph, get_mask_from_lengths, pad
 
 from .blocks import (
     BatchNorm1dTBC,
-    ConvNorm,
-    DiffusionEmbedding,
     Embedding,
     EncSALayer,
     LayerNorm,
-    LinearNorm,
-    Mish,
-    ResidualBlock,
     SinusoidalPositionalEmbedding,
 )
 
@@ -684,67 +677,3 @@ class PitchPredictor(torch.nn.Module):
 
 class EnergyPredictor(PitchPredictor):
     pass
-
-
-class Denoiser(nn.Module):
-    """Conditional Diffusion Denoiser"""
-
-    def __init__(
-        self,
-        n_mel_channels=128,
-        d_encoder=256,
-        residual_channels=512,
-        residual_layers=20,
-        dropout=0.2,
-    ):
-        super(Denoiser, self).__init__()
-
-        self.input_projection = ConvNorm(
-            n_mel_channels, residual_channels, kernel_size=1
-        )
-        self.diffusion_embedding = DiffusionEmbedding(residual_channels)
-        self.mlp = nn.Sequential(
-            LinearNorm(residual_channels, residual_channels * 4),
-            Mish(),
-            LinearNorm(residual_channels * 4, residual_channels),
-        )
-        self.residual_layers = nn.ModuleList(
-            [
-                ResidualBlock(d_encoder, residual_channels, dropout=dropout)
-                for _ in range(residual_layers)
-            ]
-        )
-        self.skip_projection = ConvNorm(
-            residual_channels, residual_channels, kernel_size=1
-        )
-        self.output_projection = ConvNorm(
-            residual_channels, n_mel_channels, kernel_size=1
-        )
-        nn.init.zeros_(self.output_projection.conv.weight)
-
-    def forward(self, mel, diffusion_step, conditioner, mask=None):
-        """
-
-        :param mel: [B, 1, M, T]
-        :param diffusion_step: [B,]
-        :param conditioner: [B, M, T]
-        :return:
-        """
-        x = mel[:, 0]
-        x = self.input_projection(x)  # x [B, residual_channel, T]
-        x = F.relu(x)
-
-        diffusion_step = self.diffusion_embedding(diffusion_step)
-        diffusion_step = self.mlp(diffusion_step)
-
-        skip = []
-        for layer in self.residual_layers:
-            x, skip_connection = layer(x, conditioner, diffusion_step, mask)
-            skip.append(skip_connection)
-
-        x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
-        x = self.skip_projection(x)
-        x = F.relu(x)
-        x = self.output_projection(x)  # [B, 80, T]
-
-        return x[:, None, :, :]
