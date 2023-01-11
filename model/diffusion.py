@@ -15,16 +15,6 @@ from utils.tools import get_noise_schedule_list
 from .modules import Denoiser
 
 
-def exists(x):
-    return x is not None
-
-
-def default(val, d):
-    if exists(val):
-        return val
-    return d() if isfunction(d) else d
-
-
 def extract(a, t, x_shape):
     b, *_ = t.shape
     out = a.gather(-1, t)
@@ -219,7 +209,8 @@ class GaussianDiffusion(nn.Module):
         return x_prev
 
     def q_sample(self, x_start, t, noise=None):
-        noise = default(noise, lambda: torch.randn_like(x_start))
+        if noise is None:
+            noise = torch.randn_like(x_start)
 
         return (
             extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start
@@ -227,19 +218,24 @@ class GaussianDiffusion(nn.Module):
         )
 
     def p_losses(self, x_start, t, cond, noise=None, mask=None):
-        noise = default(noise, lambda: torch.randn_like(x_start))
+        if noise is None:
+            noise = torch.randn_like(x_start)
 
         noised_mel = self.q_sample(x_start=x_start, t=t, noise=noise)
         epsilon = self.denoise_fn(noised_mel, t, cond)
 
-        if self.loss_type == "l1":
-            if mask is not None:
-                mask = mask.unsqueeze(-1).transpose(1, 2)
-                loss = (noise - epsilon).abs().squeeze(1).masked_fill(mask, 0.0).mean()
-            else:
-                print("are you sure w/o mask?")
-                loss = (noise - epsilon).abs().mean()
+        if mask is not None:
+            # mask: (B, N) -> (B, 1, 1, N)
+            mask = mask[:, None, None, :]
 
+            # Apply mask
+            noise = noise.masked_fill(mask, 0.0)
+            epsilon = epsilon.masked_fill(mask, 0.0)
+
+        if self.loss_type == "l1":
+            loss = F.l1_loss(noise, epsilon)
+        elif self.loss_type == "smoothed-l1":
+            loss = F.smooth_l1_loss(noise, epsilon)
         elif self.loss_type == "l2":
             loss = F.mse_loss(noise, epsilon)
         else:
