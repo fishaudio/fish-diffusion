@@ -10,7 +10,9 @@ transformer:
   decoder_dropout: 0.1
   ffn_padding: "SAME"
   ffn_act: "gelu"
-  input_featuers: 100
+  input_featuers: 1024
+  feature_distillation: True
+  feature_distillation_dim: 128
 
 denoiser:
   denoiser_hidden: 512

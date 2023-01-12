@@ -17,7 +17,7 @@ from sklearn.cluster import KMeans
 from audio.tools import get_mel_from_wav
 
 from diff_svc.utils.stft import TacotronSTFT
-from diff_svc.feature_extractors.chinese_hubert import ChineseHubert
+from diff_svc.feature_extractors.wav2vec2_xlsr import Wav2Vec2XLSR
 import utils.tools
 from utils import mel_spectrogram_torch
 from utils.tools import get_configs_of
@@ -170,7 +170,7 @@ def process(filename):
         mel_spectrogram = np.load(mel_path)
 
     save_name = filename + ".soft.npy"
-    if not os.path.exists(save_name):
+    if not os.path.exists(save_name) or True:
         devive = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         wav, sr = librosa.load(filename, sr=16000)
         assert sr == 16000
@@ -217,7 +217,7 @@ if __name__ == "__main__":
     n_sr = int(preprocess_config["preprocessing"]["n_sr"])
     print("Loading hubert for content...")
     # hmodel = utils.tools.load_cn_model(0 if torch.cuda.is_available() else None)
-    hmodel = ChineseHubert(discrete=True)
+    hmodel = Wav2Vec2XLSR()
     hmodel.eval()
     hmodel.to(dev)
 

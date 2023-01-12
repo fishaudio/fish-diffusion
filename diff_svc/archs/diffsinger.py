@@ -50,10 +50,23 @@ class DiffSinger(nn.Module):
             model_config["transformer"]["encoder_hidden"],
         )
 
-        self.features_projection = nn.Linear(
-            model_config["transformer"]["input_featuers"],
-            model_config["transformer"]["encoder_hidden"],  # Hubert Embedding Size
-        )
+        if model_config["transformer"]["feature_distillation"]:
+            self.features_projection = nn.Sequential(
+                nn.Linear(
+                    model_config["transformer"]["input_featuers"],
+                    model_config["transformer"]["feature_distillation_dim"],
+                ),
+                nn.Softmax(dim=2),
+                nn.Linear(
+                    model_config["transformer"]["feature_distillation_dim"],
+                    model_config["transformer"]["encoder_hidden"],
+                ),
+            )
+        else:
+            self.features_projection = nn.Linear(
+                model_config["transformer"]["input_featuers"],
+                model_config["transformer"]["encoder_hidden"],  # Hubert Embedding Size
+            )
 
     def forward_features(
         self,

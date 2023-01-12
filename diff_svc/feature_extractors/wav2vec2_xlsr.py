@@ -13,6 +13,7 @@ class Wav2Vec2XLSR(BaseFeatureExtractor):
         self.model = Wav2Vec2ForCTC.from_pretrained(name)
         self.model.eval()
 
+    @torch.no_grad()
     def forward(self, path_or_audio, sampling_rate=None):
         audio = self.preprocess(path_or_audio, sampling_rate)
 
@@ -21,8 +22,7 @@ class Wav2Vec2XLSR(BaseFeatureExtractor):
         ).input_values
         input_values = input_values.to(self.model.device)
 
-        with torch.no_grad():
-            outputs = self.model(input_values, output_hidden_states=True)
+        outputs = self.model(input_values, output_hidden_states=True)
 
         # (B, D, T) -> (B, T, D)
         return outputs.hidden_states[-1].transpose(1, 2)

@@ -67,8 +67,8 @@ class DiffSVC(pl.LightningModule):
 
         if mode == "valid":
             x = self.model.diffusion.inference(output["features"])
-            for gt_mel, gt_pitch, predict_mel, predict_mel_len in zip(
-                batch["mels"], pitches, x, batch["mel_lens"]
+            for path, gt_mel, gt_pitch, predict_mel, predict_mel_len in zip(
+                batch["paths"], batch["mels"], pitches, x, batch["mel_lens"]
             ):
                 mel_fig, wav_reconstruction, wav_prediction = viz_synth_sample(
                     gt_mel=gt_mel,
@@ -81,17 +81,14 @@ class DiffSVC(pl.LightningModule):
                 # WanDB logger
                 self.logger.experiment.log(
                     {
-                        "reconstruction_mel": [
-                            wandb.Image(mel_fig, caption="reconstruction_mel"),
-                        ],
-                        "target_wav": [
+                        "paths": wandb.Html(f"Path: {path}"),
+                        "mel_fig": wandb.Image(mel_fig, caption="reconstruction_mel"),
+                        "wavs": [
                             wandb.Audio(
                                 wav_reconstruction.to(torch.float32).cpu().numpy(),
                                 sample_rate=44100,
-                                caption="reconstruction_wav",
+                                caption="reconstruction_wav (gt)",
                             ),
-                        ],
-                        "prediction_wav": [
                             wandb.Audio(
                                 wav_prediction.to(torch.float32).cpu().numpy(),
                                 sample_rate=44100,
@@ -136,7 +133,7 @@ if __name__ == "__main__":
 
     valid_loader = DataLoader(
         valid_dataset,
-        batch_size=2,
+        batch_size=1,
         shuffle=False,
         collate_fn=valid_dataset.collate_fn,
     )
@@ -152,7 +149,7 @@ if __name__ == "__main__":
         max_steps=160000,
         precision=16,
         logger=WandbLogger(
-            project="diff-svc", save_dir="logs", log_model="all"
+            project="diff-svc", save_dir="logs", log_model="all", entity="fish-audio"
         ),  # resume="must", id="2qx3vhvp"),
         callbacks=[
             ModelCheckpoint(

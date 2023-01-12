@@ -25,6 +25,7 @@ class ChineseHubert(BaseFeatureExtractor):
             )
             self.cluster_centers = torch.nn.Parameter(checkpoint["cluster_centers_"])
 
+    @torch.no_grad()
     def forward(self, path_or_audio, sampling_rate=None):
         audio = self.preprocess(path_or_audio, sampling_rate)
 
@@ -33,10 +34,7 @@ class ChineseHubert(BaseFeatureExtractor):
         ).input_values
         input_values = input_values.to(self.model.device)
 
-        with torch.no_grad():
-            outputs = self.model(input_values)
-
-        features = outputs.last_hidden_state
+        features = self.model(input_values).last_hidden_state
 
         if self.discrete is False:
             # (B, D, T) -> (B, T, D)
