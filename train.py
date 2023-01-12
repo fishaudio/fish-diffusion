@@ -67,6 +67,7 @@ class DiffSVC(pl.LightningModule):
 
         if mode == "valid":
             x = self.model.diffusion.inference(output["features"])
+
             for path, gt_mel, gt_pitch, predict_mel, predict_mel_len in zip(
                 batch["paths"], batch["mels"], pitches, x, batch["mel_lens"]
             ):
@@ -81,8 +82,9 @@ class DiffSVC(pl.LightningModule):
                 # WanDB logger
                 self.logger.experiment.log(
                     {
-                        "paths": wandb.Html(f"Path: {path}"),
-                        "mel_fig": wandb.Image(mel_fig, caption="reconstruction_mel"),
+                        "reconstruction_mel": wandb.Image(
+                            mel_fig, caption="reconstruction_mel"
+                        ),
                         "wavs": [
                             wandb.Audio(
                                 wav_reconstruction.to(torch.float32).cpu().numpy(),
@@ -95,7 +97,7 @@ class DiffSVC(pl.LightningModule):
                                 caption="prediction_wav",
                             ),
                         ],
-                    }
+                    },
                 )
 
                 plt.close(mel_fig)
@@ -133,9 +135,11 @@ if __name__ == "__main__":
 
     valid_loader = DataLoader(
         valid_dataset,
-        batch_size=1,
+        batch_size=20,
         shuffle=False,
         collate_fn=valid_dataset.collate_fn,
+        persistent_workers=True,
+        num_workers=2,
     )
 
     trainer = pl.Trainer(
