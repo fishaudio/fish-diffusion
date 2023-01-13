@@ -1,5 +1,4 @@
 import json
-import os
 from collections import deque
 from functools import partial
 
@@ -7,9 +6,23 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
-from tqdm import tqdm
+from diff_svc.denoisers import DENOISERS
+from .builder import DIFFUSIONS
 
-from utils.tools import get_noise_schedule_list
+
+def get_noise_schedule_list(schedule_mode, timesteps, max_beta=0.01, s=0.008):
+    if schedule_mode == "linear":
+        schedule_list = np.linspace(1e-4, max_beta, timesteps)
+    elif schedule_mode == "cosine":
+        steps = timesteps + 1
+        x = np.linspace(0, steps, steps)
+        alphas_cumprod = np.cos(((x / steps) + s) / (1 + s) * np.pi * 0.5) ** 2
+        alphas_cumprod = alphas_cumprod / alphas_cumprod[0]
+        betas = 1 - (alphas_cumprod[1:] / alphas_cumprod[:-1])
+        schedule_list = np.clip(betas, a_min=0, a_max=0.999)
+    else:
+        raise NotImplementedError
+    return schedule_list
 
 
 def extract(a, t, x_shape):
@@ -25,11 +38,11 @@ def noise_like(shape, device, repeat=False):
     noise = lambda: torch.randn(shape, device=device)
     return repeat_noise() if repeat else noise()
 
-
+@DIFFUSIONS.register_module()
 class GaussianDiffusion(nn.Module):
     def __init__(
         self,
-        denosier,
+        denoiser,
         mel_channels=128,
         keep_bins=128,
         noise_schedule="linear",
@@ -40,8 +53,8 @@ class GaussianDiffusion(nn.Module):
         spec_stats_path="dataset/stats.json",
     ):
         super().__init__()
-
-        self.denoise_fn = denosier
+        
+        self.denoise_fn = DENOISERS.build(denoiser)
         self.mel_bins = mel_channels
 
         betas = get_noise_schedule_list(noise_schedule, timesteps, max_beta, s)

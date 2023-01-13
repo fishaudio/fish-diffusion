@@ -128,90 +128,6 @@ def expand(values, durations):
     return np.array(out)
 
 
-def viz_synth_sample(
-    gt_mel,
-    gt_pitch,
-    predict_mel,
-    predict_mel_len,
-    vocoder,
-):
-    mel_len = predict_mel_len.item()
-    pitch = gt_pitch[:mel_len]
-    mel_target = gt_mel[:mel_len].float().detach().T
-    mel_prediction = predict_mel[:mel_len].float().detach().T
-
-    fig_mels = plot_mel(
-        [
-            mel_prediction.cpu().numpy(),
-            mel_target.cpu().numpy(),
-        ],
-        ["Sampled Spectrogram", "Ground-Truth Spectrogram"],
-    )
-
-    wav_reconstruction = vocoder.spec2wav(mel_target, pitch)
-    wav_prediction = vocoder.spec2wav(mel_prediction, pitch)
-
-    return fig_mels, wav_reconstruction, wav_prediction
-
-
-def plot_mel(data, titles=None):
-    fig, axes = plt.subplots(len(data), 1, squeeze=False)
-    if titles is None:
-        titles = [None for i in range(len(data))]
-    plt.tight_layout()
-
-    for i in range(len(data)):
-        mel = data[i]
-        if isinstance(mel, torch.Tensor):
-            mel = mel.detach().cpu().numpy()
-        axes[i][0].imshow(mel, origin="lower")
-        axes[i][0].set_aspect(2.5, adjustable="box")
-        axes[i][0].set_ylim(0, mel.shape[0])
-        axes[i][0].set_title(titles[i], fontsize="medium")
-        axes[i][0].tick_params(labelsize="x-small", left=False, labelleft=False)
-        axes[i][0].set_anchor("W")
-
-    return fig
-
-
-def spec_to_figure(spec, vmin=None, vmax=None):
-    if isinstance(spec, torch.Tensor):
-        spec = spec.detach().cpu().numpy()
-    fig = plt.figure(figsize=(12, 6))
-    plt.pcolor(spec.T, vmin=vmin, vmax=vmax)
-    return fig
-
-
-def f0_to_figure(f0_gt, f0_cwt=None, f0_pred=None):
-    fig = plt.figure()
-    if isinstance(f0_gt, torch.Tensor):
-        f0_gt = f0_gt.detach().cpu().numpy()
-    plt.plot(f0_gt, color="r", label="gt")
-    if f0_cwt is not None:
-        if isinstance(f0_cwt, torch.Tensor):
-            f0_cwt = f0_cwt.detach().cpu().numpy()
-        plt.plot(f0_cwt, color="b", label="cwt")
-    if f0_pred is not None:
-        if isinstance(f0_pred, torch.Tensor):
-            f0_pred = f0_pred.detach().cpu().numpy()
-        plt.plot(f0_pred, color="green", label="pred")
-    plt.legend()
-    return fig
-
-
-def energy_to_figure(energy_gt, energy_pred=None):
-    fig = plt.figure()
-    if isinstance(energy_gt, torch.Tensor):
-        energy_gt = energy_gt.detach().cpu().numpy()
-    plt.plot(energy_gt, color="r", label="gt")
-    if energy_pred is not None:
-        if isinstance(energy_pred, torch.Tensor):
-            energy_pred = energy_pred.detach().cpu().numpy()
-        plt.plot(energy_pred, color="green", label="pred")
-    plt.legend()
-    return fig
-
-
 def repeat_expand_2d(content, target_len):
     # content : [h, t]
 
@@ -283,22 +199,6 @@ def pad(input_ele, mel_max_length=None):
     out_padded = torch.stack(out_list)
     return out_padded
 
-
-def get_noise_schedule_list(schedule_mode, timesteps, max_beta=0.01, s=0.008):
-    if schedule_mode == "linear":
-        schedule_list = np.linspace(1e-4, max_beta, timesteps)
-    elif schedule_mode == "cosine":
-        steps = timesteps + 1
-        x = np.linspace(0, steps, steps)
-        alphas_cumprod = np.cos(((x / steps) + s) / (1 + s) * np.pi * 0.5) ** 2
-        alphas_cumprod = alphas_cumprod / alphas_cumprod[0]
-        betas = 1 - (alphas_cumprod[1:] / alphas_cumprod[:-1])
-        schedule_list = np.clip(betas, a_min=0, a_max=0.999)
-    else:
-        raise NotImplementedError
-    return schedule_list
-
-
 def dur_to_mel2ph(dur, dur_padding=None, alpha=1.0):
     """
     Example (no batch dim version):
@@ -341,19 +241,6 @@ def mel2ph_to_dur(mel2ph, T_txt, max_dur=None):
     if max_dur is not None:
         dur = dur.clamp(max=max_dur)
     return dur
-
-
-def make_positions(tensor, padding_idx):
-    """Replace non-padding symbols with their position numbers.
-
-    Position numbers begin at padding_idx+1. Padding symbols are ignored.
-    """
-    # The series of casts and type-conversions here are carefully
-    # balanced to both work with ONNX export and XLA. In particular XLA
-    # prefers ints, cumsum defaults to output longs, and ONNX doesn"t know
-    # how to handle the dtype kwarg in cumsum.
-    mask = tensor.ne(padding_idx).int()
-    return (torch.cumsum(mask, dim=1).type_as(mask) * mask).long() + padding_idx
 
 
 def gaussian(window_size, sigma):

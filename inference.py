@@ -13,8 +13,6 @@ from train import DiffSVC
 import utils.tools
 from utils.tools import get_configs_of
 
-from utils import mel_spectrogram_torch
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -26,25 +24,19 @@ def getc(filename, hmodel):
     devive = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     wav, sr = librosa.load(filename, sr=16000)
     wav = torch.from_numpy(wav).to(devive)
-    # sr_mel = mel_spectrogram_torch(wav, 1024, 80, 22050, 256, 1024, 0, 8000)
-    # mel_rs = utils.transform(sr_mel, 80)
-    # wav_rs = vocoder(mel_rs)[0][0].detach().cpu().numpy()
-    # wav = librosa.resample(wav_rs, orig_sr=22050, target_sr=16000)
-    # wav_rs = torch.from_numpy(_wav_rs).to(dev)
-
-    # wav = torch.from_numpy(wav).unsqueeze(0).to(devive)
     c = hmodel(wav, 16000).cpu().squeeze(0)
     c = utils.tools.repeat_expand_2d(
         c, int((wav.shape[0] * sample_rate / 16000) // hop_len)
     ).numpy()
+
     return c
 
 
 if __name__ == "__main__":
     speaker_id = 0
     conf_name = "ms"
-    trans = -4
-    src = "raw/sliced/我 的 鸡 它 八 岁 了-/test.wav"
+    trans = 0
+    src = "raw/sliced/大喜 - 泠鸢yousa,音阙诗听/0001.wav"
     # src = "dataset/aria/斯卡布罗干音_0000/0000.wav"
     restore_step = 45600
 
@@ -55,19 +47,15 @@ if __name__ == "__main__":
     )
 
     os.makedirs(os.path.dirname(tgt), exist_ok=True)
-
-    preprocess_config, model_config, train_config = get_configs_of(conf_name)
-    train_config["path"]["ckpt_path"] = "output/ckpt/cn_hubert_sr"
     # train_config["path"]["ckpt_path"] = train_config["path"]["ckpt_path"]+"_{}".format(args.model)
 
-    vocoder = utils.tools.get_vocoder(0 if torch.cuda.is_available() else None)
     model = DiffSVC.load_from_checkpoint(
-        "logs/diff-svc/3pyd2u52/checkpoints/diff-svc-epoch=1764-valid_loss=0.01.ckpt",
-        model_config=model_config,
+        "logs/diff-svc/1yhuw4kh/checkpoints/diff-svc-epoch=9117-valid_loss=0.11.ckpt",
     ).to(device)
+
     model.eval()
     # feature_extractor = Wav2Vec2XLSR().to(device)
-    feature_extractor = ChineseHubert(discrete=True).to(device)
+    feature_extractor = Wav2Vec2XLSR().to(device)
     feature_extractor.eval()
 
     ids = [src]

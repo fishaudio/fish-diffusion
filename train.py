@@ -1,7 +1,7 @@
 import argparse
 import pytorch_lightning as pl
 import torch
-from diff_svc.datasets.simple_dataset import SimpleDataset
+from diff_svc.datasets import DATASETS
 
 from diff_svc.schedulers.cosine_scheduler import (
     LambdaCosineScheduler,
@@ -10,14 +10,13 @@ from torch.optim.lr_scheduler import LambdaLR, StepLR
 from torch.optim import AdamW
 
 from diff_svc.archs.diffsinger import DiffSinger
-from utils.tools import get_configs_of, viz_synth_sample
+from diff_svc.utils.viz import viz_synth_sample
 from torch.utils.data import DataLoader
 from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 import wandb
 import matplotlib.pyplot as plt
-from pytorch_lightning.strategies import DDPStrategy
 from diff_svc.vocoders import NsfHifiGAN
+from mmcv import Config
 
 
 class DiffSVC(pl.LightningModule):
@@ -112,57 +111,41 @@ class DiffSVC(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    preprocess_config, model_config, train_config = get_configs_of("ms")
-    model = DiffSVC(model_config)
+    from argparse import ArgumentParser
 
-    train_dataset = SimpleDataset(
-        preprocess_config["preprocessing"],
-        "dataset/aria",
-    )
+    parser = ArgumentParser()
+    parser.add_argument("--config", type=str, default="configs/base.py")
+    parser.add_argument("--resume", type=str, default=None)
+    parser.add_argument("--resume-id", type=str, default=None)
+
+    args = parser.parse_args()
+
+    cfg = Config.fromfile(args.config)
+
+    model = DiffSVC(cfg.model)
+
+    train_dataset = DATASETS.build(cfg.dataset.train)
     train_loader = DataLoader(
         train_dataset,
-        batch_size=20,
-        shuffle=True,
         collate_fn=train_dataset.collate_fn,
-        persistent_workers=True,
-        num_workers=2,
+        **cfg.dataloader.train,
     )
 
-    valid_dataset = SimpleDataset(
-        preprocess_config["preprocessing"],
-        "dataset/valid",
-    )
+    valid_dataset = DATASETS.build(cfg.dataset.valid)
 
     valid_loader = DataLoader(
         valid_dataset,
-        batch_size=20,
-        shuffle=False,
         collate_fn=valid_dataset.collate_fn,
-        persistent_workers=True,
-        num_workers=2,
+        **cfg.dataloader.valid,
     )
 
     trainer = pl.Trainer(
-        accelerator="gpu",
-        devices=-1,
-        strategy=DDPStrategy(find_unused_parameters=False),
-        gradient_clip_val=0.5,
-        log_every_n_steps=10,
-        val_check_interval=1000,
-        check_val_every_n_epoch=None,
-        max_steps=160000,
-        precision=16,
         logger=WandbLogger(
-            project="diff-svc", save_dir="logs", log_model="all", entity="fish-audio"
-        ),  # resume="must", id="2qx3vhvp"),
-        callbacks=[
-            ModelCheckpoint(
-                filename="diff-svc-{epoch:02d}-{valid_loss:.2f}",
-                every_n_train_steps=1000,
-            ),
-            LearningRateMonitor(logging_interval="step"),
-        ],
-        # resume_from_checkpoint="diff-svc/2qx3vhvp/checkpoints/diff-svc-epoch=571-valid_loss=0.05.ckpt"
+            project="diff-svc", save_dir="logs", log_model="all", entity="fish-audio",
+            resume="must" if args.resume_id else False, id=args.resume_id
+        ),
+        resume_from_checkpoint=args.resume,
+        **cfg.trainer,
     )
 
     trainer.fit(model, train_loader, valid_loader)

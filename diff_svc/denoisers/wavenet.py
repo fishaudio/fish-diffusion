@@ -3,7 +3,7 @@ from torch import nn
 import torch
 import torch.nn.functional as F
 import math
-
+from .builder import DENOISERS
 
 class Mish(nn.Module):
     def forward(self, x):
@@ -153,6 +153,7 @@ class ResidualBlock(nn.Module):
         return (x + residual) / math.sqrt(2.0), skip
 
 
+@DENOISERS.register_module()
 class WaveNetDenoiser(nn.Module):
     """Conditional Diffusion Denoiser"""
 

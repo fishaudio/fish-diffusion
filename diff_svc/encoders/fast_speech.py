@@ -10,7 +10,6 @@ from diff_svc.modules.positional_embedding import (
 )
 from .builder import ENCODERS
 
-
 class Swish(torch.autograd.Function):
     @staticmethod
     def forward(ctx, i):
@@ -689,11 +688,11 @@ class FFTBlocks(nn.Module):
 
 
 @ENCODERS.register_module()
-class FastspeechEncoder(FFTBlocks):
+class FastSpeech2Encoder(FFTBlocks):
     def __init__(
         self,
         input_size=1024,
-        max_seq_len=2000,
+        max_seq_len=4096,
         num_layers=4,
         hidden_size=256,
         ffn_kernel_size=9,
@@ -702,8 +701,8 @@ class FastspeechEncoder(FFTBlocks):
         ffn_padding="SAME",
         ffn_act="gelu",
         padding_idx=0,
+        use_embedding_to_input=False,
     ):
-
         super().__init__(
             hidden_size=hidden_size,
             num_layers=num_layers,
@@ -720,8 +719,10 @@ class FastspeechEncoder(FFTBlocks):
         self.embed_scale = math.sqrt(hidden_size)
         self.embed_positions = RelPositionalEncoding(hidden_size, dropout_rate=0.0)
 
-        # CN Hubert large feature size: 1024
-        self.proj = nn.Linear(input_size, hidden_size)
+        if use_embedding_to_input:
+            self.proj = nn.Embedding(input_size, hidden_size)
+        else:
+            self.proj = nn.Linear(input_size, hidden_size)
 
     def forward(self, contents, encoder_padding_mask, spk_emb):
         """
@@ -735,6 +736,6 @@ class FastspeechEncoder(FFTBlocks):
 
         x = self.proj(contents)
         x += spk_emb
-        x = super(FastspeechEncoder, self).forward(x, encoder_padding_mask)
+        x = super(FastSpeech2Encoder, self).forward(x, encoder_padding_mask)
 
         return x

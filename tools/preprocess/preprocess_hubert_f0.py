@@ -17,7 +17,7 @@ from sklearn.cluster import KMeans
 from audio.tools import get_mel_from_wav
 
 from diff_svc.utils.stft import TacotronSTFT
-from diff_svc.feature_extractors.wav2vec2_xlsr import Wav2Vec2XLSR
+from diff_svc.feature_extractors.wav2vec2_xlsr import Wav2Vec2XLSRIPA
 import utils.tools
 from utils import mel_spectrogram_torch
 from utils.tools import get_configs_of
@@ -217,7 +217,7 @@ if __name__ == "__main__":
     n_sr = int(preprocess_config["preprocessing"]["n_sr"])
     print("Loading hubert for content...")
     # hmodel = utils.tools.load_cn_model(0 if torch.cuda.is_available() else None)
-    hmodel = Wav2Vec2XLSR()
+    hmodel = Wav2Vec2XLSRIPA()
     hmodel.eval()
     hmodel.to(dev)
 
