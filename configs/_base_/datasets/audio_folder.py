@@ -13,12 +13,10 @@ dataset = dict(
 
 dataloader = dict(
     train=dict(
-        dict(
-            batch_size=20,
-            shuffle=True,
-            num_workers=2,
-            persistent_workers=True,
-        )
+        batch_size=20,
+        shuffle=True,
+        num_workers=2,
+        persistent_workers=True,
     ),
     valid=dict(
         batch_size=20,
