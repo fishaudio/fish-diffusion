@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import math
 from .builder import DENOISERS
 
+
 class Mish(nn.Module):
     def forward(self, x):
         return x * torch.tanh(F.softplus(x))

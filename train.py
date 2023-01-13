@@ -141,8 +141,12 @@ if __name__ == "__main__":
 
     trainer = pl.Trainer(
         logger=WandbLogger(
-            project="diff-svc", save_dir="logs", log_model="all", entity="fish-audio",
-            resume="must" if args.resume_id else False, id=args.resume_id
+            project="diff-svc",
+            save_dir="logs",
+            log_model="all",
+            entity="fish-audio",
+            resume="must" if args.resume_id else False,
+            id=args.resume_id,
         ),
         resume_from_checkpoint=args.resume,
         **cfg.trainer,

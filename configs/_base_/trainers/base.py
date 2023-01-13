@@ -16,6 +16,6 @@ trainer = dict(
             filename="diff-svc-{epoch:02d}-{valid_loss:.2f}",
             every_n_train_steps=1000,
         ),
-        LearningRateMonitor(logging_interval="step")
-    ]
+        LearningRateMonitor(logging_interval="step"),
+    ],
 )

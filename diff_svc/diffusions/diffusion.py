@@ -38,6 +38,7 @@ def noise_like(shape, device, repeat=False):
     noise = lambda: torch.randn(shape, device=device)
     return repeat_noise() if repeat else noise()
 
+
 @DIFFUSIONS.register_module()
 class GaussianDiffusion(nn.Module):
     def __init__(
@@ -53,7 +54,7 @@ class GaussianDiffusion(nn.Module):
         spec_stats_path="dataset/stats.json",
     ):
         super().__init__()
-        
+
         self.denoise_fn = DENOISERS.build(denoiser)
         self.mel_bins = mel_channels
 

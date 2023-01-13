@@ -8,13 +8,12 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import torchaudio
+import vanilla_hifigan
 import yaml
 from matplotlib import pyplot as plt
 from scipy.io import wavfile
 from torch.autograd import Variable
 from tqdm import tqdm
-
-import vanilla_hifigan
 
 matplotlib.use("Agg")
 
@@ -198,6 +197,7 @@ def pad(input_ele, mel_max_length=None):
         out_list.append(one_batch_padded)
     out_padded = torch.stack(out_list)
     return out_padded
+
 
 def dur_to_mel2ph(dur, dur_padding=None, alpha=1.0):
     """

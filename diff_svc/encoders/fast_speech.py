@@ -10,6 +10,7 @@ from diff_svc.modules.positional_embedding import (
 )
 from .builder import ENCODERS
 
+
 class Swish(torch.autograd.Function):
     @staticmethod
     def forward(ctx, i):

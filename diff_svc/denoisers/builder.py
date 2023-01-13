@@ -1,3 +1,3 @@
 from mmcv.utils import Registry
 
-DENOISERS = Registry('denoiser')
+DENOISERS = Registry("denoiser")

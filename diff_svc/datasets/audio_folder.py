@@ -11,9 +11,7 @@ from .builder import DATASETS
 
 @DATASETS.register_module()
 class AudioFolderDataset(Dataset):
-    def __init__(
-        self, path="dataset", speaker_mapping="dataset/speakers.json"
-    ):
+    def __init__(self, path="dataset", speaker_mapping="dataset/speakers.json"):
         self.wav_paths = list_files(path, {".wav"}, recursive=True)
         self.dataset_path = Path(path)
 
