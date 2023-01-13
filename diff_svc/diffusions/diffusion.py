@@ -277,7 +277,7 @@ class GaussianDiffusion(nn.Module):
         x = torch.randn(shape, device=device)
 
         self.noise_list = deque(maxlen=4)
-        iteration_interval = 20  # TODO: 读取配置的 PNDM
+        iteration_interval = 10  # TODO: 读取配置的 PNDM
 
         for i in reversed(range(0, t, iteration_interval)):
             x = self.p_sample_plms(

@@ -26,3 +26,26 @@ class Wav2Vec2XLSR(BaseFeatureExtractor):
 
         # (B, D, T) -> (B, T, D)
         return outputs.hidden_states[-1].transpose(1, 2)
+
+
+class Wav2Vec2XLSRIPA(Wav2Vec2XLSR):
+    def __init__(self, name="facebook/wav2vec2-xlsr-53-espeak-cv-ft"):
+        super().__init__(name)
+
+    @torch.no_grad()
+    def forward(self, path_or_audio, sampling_rate=None):
+        audio = self.preprocess(path_or_audio, sampling_rate)
+
+        input_values = self.feature_extractor(
+            audio, sampling_rate=16000, return_tensors="pt"
+        ).input_values
+        input_values = input_values.to(self.model.device)
+
+        logits = self.model(input_values).logits
+        logits = logits.softmax(-1)
+
+        # Mask out everything < 0.1
+        logits = logits.masked_fill(logits < 0.1, 0.0)
+
+        # (B, D, T) -> (B, T, D)
+        return logits.transpose(1, 2)

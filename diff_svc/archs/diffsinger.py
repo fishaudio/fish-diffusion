@@ -5,6 +5,7 @@ import utils.pitch_tools
 from utils.tools import get_mask_from_lengths
 
 from diff_svc.diffusions import GaussianDiffusion
+from diff_svc.diffusions.modules import FastspeechEncoder
 
 
 class DiffSinger(nn.Module):
@@ -15,7 +16,7 @@ class DiffSinger(nn.Module):
 
         self.model_config = model_config
 
-        # self.text_encoder = FastspeechEncoder(model_config)
+        self.text_encoder = FastspeechEncoder(model_config)
         denoiser = WaveNetDenoiser(
             mel_channels=128,
             d_encoder=256,
@@ -80,6 +81,16 @@ class DiffSinger(nn.Module):
     ):
 
         features = self.features_projection(contents)
+        x = self.features_projection[0](contents)
+        x = self.features_projection[1](x)
+        # import torch
+        # print(x.shape, torch.topk(x, 3, dim=2))
+        # from matplotlib import pyplot as plt
+        # # histogram
+
+        # plt.hist(x.flatten().cpu().numpy(), bins=100)
+        # plt.savefig("hist.png")
+        # exit()
         features = features + self.speaker_emb(speakers).unsqueeze(1).expand(
             -1, max_src_len, -1
         )

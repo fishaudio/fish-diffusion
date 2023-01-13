@@ -2,99 +2,81 @@ import math
 
 import torch
 import torch.nn as nn
-from torch.nn import functional as F
+import torch.nn.functional as F
 
-from utils.tools import make_positions
-
-
-def Embedding(num_embeddings, embedding_dim, padding_idx=None):
-    m = nn.Embedding(num_embeddings, embedding_dim, padding_idx=padding_idx)
-    nn.init.normal_(m.weight, mean=0, std=embedding_dim**-0.5)
-    if padding_idx is not None:
-        nn.init.constant_(m.weight[padding_idx], 0)
-    return m
+from diff_svc.modules.positional_embedding import (
+    SinusoidalPositionalEmbedding,
+    RelPositionalEncoding,
+)
+from .builder import ENCODERS
 
 
-def Linear(in_features, out_features, bias=True):
-    m = nn.Linear(in_features, out_features, bias)
-    nn.init.xavier_uniform_(m.weight)
-    if bias:
-        nn.init.constant_(m.bias, 0.0)
-    return m
-
-
-class SinusoidalPositionalEmbedding(nn.Module):
-    """This module produces sinusoidal positional embeddings of any length.
-
-    Padding symbols are ignored.
-    """
-
-    def __init__(self, embedding_dim, padding_idx, init_size=1024):
-        super().__init__()
-        self.embedding_dim = embedding_dim
-        self.padding_idx = padding_idx
-        self.weights = SinusoidalPositionalEmbedding.get_embedding(
-            init_size,
-            embedding_dim,
-            padding_idx,
-        )
-        self.register_buffer("_float_tensor", torch.FloatTensor(1))
+class Swish(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, i):
+        result = i * torch.sigmoid(i)
+        ctx.save_for_backward(i)
+        return result
 
     @staticmethod
-    def get_embedding(num_embeddings, embedding_dim, padding_idx=None):
-        """Build sinusoidal embeddings.
+    def backward(ctx, grad_output):
+        i = ctx.saved_variables[0]
+        sigmoid_i = torch.sigmoid(i)
+        return grad_output * (sigmoid_i * (1 + i * (1 - sigmoid_i)))
 
-        This matches the implementation in tensor2tensor, but differs slightly
-        from the description in Section 3.5 of "Attention Is All You Need".
-        """
-        half_dim = embedding_dim // 2
-        emb = math.log(10000) / (half_dim - 1)
-        emb = torch.exp(torch.arange(half_dim, dtype=torch.float) * -emb)
-        emb = torch.arange(num_embeddings, dtype=torch.float).unsqueeze(
-            1
-        ) * emb.unsqueeze(0)
-        emb = torch.cat([torch.sin(emb), torch.cos(emb)], dim=1).view(
-            num_embeddings, -1
-        )
-        if embedding_dim % 2 == 1:
-            # zero pad
-            emb = torch.cat([emb, torch.zeros(num_embeddings, 1)], dim=1)
-        if padding_idx is not None:
-            emb[padding_idx, :] = 0
-        return emb
 
-    def forward(
-        self, input, incremental_state=None, timestep=None, positions=None, **kwargs
+class CustomSwish(nn.Module):
+    def forward(self, input_tensor):
+        return Swish.apply(input_tensor)
+
+
+class TransformerFFNLayer(nn.Module):
+    def __init__(
+        self,
+        hidden_size,
+        filter_size,
+        padding="SAME",
+        kernel_size=1,
+        dropout=0.0,
+        act="gelu",
     ):
-        """Input is expected to be of size [bsz x seqlen]."""
-        bsz, seq_len = input.shape[:2]
-        max_pos = self.padding_idx + 1 + seq_len
-        if self.weights is None or max_pos > self.weights.size(0):
-            # recompute/expand embeddings if needed
-            self.weights = SinusoidalPositionalEmbedding.get_embedding(
-                max_pos,
-                self.embedding_dim,
-                self.padding_idx,
+        super().__init__()
+        self.kernel_size = kernel_size
+        self.dropout = dropout
+        self.act = act
+        if padding == "SAME":
+            self.ffn_1 = nn.Conv1d(
+                hidden_size, filter_size, kernel_size, padding=kernel_size // 2
             )
-        self.weights = self.weights.to(self._float_tensor)
+        elif padding == "LEFT":
+            self.ffn_1 = nn.Sequential(
+                nn.ConstantPad1d((kernel_size - 1, 0), 0.0),
+                nn.Conv1d(hidden_size, filter_size, kernel_size),
+            )
+        self.ffn_2 = nn.Linear(filter_size, hidden_size)
+        if self.act == "swish":
+            self.swish_fn = CustomSwish()
+
+    def forward(self, x, incremental_state=None):
+        # x: T x B x C
+        if incremental_state is not None:
+            assert incremental_state is None, "Nar-generation does not allow this."
+            exit(1)
+
+        x = self.ffn_1(x.permute(1, 2, 0)).permute(2, 0, 1)
+        x = x * self.kernel_size**-0.5
 
         if incremental_state is not None:
-            # positions is the same for every token when decoding a single step
-            pos = timestep.view(-1)[0] + 1 if timestep is not None else seq_len
-            return self.weights[self.padding_idx + pos, :].expand(bsz, 1, -1)
-
-        positions = (
-            make_positions(input, self.padding_idx) if positions is None else positions
-        )
-        return (
-            self.weights.index_select(0, positions.view(-1))
-            .view(bsz, seq_len, -1)
-            .detach()
-        )
-
-    def max_positions(self):
-        """Maximum number of supported positions."""
-        return int(1e5)  # an arbitrary large number
+            x = x[-1:]
+        if self.act == "gelu":
+            x = F.gelu(x)
+        if self.act == "relu":
+            x = F.relu(x)
+        if self.act == "swish":
+            x = self.swish_fn(x)
+        x = F.dropout(x, self.dropout, training=self.training)
+        x = self.ffn_2(x)
+        return x
 
 
 class LayerNorm(torch.nn.LayerNorm):
@@ -499,74 +481,6 @@ class MultiheadAttention(nn.Module):
         return attn_weights
 
 
-class Swish(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, i):
-        result = i * torch.sigmoid(i)
-        ctx.save_for_backward(i)
-        return result
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        i = ctx.saved_variables[0]
-        sigmoid_i = torch.sigmoid(i)
-        return grad_output * (sigmoid_i * (1 + i * (1 - sigmoid_i)))
-
-
-class CustomSwish(nn.Module):
-    def forward(self, input_tensor):
-        return Swish.apply(input_tensor)
-
-
-class TransformerFFNLayer(nn.Module):
-    def __init__(
-        self,
-        hidden_size,
-        filter_size,
-        padding="SAME",
-        kernel_size=1,
-        dropout=0.0,
-        act="gelu",
-    ):
-        super().__init__()
-        self.kernel_size = kernel_size
-        self.dropout = dropout
-        self.act = act
-        if padding == "SAME":
-            self.ffn_1 = nn.Conv1d(
-                hidden_size, filter_size, kernel_size, padding=kernel_size // 2
-            )
-        elif padding == "LEFT":
-            self.ffn_1 = nn.Sequential(
-                nn.ConstantPad1d((kernel_size - 1, 0), 0.0),
-                nn.Conv1d(hidden_size, filter_size, kernel_size),
-            )
-        self.ffn_2 = Linear(filter_size, hidden_size)
-        if self.act == "swish":
-            self.swish_fn = CustomSwish()
-
-    def forward(self, x, incremental_state=None):
-        # x: T x B x C
-        if incremental_state is not None:
-            assert incremental_state is None, "Nar-generation does not allow this."
-            exit(1)
-
-        x = self.ffn_1(x.permute(1, 2, 0)).permute(2, 0, 1)
-        x = x * self.kernel_size**-0.5
-
-        if incremental_state is not None:
-            x = x[-1:]
-        if self.act == "gelu":
-            x = F.gelu(x)
-        if self.act == "relu":
-            x = F.relu(x)
-        if self.act == "swish":
-            x = self.swish_fn(x)
-        x = F.dropout(x, self.dropout, training=self.training)
-        x = self.ffn_2(x)
-        return x
-
-
 class BatchNorm1dTBC(nn.Module):
     def __init__(self, c):
         super(BatchNorm1dTBC, self).__init__()
@@ -647,4 +561,180 @@ class EncSALayer(nn.Module):
         x = F.dropout(x, self.dropout, training=self.training)
         x = residual + x
         x = x * (1 - encoder_padding_mask.float()).transpose(0, 1)[..., None]
+        return x
+
+
+class TransformerEncoderLayer(nn.Module):
+    def __init__(
+        self,
+        hidden_size,
+        dropout,
+        kernel_size=None,
+        num_heads=2,
+        norm="ln",
+        ffn_padding="SAME",
+        ffn_act="gelu",
+    ):
+        super().__init__()
+        self.hidden_size = hidden_size
+        self.dropout = dropout
+        self.num_heads = num_heads
+        self.op = EncSALayer(
+            hidden_size,
+            num_heads,
+            dropout=dropout,
+            attention_dropout=0.0,
+            relu_dropout=dropout,
+            kernel_size=kernel_size,
+            padding=ffn_padding,
+            norm=norm,
+            act=ffn_act,
+        )
+
+    def forward(self, x, **kwargs):
+        return self.op(x, **kwargs)
+
+
+class FFTBlocks(nn.Module):
+    def __init__(
+        self,
+        hidden_size,
+        num_layers,
+        max_seq_len=4096,
+        ffn_kernel_size=9,
+        dropout=None,
+        num_heads=2,
+        use_pos_embed=True,
+        use_last_norm=True,
+        norm="ln",
+        ffn_padding="SAME",
+        ffn_act="gelu",
+        padding_idx=0,
+        use_pos_embed_alpha=True,
+    ):
+        super().__init__()
+        self.num_layers = num_layers
+        embed_dim = self.hidden_size = hidden_size
+        self.dropout = dropout
+        self.use_pos_embed = use_pos_embed
+        self.use_last_norm = use_last_norm
+
+        if use_pos_embed:
+            self.max_source_positions = max_seq_len
+            self.padding_idx = padding_idx
+            self.pos_embed_alpha = (
+                nn.Parameter(torch.Tensor([1])) if use_pos_embed_alpha else 1
+            )
+            self.embed_positions = SinusoidalPositionalEmbedding(
+                embed_dim,
+                self.padding_idx,
+                init_size=max_seq_len,
+            )
+
+        self.layers = nn.ModuleList([])
+        self.layers.extend(
+            [
+                TransformerEncoderLayer(
+                    self.hidden_size,
+                    self.dropout,
+                    kernel_size=ffn_kernel_size,
+                    num_heads=num_heads,
+                    ffn_padding=ffn_padding,
+                    ffn_act=ffn_act,
+                )
+                for _ in range(self.num_layers)
+            ]
+        )
+        if self.use_last_norm:
+            if norm == "ln":
+                self.layer_norm = nn.LayerNorm(embed_dim)
+            elif norm == "bn":
+                self.layer_norm = BatchNorm1dTBC(embed_dim)
+        else:
+            self.layer_norm = None
+
+    def forward(self, x, padding_mask=None, attn_mask=None, return_hiddens=False):
+        """
+        :param x: [B, T, C]
+        :param padding_mask: [B, T]
+        :return: [B, T, C] or [L, B, T, C]
+        """
+        padding_mask = (
+            x.abs().sum(-1).eq(0).data if padding_mask is None else padding_mask
+        )
+        nonpadding_mask_TB = (
+            1 - padding_mask.transpose(0, 1).float()[:, :, None]
+        )  # [T, B, 1]
+        if self.use_pos_embed:
+            positions = self.pos_embed_alpha * self.embed_positions(x[..., 0])
+            x = x + positions
+            x = F.dropout(x, p=self.dropout, training=self.training)
+        # B x T x C -> T x B x C
+        x = x.transpose(0, 1) * nonpadding_mask_TB
+        hiddens = []
+        for layer in self.layers:
+            x = (
+                layer(x, encoder_padding_mask=padding_mask, attn_mask=attn_mask)
+                * nonpadding_mask_TB
+            )
+            hiddens.append(x)
+        if self.use_last_norm:
+            x = self.layer_norm(x) * nonpadding_mask_TB
+        if return_hiddens:
+            x = torch.stack(hiddens, 0)  # [L, T, B, C]
+            x = x.transpose(1, 2)  # [L, B, T, C]
+        else:
+            x = x.transpose(0, 1)  # [B, T, C]
+        return x
+
+
+@ENCODERS.register_module()
+class FastspeechEncoder(FFTBlocks):
+    def __init__(
+        self,
+        input_size=1024,
+        max_seq_len=2000,
+        num_layers=4,
+        hidden_size=256,
+        ffn_kernel_size=9,
+        dropout=0.1,
+        num_heads=2,
+        ffn_padding="SAME",
+        ffn_act="gelu",
+        padding_idx=0,
+    ):
+
+        super().__init__(
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            max_seq_len=max_seq_len,
+            ffn_kernel_size=ffn_kernel_size,
+            dropout=dropout,
+            num_heads=num_heads,
+            ffn_padding=ffn_padding,
+            ffn_act=ffn_act,
+            padding_idx=padding_idx,
+            use_pos_embed=False,  # Use our own position embedding
+        )
+
+        self.embed_scale = math.sqrt(hidden_size)
+        self.embed_positions = RelPositionalEncoding(hidden_size, dropout_rate=0.0)
+
+        # CN Hubert large feature size: 1024
+        self.proj = nn.Linear(input_size, hidden_size)
+
+    def forward(self, contents, encoder_padding_mask, spk_emb):
+        """
+
+        :param txt_tokens: [B, T]
+        :param encoder_padding_mask: [B, T]
+        :return: {
+            "encoder_out": [T x B x C]
+        }
+        """
+
+        x = self.proj(contents)
+        x += spk_emb
+        x = super(FastspeechEncoder, self).forward(x, encoder_padding_mask)
+
         return x
