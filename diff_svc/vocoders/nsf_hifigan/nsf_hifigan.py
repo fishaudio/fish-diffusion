@@ -1,5 +1,4 @@
 import torch
-from torch import nn
 
 import json
 import os

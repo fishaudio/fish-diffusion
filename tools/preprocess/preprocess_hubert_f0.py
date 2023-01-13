@@ -14,12 +14,11 @@ from tqdm import tqdm
 import harmof0
 import torchcrepe
 from sklearn.cluster import KMeans
-from audio.tools import get_mel_from_wav
+from diff_svc.utils.common import get_mel_from_wav
 
 from diff_svc.utils.stft import TacotronSTFT
 from diff_svc.feature_extractors.wav2vec2_xlsr import Wav2Vec2XLSRIPA
 import utils.tools
-from utils import mel_spectrogram_torch
 from utils.tools import get_configs_of
 
 logging.getLogger("numba").setLevel(logging.WARNING)
@@ -224,7 +223,6 @@ if __name__ == "__main__":
     pit = harmof0.PitchTracker(hop_length=80, post_processing=False, low_threshold=0.2)
 
     print("Loaded hubert.")
-    vocoder = utils.tools.get_vocoder(0 if torch.cuda.is_available() else None)
 
     filenames = glob(f"{args.in_dir}/**/*.wav", recursive=True)  # [:10]
     filenames = [i for i in filenames if not i.endswith((".22k.wav", ".16k.wav"))]

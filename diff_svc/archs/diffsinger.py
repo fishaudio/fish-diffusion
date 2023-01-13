@@ -1,11 +1,11 @@
 import torch.nn as nn
-from diff_svc.denoisers.wavenet import WaveNetDenoiser
 
-import utils.pitch_tools
+import torch
 from utils.tools import get_mask_from_lengths
 
 from diff_svc.encoders import ENCODERS
 from diff_svc.diffusions import DIFFUSIONS
+from diff_svc.utils.pitch import f0_to_coarse
 
 
 class DiffSinger(nn.Module):
@@ -19,6 +19,17 @@ class DiffSinger(nn.Module):
         self.speaker_encoder = ENCODERS.build(model_config.speaker_encoder)
         self.pitch_encoder = ENCODERS.build(model_config.pitch_encoder)
 
+    @staticmethod
+    def get_mask_from_lengths(lengths, max_len=None):
+        batch_size = lengths.shape[0]
+        if max_len is None:
+            max_len = torch.max(lengths).item()
+
+        ids = torch.arange(0, max_len).unsqueeze(0).expand(batch_size, -1).to(device)
+        mask = ids >= lengths.unsqueeze(1).expand(-1, max_len)
+
+        return mask
+
     def forward_features(
         self,
         speakers,
@@ -30,7 +41,7 @@ class DiffSinger(nn.Module):
         pitches=None,
     ):
         src_masks = (
-            get_mask_from_lengths(src_lens, max_src_len)
+            self.get_mask_from_lengths(src_lens, max_src_len)
             if src_lens is not None
             else None
         )
@@ -39,10 +50,10 @@ class DiffSinger(nn.Module):
             self.speaker_encoder(speakers).unsqueeze(1).expand(-1, max_src_len, -1)
         )
         features = self.text_encoder(contents, src_masks, speaker_embed)
-        features += self.pitch_encoder(utils.pitch_tools.f0_to_coarse(pitches))
+        features += self.pitch_encoder(f0_to_coarse(pitches))
 
         mel_masks = (
-            get_mask_from_lengths(mel_lens, max_mel_len)
+            self.get_mask_from_lengths(mel_lens, max_mel_len)
             if mel_lens is not None
             else None
         )
