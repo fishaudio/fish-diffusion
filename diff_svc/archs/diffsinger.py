@@ -1,7 +1,6 @@
 import torch.nn as nn
 
 import torch
-from utils.tools import get_mask_from_lengths
 
 from diff_svc.encoders import ENCODERS
 from diff_svc.diffusions import DIFFUSIONS
