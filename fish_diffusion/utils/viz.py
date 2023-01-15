@@ -1,5 +1,8 @@
 import torch
 from matplotlib import pyplot as plt
+import matplotlib
+
+matplotlib.use("Agg")
 
 
 def plot_mel(data, titles=None):

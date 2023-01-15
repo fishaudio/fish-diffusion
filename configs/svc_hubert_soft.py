@@ -34,7 +34,7 @@ model = dict(
     ),
     speaker_encoder=dict(
         type="NaiveProjectionEncoder",
-        input_size=1,
+        input_size=10,
         output_size=hidden_size,
         use_embedding=True,
     ),
