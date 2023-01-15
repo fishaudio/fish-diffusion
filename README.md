@@ -64,5 +64,6 @@ python train.py --config configs/svc_hubert_soft.py --resume [checkpoint]
 ```
 
 ## 推理
-
-> 推理脚本仍在优化, 请耐心等待
+```bash
+python inference.py
+```

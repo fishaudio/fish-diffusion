@@ -66,7 +66,7 @@ def get_mel_from_audio(
         norm=norm,
         onesided=onesided,
         mel_scale=mel_scale,
-    )
+    ).to(audio.device)
 
     mel = transform(audio)
     mel = dynamic_range_compression(mel)

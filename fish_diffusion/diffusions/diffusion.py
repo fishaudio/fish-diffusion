@@ -52,6 +52,7 @@ class GaussianDiffusion(nn.Module):
         s=0.008,
         noise_loss="smoothed-l1",
         spec_stats_path="dataset/stats.json",
+        sampler_interval=10,
     ):
         super().__init__()
 
@@ -121,6 +122,8 @@ class GaussianDiffusion(nn.Module):
                 "spec_max",
                 torch.FloatTensor(stats["spec_max"])[None, None, :keep_bins],
             )
+
+        self.sampler_interval = sampler_interval
 
     def q_mean_variance(self, x_start, t):
         mean = extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start
@@ -291,13 +294,12 @@ class GaussianDiffusion(nn.Module):
         x = torch.randn(shape, device=device)
 
         self.noise_list = deque(maxlen=4)
-        iteration_interval = 10  # TODO: 读取配置的 PNDM
 
-        for i in reversed(range(0, t, iteration_interval)):
+        for i in reversed(range(0, t, self.sampler_interval)):
             x = self.p_sample_plms(
                 x,
                 torch.full((b,), i, device=device, dtype=torch.long),
-                iteration_interval,
+                self.sampler_interval,
                 features,
             )
 

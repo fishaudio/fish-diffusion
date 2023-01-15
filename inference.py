@@ -1,104 +1,117 @@
-import argparse
 import os
 import librosa
 import numpy as np
-import parselmouth
-import soundfile
 import torch
-from fish_diffusion.feature_extractors.wav2vec2_xlsr import Wav2Vec2XLSR
-from fish_diffusion.feature_extractors.chinese_hubert import ChineseHubert
-from tools.preprocess.preprocess_hubert_f0 import compute_f0
+from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS
+from fish_audio_preprocess.utils import separate_audio, slice_audio
+from fish_diffusion.utils.audio import get_mel_from_audio
+from fish_diffusion.utils.pitch import PITCH_EXTRACTORS
+from fish_diffusion.utils.tensor import repeat_expand_2d
 from train import DiffSVC
-
-import utils.tools
-from utils.tools import get_configs_of
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-sample_rate = 44100
-hop_len = 512
+from mmengine import Config
+from loguru import logger
+import soundfile as sf
+import os
 
 
-def getc(filename, hmodel):
-    devive = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    wav, sr = librosa.load(filename, sr=16000)
-    wav = torch.from_numpy(wav).to(devive)
-    c = hmodel(wav, 16000).cpu().squeeze(0)
-    c = utils.tools.repeat_expand_2d(
-        c, int((wav.shape[0] * sample_rate / 16000) // hop_len)
-    ).numpy()
+@torch.no_grad()
+def inference(
+    config,
+    checkpoint,
+    input_path,
+    speaker_id=0,
+    pitch_adjust=0,
+    device="cuda",
+    extract_vocals=True,
+):
+    if os.path.isdir(checkpoint):
+        # Find the latest checkpoint
+        checkpoints = sorted(os.listdir(checkpoint))
+        checkpoint = os.path.join(checkpoint, checkpoints[-1])
 
-    return c
+    audio, sr = librosa.load(input_path, sr=config.sampling_rate, mono=True)
 
+    # Extract vocals
 
-if __name__ == "__main__":
-    speaker_id = 0
-    conf_name = "ms"
-    trans = 0
-    src = "raw/sliced/大喜 - 泠鸢yousa,音阙诗听/0001.wav"
-    # src = "dataset/aria/斯卡布罗干音_0000/0000.wav"
-    restore_step = 45600
+    if extract_vocals:
+        logger.info("Extracting vocals...")
+        model = separate_audio.init_model("htdemucs", device=device)
+        audio = librosa.resample(audio, orig_sr=sr, target_sr=model.samplerate)[None]
 
-    tgt = (
-        src.replace(".wav", f"_{speaker_id}_{trans}_{restore_step}step.wav")
-        .replace("raw", "results")
-        .replace("dataset", "results")
+        # To two channels
+        audio = np.concatenate([audio, audio], axis=0)
+        audio = torch.from_numpy(audio).to(device)
+        tracks = separate_audio.separate_audio(
+            model, audio, shifts=1, num_workers=0, progress=True
+        )
+        audio = separate_audio.merge_tracks(tracks, filter=["vocals"]).cpu().numpy()
+        audio = audio[0]
+        audio = librosa.resample(audio, orig_sr=model.samplerate, target_sr=sr)
+
+    # Slice into segments
+    # TODO: 这个切片机只保留了有声音的部分, 需要修复
+    segments = list(slice_audio.slice_audio(audio, sr))
+    logger.info(f"Extracted {len(segments)} segments")
+
+    # Load models
+    text_features_extractor = FEATURE_EXTRACTORS.build(
+        config.preprocessing.text_features_extractor
     )
+    pitch_extractor = PITCH_EXTRACTORS.get(config.preprocessing.pitch_extractor)
+    model = DiffSVC.load_from_checkpoint(checkpoint).to(device)
+    wavs = []
 
-    os.makedirs(os.path.dirname(tgt), exist_ok=True)
-    # train_config["path"]["ckpt_path"] = train_config["path"]["ckpt_path"]+"_{}".format(args.model)
+    assert pitch_extractor is not None, "Pitch extractor not found"
 
-    model = DiffSVC.load_from_checkpoint(
-        "logs/diff-svc/1yhuw4kh/checkpoints/diff-svc-epoch=9117-valid_loss=0.11.ckpt",
-    ).to(device)
+    for idx, segment in enumerate(segments):
+        segment = torch.from_numpy(segment).to(device)[None]
+        logger.info(
+            f"Processing segment {idx + 1}/{len(segments)}, duration: {segment.shape[-1] / sr:.2f}s"
+        )
 
-    model.eval()
-    # feature_extractor = Wav2Vec2XLSR().to(device)
-    feature_extractor = Wav2Vec2XLSR().to(device)
-    feature_extractor.eval()
+        # Extract mel
+        mel = get_mel_from_audio(segment, sr)
 
-    ids = [src]
-    c = getc(src, feature_extractor).T
-    c_lens = np.array([c.shape[0]])
-    contents = np.array([c])
-    speakers = np.array([speaker_id])
-    _, f0 = compute_f0(src, c.shape[0])
+        # Extract pitch (f0)
+        pitch = pitch_extractor(segment, sr, pad_to=mel.shape[-1]).float()
 
-    f0 *= pow(2, trans / 12)
+        # Extract text features
+        text_features = text_features_extractor(segment, sr)[0]
+        text_features = repeat_expand_2d(text_features, mel.shape[-1]).T
 
-    print(f0.shape, c.shape)
+        # Predict
+        src_lens = torch.tensor([mel.shape[-1]]).to(device)
 
-    # f0 = np.load("dataset/aria/斯卡布罗干音_0000/0000.wav.f0.npy")
-    # c = np.load("dataset/aria/斯卡布罗干音_0000/0000.wav.0.soft.npy").T
-    # c_lens = np.array([c.shape[0]])
-    # contents = np.array([c])
-
-    print(f0.shape, c.shape)
-
-    with torch.no_grad():
         features = model.model.forward_features(
-            speakers=torch.from_numpy(speakers).to(device),
-            contents=torch.from_numpy(contents).to(device),
-            src_lens=torch.from_numpy(c_lens).to(device),
-            max_src_len=max(c_lens),
-            mel_lens=torch.from_numpy(c_lens).to(device),
-            max_mel_len=max(c_lens),
-            pitches=torch.from_numpy(f0)[None].to(device),
+            speakers=torch.tensor([speaker_id]).long().to(device),
+            contents=text_features[None].to(device),
+            src_lens=src_lens,
+            max_src_len=max(src_lens),
+            mel_lens=src_lens,
+            max_mel_len=max(src_lens),
+            pitches=pitch[None].to(device),
         )
 
         result = model.model.diffusion.inference(features["features"])
+        wav = model.vocoder.spec2wav(result[0].T, f0=pitch).cpu().numpy()
 
-    from matplotlib import pyplot as plt
+        wavs.append(wav)
 
-    plt.imshow(result[0].T.cpu().numpy())
-    plt.savefig("result.png")
+    wavs = np.concatenate(wavs, axis=0)
+    sf.write("output.wav", wavs, sr)
 
-    wav_prediction = (
-        model.vocoder.spec2wav(result[0].T, f0=torch.from_numpy(f0).to(device))
-        .cpu()
-        .numpy()
+    logger.info("Done")
+
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    inference(
+        Config.fromfile("configs/svc_hubert_soft_continuous_pitch.py"),
+        "logs/diff-svc/5w6yytnv/checkpoints",
+        "raw/separated/【Mia米娅】《百万个吻》Mua版-.wav",
+        speaker_id=0,
+        pitch_adjust=0,
+        extract_vocals=False,
+        device=device,
     )
-
-    soundfile.write(tgt, wav_prediction, 44100)
-    print(wav_prediction)

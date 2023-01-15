@@ -166,3 +166,9 @@ def get_pitch_crepe(
     f0 = np.interp(time_frame, time_org, f0, left=f0[0], right=f0[-1])
 
     return torch.from_numpy(f0).to(x.device)
+
+
+PITCH_EXTRACTORS = {
+    "crepe": get_pitch_crepe,
+    "parselmouth": get_pitch_parselmouth,
+}
