@@ -6,6 +6,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
+from tqdm import tqdm
 from fish_diffusion.denoisers import DENOISERS
 from .builder import DIFFUSIONS
 
@@ -284,7 +285,7 @@ class GaussianDiffusion(nn.Module):
             t=t,
         )
 
-    def inference(self, features):
+    def inference(self, features, progress=False):
         # Cond 基本就是 hubert / fs2 参数
         b, *_, device = *features.shape, features.device
         features = features.transpose(1, 2)
@@ -295,7 +296,12 @@ class GaussianDiffusion(nn.Module):
 
         self.noise_list = deque(maxlen=4)
 
-        for i in reversed(range(0, t, self.sampler_interval)):
+        chunks = list(reversed(range(0, t, self.sampler_interval)))
+
+        if progress:
+            chunks = tqdm(chunks)
+
+        for i in chunks:
             x = self.p_sample_plms(
                 x,
                 torch.full((b,), i, device=device, dtype=torch.long),
