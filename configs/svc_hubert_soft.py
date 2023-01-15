@@ -1,3 +1,5 @@
+from fish_diffusion.utils.pitch import pitch_to_coarse
+
 _base_ = [
     "./_base_/trainers/base.py",
     "./_base_/datasets/audio_folder.py",
@@ -43,6 +45,7 @@ model = dict(
         input_size=256,
         output_size=hidden_size,
         use_embedding=True,
+        preprocessing=pitch_to_coarse,
     ),
     vocoder=dict(
         type="NsfHifiGAN",

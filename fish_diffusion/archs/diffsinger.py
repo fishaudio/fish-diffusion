@@ -4,7 +4,6 @@ import torch
 
 from fish_diffusion.encoders import ENCODERS
 from fish_diffusion.diffusions import DIFFUSIONS
-from fish_diffusion.utils.pitch import f0_to_coarse
 
 
 class DiffSinger(nn.Module):
@@ -54,7 +53,7 @@ class DiffSinger(nn.Module):
             self.speaker_encoder(speakers).unsqueeze(1).expand(-1, max_src_len, -1)
         )
         features = self.text_encoder(contents, src_masks, speaker_embed)
-        features += self.pitch_encoder(f0_to_coarse(pitches))
+        features += self.pitch_encoder(pitches)
 
         mel_masks = (
             self.get_mask_from_lengths(mel_lens, max_mel_len)
