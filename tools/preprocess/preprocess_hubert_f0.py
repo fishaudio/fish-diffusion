@@ -79,6 +79,7 @@ def get_f0(path, p_len=None, f0_up_key=0):
     f0_mel[f0_mel <= 1] = 1
     f0_mel[f0_mel > 255] = 255
     f0_coarse = np.rint(f0_mel).astype(np.int)
+
     return f0_coarse, f0bak
 
 

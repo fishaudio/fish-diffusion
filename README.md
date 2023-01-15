@@ -1,7 +1,5 @@
 # Fish Diffusion
-基于[DiffSinger非官方仓库](https://github.com/keonlee9420/DiffSinger) 实现的 [diffsvc](https://github.com/prophesier/diff-svc) 的优化版本 [diff-svc](https://github.com/innnky/diff-svc/) 的优化版本
-
-> 推理脚本仍在优化, 请耐心等待
+基于 [diff-svc](https://github.com/innnky/diff-svc/) 实现的 TTS / SVS / SVC 的训练框架
 
 ## 简介
 基于 DiffSinger 实现歌声音色转换。相较于原 diffsvc 仓库，本仓库优缺点如下
@@ -9,6 +7,27 @@
 + 本仓库代码结构更简单易懂, 模块全部解耦
 + 声码器同样使用 [441khz Diff Singer 社区声码器](https://openvpi.github.io/vocoders/)
 + 支持多机多卡训练, 支持半精度训练, 拯救你的训练速度和显存
+
+## 环境准备
+以下命令需要在 python 3.10 的 conda 环境下执行
+
+```bash
+# 安装 PyTorch 相关核心依赖, 如果已安装则跳过
+# 参考 https://pytorch.org/get-started/locally/
+conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
+
+# 安装 Poetry 依赖管理工具, 如果已安装则跳过
+# 参考 https://python-poetry.org/docs/#installation
+curl -sSL https://install.python-poetry.org | python3 -
+
+# 安装依赖
+poetry install
+```
+
+## 声码器准备
+下载 [441khz 声码器](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) 中的 `nsf_hifigan_20221211.zip`
+
+复制 `model` 文件到 `checkpoints/nsf_hifigan` 目录下
 
 ## 数据集准备
 仅需要以以下文件结构将数据集放入 dataset 目录即可
@@ -26,3 +45,18 @@ dataset
     ├───...
     └───xxx7-xxx007.wav
 ```
+
+> 数据集处理脚本还在优化中, 请耐心等待
+
+## 基本训练
+```bash
+# 单机单卡 / 单机多卡训练
+python train.py
+
+# 继续训练
+python train.py --resume [checkpoint]
+```
+
+## 推理
+
+> 推理脚本仍在优化, 请耐心等待
