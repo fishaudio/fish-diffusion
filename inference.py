@@ -182,6 +182,9 @@ def inference(
         wav = model.vocoder.spec2wav(result[0].T, f0=pitch).cpu().numpy()
         max_wav_len = generated_audio.shape[-1] - start
         generated_audio[start : start + wav.shape[-1]] = wav[:max_wav_len]
+    
+    # Loudness normalization
+    generated_audio = loudness_norm.loudness_norm(generated_audio, sr)
 
     # Merge non-vocals
     if extract_vocals and merge_non_vocals:
