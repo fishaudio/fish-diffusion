@@ -2,12 +2,12 @@ dataset = dict(
     train=dict(
         type="AudioFolderDataset",
         path="dataset/aria",
-        speaker_mapping="dataset/speakers.json",
+        speaker_id=0,
     ),
     valid=dict(
         type="AudioFolderDataset",
         path="dataset/valid",
-        speaker_mapping="dataset/speakers.json",
+        speaker_id=0,
     ),
 )
 

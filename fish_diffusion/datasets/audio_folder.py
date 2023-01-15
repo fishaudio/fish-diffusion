@@ -11,11 +11,10 @@ from .builder import DATASETS
 
 @DATASETS.register_module()
 class AudioFolderDataset(Dataset):
-    def __init__(self, path="dataset", speaker_mapping="dataset/speakers.json"):
+    def __init__(self, path="dataset", speaker_id=0):
         self.wav_paths = list_files(path, {".wav"}, recursive=True)
         self.dataset_path = Path(path)
-
-        self.speaker_map = json.loads(Path(speaker_mapping).read_text())
+        self.speaker_id = speaker_id
 
     def __len__(self):
         return len(self.wav_paths)
@@ -23,7 +22,6 @@ class AudioFolderDataset(Dataset):
     def __getitem__(self, idx):
         wav_path: Path = self.wav_paths[idx]
 
-        speaker_id = 0
         wav_path = str(wav_path)
 
         mel_path = wav_path + ".mel.npy"
@@ -36,7 +34,7 @@ class AudioFolderDataset(Dataset):
 
         sample = {
             "path": wav_path,
-            "speaker": speaker_id,
+            "speaker": self.speaker_id,
             "content": c,
             "mel": mel,
             "pitch": pitch,
