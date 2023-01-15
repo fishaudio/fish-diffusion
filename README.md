@@ -1,7 +1,7 @@
 # Fish Diffusion
 基于[DiffSinger非官方仓库](https://github.com/keonlee9420/DiffSinger) 实现的 [diffsvc](https://github.com/prophesier/diff-svc) 的优化版本 [diff-svc](https://github.com/innnky/diff-svc/) 的优化版本
 
-> 在这个版本上, 科研狗更好做实验了
+> 推理脚本仍在优化, 请耐心等待
 
 ## 简介
 基于 DiffSinger 实现歌声音色转换。相较于原 diffsvc 仓库，本仓库优缺点如下
