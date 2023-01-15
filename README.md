@@ -20,7 +20,7 @@ dataset
 │   ├───...
 │   ├───Lxx-0xx8.wav
 │   └───abcd (支持子目录)
-|       └───xxx1-xxx1.wav
+│       └───xxx1-xxx1.wav
 └───speaker1
     ├───xx2-0xxx2.wav
     ├───...
