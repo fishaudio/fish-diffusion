@@ -27,18 +27,13 @@ model = dict(
         ),
     ),
     text_encoder=dict(
-        type="FastSpeech2Encoder",
-        input_size=392,  # IPA symbols
-        max_seq_len=4096,
-        num_layers=4,
-        hidden_size=256,
-        ffn_kernel_size=9,
-        dropout=0.1,
-        num_heads=2,
+        type="NaiveProjectionEncoder",
+        input_size=392,
+        output_size=256,
     ),
     speaker_encoder=dict(
         type="NaiveProjectionEncoder",
-        input_size=1,
+        input_size=10,  # 10 个说话人, 可以根据自己的数据集修改
         output_size=hidden_size,
         use_embedding=True,
     ),
@@ -56,6 +51,9 @@ model = dict(
     ),
 )
 
-feature_extractor = dict(
-    type="HubertSoft",
+preprocess = dict(
+    text_features_extractor = dict(
+        type="HubertSoft",
+    ),
+    pitch_extractor = "parselmouth",
 )

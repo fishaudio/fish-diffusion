@@ -1,24 +1,20 @@
 import numpy as np
 import parselmouth
 import torch
+import torchcrepe
+import torchaudio
+import librosa
 
-# TODO: remove the following hyper-parameters
-gamma = 0
-mcepInput = 3  # 0 for dB, 3 for magnitude
-alpha = 0.45
-en_floor = 10 ** (-80 / 20)
-FFT_SIZE = 2048
-
-
-f0_bin = 256
-f0_max = 1100.0
-f0_min = 50.0
-f0_mel_min = 1127 * np.log(1 + f0_min / 700)
-f0_mel_max = 1127 * np.log(1 + f0_max / 700)
+_f0_bin = 256
+_f0_max = 1100.0
+_f0_min = 50.0
+_f0_mel_min = 1127 * np.log(1 + _f0_min / 700)
+_f0_mel_max = 1127 * np.log(1 + _f0_max / 700)
 
 
-def f0_to_coarse(f0):
+def f0_to_coarse(f0, f0_mel_min=_f0_mel_min, f0_mel_max=_f0_mel_max, f0_bin=_f0_bin):
     is_torch = isinstance(f0, torch.Tensor)
+
     f0_mel = 1127 * (1 + f0 / 700).log() if is_torch else 1127 * np.log(1 + f0 / 700)
     f0_mel[f0_mel > 0] = (f0_mel[f0_mel > 0] - f0_mel_min) * (f0_bin - 2) / (
         f0_mel_max - f0_mel_min
@@ -36,47 +32,107 @@ def f0_to_coarse(f0):
     return f0_coarse
 
 
-# TODO: fix the bug of the following function
-def get_pitch(wav_data, mel, sampling_rate=44100, hop_length=512):
+def get_pitch_parselmouth(
+    x,
+    sampling_rate=44100,
+    hop_length=512,
+    f0_min=_f0_min,
+    f0_max=_f0_max,
+    mel=None,
+):
+    """Extract pitch using parselmouth.
+
+    Args:
+        x (torch.Tensor): Audio signal, shape (T,).
+        sampling_rate (int, optional): Sampling rate. Defaults to 44100.
+        hop_length (int, optional): Hop length. Defaults to 512.
+        f0_min (float, optional): Minimum pitch. Defaults to 50.
+        f0_max (float, optional): Maximum pitch. Defaults to 1100.
+
+    Returns:
+        torch.Tensor: Pitch, shape (T // hop_length,).
     """
 
-    :param wav_data: [T]
-    :param mel: [T, 80]
-    :param config:
-    :return:
-    """
-
-    time_step = hop_length / sampling_rate * 1000
-    f0_min = 50
-    f0_max = 1100
-
-    if hop_length == 128:
-        pad_size = 4
-    elif hop_length == 256:
-        pad_size = 2
-    else:
-        assert False
+    x = x.cpu().numpy()
+    time_step = hop_length / sampling_rate
 
     f0 = (
-        parselmouth.Sound(wav_data, sampling_rate)
+        parselmouth.Sound(x, sampling_rate)
         .to_pitch_ac(
-            time_step=time_step / 1000,
+            time_step=time_step,
             voicing_threshold=0.6,
             pitch_floor=f0_min,
             pitch_ceiling=f0_max,
         )
         .selected_array["frequency"]
     )
-    lpad = pad_size * 2
-    rpad = len(mel) - len(f0) - lpad
-    f0 = np.pad(f0, [[lpad, rpad]], mode="constant")
-    # mel and f0 are extracted by 2 different libraries. we should force them to have the same length.
-    # Attention: we find that new version of some libraries could cause ``rpad'' to be a negetive value...
-    # Just to be sure, we recommend users to set up the same environments as them in requirements_auto.txt (by Anaconda)
-    delta_l = len(mel) - len(f0)
-    assert np.abs(delta_l) <= 8
-    if delta_l > 0:
-        f0 = np.concatenate([f0, [f0[-1]] * delta_l], 0)
-    f0 = f0[: len(mel)]
-    pitch_coarse = f0_to_coarse(f0)
-    return f0, pitch_coarse
+
+    p_len = x.shape[0] // hop_length
+    pad_size = (p_len - len(f0) + 1) // 2
+
+    if pad_size > 0 or p_len - len(f0) - pad_size > 0:
+        f0 = np.pad(f0, [[pad_size, p_len - len(f0) - pad_size]], mode="constant")
+
+    return torch.from_numpy(f0)
+
+
+def get_pitch_crepe(
+    x,
+    mel,
+    sampling_rate=44100,
+    hop_length=512,
+    f0_min=_f0_min,
+    f0_max=_f0_max,
+    threshold=0.05,
+):
+    """Extract pitch using crepe.
+
+    Args:
+        x (torch.Tensor): Audio signal, shape (T,).
+        sampling_rate (int, optional): Sampling rate. Defaults to 44100.
+        hop_length (int, optional): Hop length. Defaults to 512.
+        f0_min (float, optional): Minimum pitch. Defaults to 50.
+        f0_max (float, optional): Maximum pitch. Defaults to 1100.
+        threshold (float, optional): Threshold for unvoiced. Defaults to 0.05.
+
+    Returns:
+        torch.Tensor: Pitch, shape (T // hop_length,).
+    """
+
+    if sampling_rate != 16000:
+        x = torchaudio.functional.resample(x, sampling_rate, 16000)
+
+    # 重采样后按照hopsize=80,也就是5ms一帧分析f0
+    f0, pd = torchcrepe.predict(
+        x,
+        16000,
+        80,
+        f0_min,
+        f0_max,
+        pad=True, 
+        model='full', 
+        batch_size=1024,
+        device=x.device, 
+        return_periodicity=True
+    )
+
+    # 滤波，去掉静音，设置uv阈值，参考原仓库readme
+    pd = torchcrepe.filter.median(pd, 3)
+    pd = torchcrepe.threshold.Silence(-60.)(pd, x, 16000, 80)
+    f0 = torchcrepe.threshold.At(threshold)(f0, pd)
+    f0 = torchcrepe.filter.mean(f0, 3)
+
+    f0 = torch.where(torch.isnan(f0), torch.full_like(f0, 0), f0)
+    
+    # 去掉0频率，并线性插值
+    nzindex = torch.nonzero(f0[0]).squeeze()
+    f0 = torch.index_select(f0[0], dim=0, index=nzindex).cpu().numpy()
+    time_org = 0.005 * nzindex.cpu().numpy()
+    time_frame = np.arange(len(mel)) * hop_length / sampling_rate
+
+    if f0.shape[0] == 0:
+        return torch.FloatTensor(time_frame.shape[0]).fill_(0)
+
+    f0 = np.interp(time_frame, time_org, f0, left=f0[0], right=f0[-1])
+
+    return torch.from_numpy(f0)
