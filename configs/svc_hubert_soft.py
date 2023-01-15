@@ -34,7 +34,7 @@ model = dict(
     ),
     speaker_encoder=dict(
         type="NaiveProjectionEncoder",
-        input_size=10,  # 10 个说话人, 可以根据自己的数据集修改
+        input_size=1,
         output_size=hidden_size,
         use_embedding=True,
     ),
