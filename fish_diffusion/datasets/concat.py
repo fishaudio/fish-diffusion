@@ -5,7 +5,7 @@ from typing import Iterable
 
 @DATASETS.register_module()
 class ConcatDataset(_ConcatDataset):
-    def __init__(self, datasets: Iterable[dict]) -> None:
+    def __init__(self, datasets: Iterable[dict], collate_fn=None) -> None:
         """Concatenate multiple datasets.
 
         Args:
@@ -13,3 +13,5 @@ class ConcatDataset(_ConcatDataset):
         """
 
         super().__init__([DATASETS.build(dataset) for dataset in datasets])
+
+        self.collate_fn = collate_fn

@@ -1,3 +1,5 @@
+from fish_diffusion.datasets.audio_folder import AudioFolderDataset
+
 _base_ = [
     "./svc_hubert_soft.py",
 ]
@@ -17,6 +19,8 @@ dataset = dict(
                 speaker_id=1,
             ),
         ],
+        # Are there any other ways to do this?
+        collate_fn=AudioFolderDataset.collate_fn,
     ),
     valid=dict(
         type="AudioFolderDataset",
