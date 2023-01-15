@@ -1,7 +1,7 @@
 dataset = dict(
     train=dict(
         type="AudioFolderDataset",
-        path="dataset/aria",
+        path="dataset/train",
         speaker_id=0,
     ),
     valid=dict(
