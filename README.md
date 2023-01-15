@@ -1,4 +1,4 @@
-# diff-svc
+# Fish Diffusion
 基于[DiffSinger非官方仓库](https://github.com/keonlee9420/DiffSinger) 实现的 [diffsvc](https://github.com/prophesier/diff-svc) 的优化版本 [diff-svc](https://github.com/innnky/diff-svc/) 的优化版本
 
 > 在这个版本上, 科研狗更好做实验了

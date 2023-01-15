@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
-from diff_svc.denoisers import DENOISERS
+from fish_diffusion.denoisers import DENOISERS
 from .builder import DIFFUSIONS
 
 

@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from diff_svc.modules.positional_embedding import (
+from fish_diffusion.modules.positional_embedding import (
     SinusoidalPositionalEmbedding,
     RelPositionalEncoding,
 )

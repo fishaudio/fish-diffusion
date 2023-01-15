@@ -2,9 +2,9 @@ import torch.nn as nn
 
 import torch
 
-from diff_svc.encoders import ENCODERS
-from diff_svc.diffusions import DIFFUSIONS
-from diff_svc.utils.pitch import f0_to_coarse
+from fish_diffusion.encoders import ENCODERS
+from fish_diffusion.diffusions import DIFFUSIONS
+from fish_diffusion.utils.pitch import f0_to_coarse
 
 
 class DiffSinger(nn.Module):

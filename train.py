@@ -1,21 +1,21 @@
 import argparse
 import pytorch_lightning as pl
 import torch
-from diff_svc.datasets import DATASETS
+from fish_diffusion.datasets import DATASETS
 
-from diff_svc.schedulers.cosine_scheduler import (
+from fish_diffusion.schedulers.cosine_scheduler import (
     LambdaCosineScheduler,
 )
 from torch.optim.lr_scheduler import LambdaLR, StepLR
 from torch.optim import AdamW
 
-from diff_svc.archs.diffsinger import DiffSinger
-from diff_svc.utils.viz import viz_synth_sample
+from fish_diffusion.archs.diffsinger import DiffSinger
+from fish_diffusion.utils.viz import viz_synth_sample
 from torch.utils.data import DataLoader
 from pytorch_lightning.loggers import WandbLogger
 import wandb
 import matplotlib.pyplot as plt
-from diff_svc.vocoders import NsfHifiGAN
+from fish_diffusion.vocoders import NsfHifiGAN
 from mmcv import Config
 
 

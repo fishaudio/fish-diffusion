@@ -14,10 +14,10 @@ from tqdm import tqdm
 import harmof0
 import torchcrepe
 from sklearn.cluster import KMeans
-from diff_svc.utils.common import get_mel_from_wav
+from fish_diffusion.utils.common import get_mel_from_wav
 
-from diff_svc.utils.stft import TacotronSTFT
-from diff_svc.feature_extractors.wav2vec2_xlsr import Wav2Vec2XLSRIPA
+from fish_diffusion.utils.stft import TacotronSTFT
+from fish_diffusion.feature_extractors.wav2vec2_xlsr import Wav2Vec2XLSRIPA
 import utils.tools
 from utils.tools import get_configs_of
 

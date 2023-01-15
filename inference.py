@@ -5,8 +5,8 @@ import numpy as np
 import parselmouth
 import soundfile
 import torch
-from diff_svc.feature_extractors.wav2vec2_xlsr import Wav2Vec2XLSR
-from diff_svc.feature_extractors.chinese_hubert import ChineseHubert
+from fish_diffusion.feature_extractors.wav2vec2_xlsr import Wav2Vec2XLSR
+from fish_diffusion.feature_extractors.chinese_hubert import ChineseHubert
 from tools.preprocess.preprocess_hubert_f0 import compute_f0
 from train import DiffSVC
 
