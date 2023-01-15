@@ -4,7 +4,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 trainer = dict(
     accelerator="gpu",
     devices=-1,
-    strategy=DDPStrategy(find_unused_parameters=False),
+    strategy=DDPStrategy(find_unused_parameters=True),
     gradient_clip_val=0.5,
     log_every_n_steps=10,
     val_check_interval=1000,

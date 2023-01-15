@@ -34,27 +34,33 @@ poetry install
 
 ```shell
 dataset
-├───speaker0
+├───train
 │   ├───xxx1-xxx1.wav
 │   ├───...
 │   ├───Lxx-0xx8.wav
-│   └───abcd (支持子目录)
+│   └───speaker0 (支持子目录)
 │       └───xxx1-xxx1.wav
-└───speaker1
+└───valid
     ├───xx2-0xxx2.wav
     ├───...
     └───xxx7-xxx007.wav
 ```
 
-> 数据集处理脚本还在优化中, 请耐心等待
+```bash
+# 1. 提取全部数据的特征, 如 pitch, text features, mel features 等
+python tools/preprocess/extract_features.py --config configs/svc_hubert_soft.py --path dataset --clean
+
+# 2. 生成训练集统计信息
+python tools/preprocessing/generate_stats.py --input-dir dataset/train --output-file dataset/stats.json
+```
 
 ## 基本训练
 ```bash
 # 单机单卡 / 单机多卡训练
-python train.py
+python train.py --config configs/svc_hubert_soft.py
 
 # 继续训练
-python train.py --resume [checkpoint]
+python train.py --config configs/svc_hubert_soft.py --resume [checkpoint]
 ```
 
 ## 推理

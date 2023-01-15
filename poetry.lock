@@ -572,28 +572,26 @@ python-dateutil = ">=2.7"
 setuptools_scm = ">=7"
 
 [[package]]
-name = "mmcv"
-version = "1.7.1"
-description = "OpenMMLab Computer Vision Foundation"
+name = "mmengine"
+version = "0.4.0"
+description = "Engine of OpenMMLab projects"
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.6"
 
 [package.dependencies]
 addict = "*"
+matplotlib = "*"
 numpy = "*"
 opencv-python = ">=3"
-packaging = "*"
-Pillow = "*"
 pyyaml = "*"
 regex = {version = "*", markers = "sys_platform == \"win32\""}
+termcolor = "*"
 yapf = "*"
 
 [package.extras]
-all = ["addict", "coverage", "lmdb", "ninja", "numpy", "onnx", "onnxoptimizer", "onnxruntime (>=1.8.0)", "packaging", "pillow", "protobuf (>=3.19.0,<3.20.0)", "psutil", "pytest", "pytest-runner", "pyturbojpeg", "pyyaml", "regex", "scipy", "tifffile", "yapf"]
-build = ["pytest-runner"]
-optional = ["ninja", "psutil"]
-tests = ["coverage", "lmdb", "onnx", "onnxoptimizer", "onnxruntime (>=1.8.0)", "protobuf (>=3.19.0,<3.20.0)", "pytest", "pyturbojpeg", "scipy", "tifffile"]
+all = ["addict", "coverage", "lmdb", "matplotlib", "numpy", "parameterized", "pytest", "pyyaml", "regex", "termcolor", "yapf"]
+tests = ["coverage", "lmdb", "parameterized", "pytest"]
 
 [[package]]
 name = "multidict"
@@ -1117,6 +1115,17 @@ numpy = "*"
 protobuf = ">=3.8.0,<=3.20.1"
 
 [[package]]
+name = "termcolor"
+version = "2.2.0"
+description = "ANSI color formatting for output in terminal"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+tests = ["pytest", "pytest-cov"]
+
+[[package]]
 name = "threadpoolctl"
 version = "3.1.0"
 description = "threadpoolctl"
@@ -1387,7 +1396,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "dff356185cb0cf02017ffbf34bbf387123e348f2307dd01e280c10c37a895981"
+content-hash = "b75a8fe8380f7435d235811f0bd26188f61676f2640c164f1acc43096089afae"
 
 [metadata.files]
 addict = [
@@ -2051,8 +2060,9 @@ matplotlib = [
     {file = "matplotlib-3.6.3-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:9ceebaf73f1a3444fa11014f38b9da37ff7ea328d6efa1652241fe3777bfdab9"},
     {file = "matplotlib-3.6.3.tar.gz", hash = "sha256:1f4d69707b1677560cd952544ee4962f68ff07952fb9069ff8c12b56353cb8c9"},
 ]
-mmcv = [
-    {file = "mmcv-1.7.1.tar.gz", hash = "sha256:2a4161c628f0c848d508ef018adf82e0911f0b5b6a1b9ea2e3bbd1421eaa86cd"},
+mmengine = [
+    {file = "mmengine-0.4.0-py3-none-any.whl", hash = "sha256:2c914c13d7aadf20a43cd743bab5bd79117b08bdfa54cd5a76a7078521ba604e"},
+    {file = "mmengine-0.4.0.tar.gz", hash = "sha256:8204a9bfcac122bfdf8faaf15d1c53743838e19b732a57aa05a9ecf78dd48203"},
 ]
 multidict = [
     {file = "multidict-6.0.4-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:0b1a97283e0c85772d613878028fec909f003993e1007eafa715b24b377cb9b8"},
@@ -2747,6 +2757,10 @@ submitit = [
 tensorboardx = [
     {file = "tensorboardX-2.5.1-py2.py3-none-any.whl", hash = "sha256:8808133ccca673cd04076f6f2a85cf2d39bb2d0393a0f20d0f9cbb06d472b57e"},
     {file = "tensorboardX-2.5.1.tar.gz", hash = "sha256:ea85a3446f22ce8a917fe4fa4d8a7a96222ef84ac835267d038c34bb99f6d61b"},
+]
+termcolor = [
+    {file = "termcolor-2.2.0-py3-none-any.whl", hash = "sha256:91ddd848e7251200eac969846cbae2dacd7d71c2871e92733289e7e3666f48e7"},
+    {file = "termcolor-2.2.0.tar.gz", hash = "sha256:dfc8ac3f350788f23b2947b3e6cfa5a53b630b612e6cd8965a015a776020b99a"},
 ]
 threadpoolctl = [
     {file = "threadpoolctl-3.1.0-py3-none-any.whl", hash = "sha256:8b99adda265feb6773280df41eece7b2e6561b772d21ffd52e372f999024907b"},

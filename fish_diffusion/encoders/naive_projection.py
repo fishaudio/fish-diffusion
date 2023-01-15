@@ -39,5 +39,5 @@ class NaiveProjectionEncoder(nn.Module):
         else:
             self.projection = nn.Linear(input_size, output_size)
 
-    def forward(self, x):
+    def forward(self, x, *args, **kwargs):
         return self.embedding(x) if self.use_embedding else self.projection(x)

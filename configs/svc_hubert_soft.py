@@ -25,10 +25,11 @@ model = dict(
             residual_layers=20,
             dropout=0.2,
         ),
+        spec_stats_path="dataset/stats.json",
     ),
     text_encoder=dict(
         type="NaiveProjectionEncoder",
-        input_size=392,
+        input_size=256,
         output_size=256,
     ),
     speaker_encoder=dict(
@@ -51,9 +52,9 @@ model = dict(
     ),
 )
 
-preprocess = dict(
-    text_features_extractor = dict(
+preprocessing = dict(
+    text_features_extractor=dict(
         type="HubertSoft",
     ),
-    pitch_extractor = "parselmouth",
+    pitch_extractor="crepe",
 )

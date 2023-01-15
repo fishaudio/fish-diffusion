@@ -1,3 +1,3 @@
-from mmcv.utils import Registry
+from mmengine import Registry
 
 DIFFUSIONS = Registry("diffusions")

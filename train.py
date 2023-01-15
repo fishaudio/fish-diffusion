@@ -16,7 +16,7 @@ from pytorch_lightning.loggers import WandbLogger
 import wandb
 import matplotlib.pyplot as plt
 from fish_diffusion.vocoders import NsfHifiGAN
-from mmcv import Config
+from mmengine import Config
 
 
 class DiffSVC(pl.LightningModule):
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
-    parser.add_argument("--config", type=str, default="configs/base.py")
+    parser.add_argument("--config", type=str, required=True)
     parser.add_argument("--resume", type=str, default=None)
     parser.add_argument("--resume-id", type=str, default=None)
 

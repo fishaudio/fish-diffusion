@@ -27,7 +27,7 @@ class AudioFolderDataset(Dataset):
         mel_path = wav_path + ".mel.npy"
         mel = np.load(mel_path).T
 
-        c_path = wav_path + f".features.npy"
+        c_path = wav_path + f".text_features.npy"
         c = np.load(c_path).T
         pitch_path = wav_path + ".f0.npy"
         pitch = np.load(pitch_path)

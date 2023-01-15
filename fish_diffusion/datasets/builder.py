@@ -1,3 +1,3 @@
-from mmcv.utils import Registry
+from mmengine import Registry
 
 DATASETS = Registry("datasets")

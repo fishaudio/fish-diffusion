@@ -15,6 +15,7 @@ class HubertSoft(BaseFeatureExtractor):
     def forward(self, path_or_audio, sampling_rate=None):
         audio = self.preprocess(path_or_audio, sampling_rate)
 
+        audio = audio[None, None].to(self.device)
         units = self.model.units(audio)
 
         return units.transpose(1, 2)
