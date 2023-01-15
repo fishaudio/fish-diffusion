@@ -4,7 +4,10 @@ from transformers import Wav2Vec2FeatureExtractor, Wav2Vec2ForCTC
 
 from .base import BaseFeatureExtractor
 
+from .builder import FEATURE_EXTRACTORS
 
+
+@FEATURE_EXTRACTORS.register_module()
 class Wav2Vec2XLSR(BaseFeatureExtractor):
     def __init__(self, name="voidful/wav2vec2-xlsr-multilingual-56"):
         super().__init__()
@@ -28,6 +31,7 @@ class Wav2Vec2XLSR(BaseFeatureExtractor):
         return outputs.hidden_states[-1].transpose(1, 2)
 
 
+@FEATURE_EXTRACTORS.register_module()
 class Wav2Vec2XLSRIPA(Wav2Vec2XLSR):
     def __init__(self, name="facebook/wav2vec2-xlsr-53-espeak-cv-ft"):
         super().__init__(name)

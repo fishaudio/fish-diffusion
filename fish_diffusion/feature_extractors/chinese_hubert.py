@@ -8,6 +8,10 @@ from transformers import (
 from .base import BaseFeatureExtractor
 
 
+from .builder import FEATURE_EXTRACTORS
+
+
+@FEATURE_EXTRACTORS.register_module()
 class ChineseHubert(BaseFeatureExtractor):
     def __init__(self, name="TencentGameMate/chinese-hubert-base", discrete=False):
         super().__init__()

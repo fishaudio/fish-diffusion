@@ -17,6 +17,7 @@ numba = "^0.56.4"
 mmcv = "^1.7.1"
 fish-audio-preprocess = "^0.1.0"
 wandb = "^0.13.9"
+transformers = "^4.25.1"
 
 [tool.poetry.dev-dependencies]
 isort = "^5.11.4"
