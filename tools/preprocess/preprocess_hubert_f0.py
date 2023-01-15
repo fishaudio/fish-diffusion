@@ -14,7 +14,7 @@ from tqdm import tqdm
 import harmof0
 import torchcrepe
 from sklearn.cluster import KMeans
-from fish_diffusion.utils.common import get_mel_from_wav
+from fish_diffusion.utils.tensor import get_mel_from_wav
 
 from fish_diffusion.utils.stft import TacotronSTFT
 from fish_diffusion.feature_extractors.wav2vec2_xlsr import Wav2Vec2XLSRIPA

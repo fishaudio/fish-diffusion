@@ -3,7 +3,7 @@ import torch
 import json
 import os
 from .models import Generator, AttrDict
-from .stft import STFT, load_wav_to_torch
+from fish_diffusion.utils.audio import get_mel_from_audio
 import pytorch_lightning as pl
 
 
@@ -62,11 +62,11 @@ class NsfHifiGAN(pl.LightningModule):
             self.h.fmax == fmax
         ), f"Maximum frequency mismatch: {self.h.fmax} (vocoder) != {fmax}"
 
+    @torch.no_grad()
     def spec2wav(self, mel, f0):
-        with torch.no_grad():
-            c = mel[None]
-            f0 = f0[None].to(c.dtype)
-            y = self.model(c, f0).view(-1)
+        c = mel[None]
+        f0 = f0[None].to(c.dtype)
+        y = self.model(c, f0).view(-1)
 
         return y
 
@@ -74,23 +74,16 @@ class NsfHifiGAN(pl.LightningModule):
     def device(self):
         return next(self.model.parameters()).device
 
-    def wav2spec(self, inp_path):
-        stft = STFT(
-            self.h.sampling_rate,
-            self.h.num_mels,
-            self.h.n_fft,
-            self.h.win_size,
-            self.h.hop_size,
-            self.h.fmin,
-            self.h.fmax,
+    def wav2spec(self, wav_torch):
+        mel_torch = get_mel_from_audio(
+            audio=wav_torch,
+            sample_rate=self.h.sampling_rate,
+            n_fft=self.h.n_fft,
+            win_length=self.h.win_size,
+            hop_length=self.h.hop_size,
+            f_min=self.h.fmin,
+            f_max=self.h.fmax,
+            n_mels=self.h.num_mels,
         )
 
-        with torch.no_grad():
-            wav_torch, _ = load_wav_to_torch(inp_path, target_sr=stft.target_sr)
-            wav_torch = wav_torch[None].to(self.device)
-            mel_torch = stft.get_mel(wav_torch)[0].T
-
-            # log mel to log10 mel
-            mel_torch = 0.434294 * mel_torch
-
-        return wav_torch.cpu().numpy(), mel_torch.cpu().numpy()
+        return mel_torch
