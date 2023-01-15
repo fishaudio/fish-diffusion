@@ -2,7 +2,7 @@ import numpy as np
 import librosa
 import torch
 from tqdm import tqdm
-from fish_diffusion.utils.pitch import get_pitch_parselmouth, get_pitch_crepe
+from fish_diffusion.utils.pitch import PITCH_EXTRACTORS
 from fish_diffusion.utils.audio import get_mel_from_audio
 from fish_diffusion.utils.tensor import repeat_expand_2d
 from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS
@@ -14,6 +14,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from fish_audio_preprocess.utils.file import list_files
 import argparse
 import multiprocessing as mp
+from loguru import logger
 
 
 text_features_extractor = None
@@ -74,15 +75,13 @@ def process(config, audio_path: Path, override: bool = False):
     f0_path = audio_path.parent / f"{audio_path.name}.f0.npy"
 
     if f0_path.exists() is False or override:
-        if config.preprocessing.pitch_extractor == "crepe":
-            f0 = get_pitch_crepe(audio, sr, pad_to=mel.shape[-1])
-        elif config.preprocessing.pitch_extractor == "parselmouth":
-            f0 = get_pitch_parselmouth(audio, sr, pad_to=mel.shape[-1])
-        else:
-            raise ValueError(
-                f"Unknown pitch extractor: {config.preprocessing.pitch_extractor}"
-            )
+        pitch_extractor = PITCH_EXTRACTORS.get(config.preprocessing.pitch_extractor)
 
+        assert (
+            pitch_extractor is not None
+        ), f"Unknown pitch extractor: {config.preprocessing.pitch_extractor}"
+
+        f0 = pitch_extractor(audio, sr, pad_to=mel.shape[-1])
         np.save(f0_path, f0.cpu().numpy())
 
 
@@ -104,18 +103,18 @@ if __name__ == "__main__":
     args = parse_args()
 
     if args.clean:
-        print("Cleaning...")
+        logger.info("Cleaning *.npy files...")
 
         files = list_files(args.path, {".npy"}, recursive=True, sort=True)
         for f in files:
             f.unlink()
 
-        print("Done!")
+        logger.info("Done!")
 
     config = Config.fromfile(args.config)
     files = list_files(args.path, {".wav"}, recursive=True, sort=True)
 
-    print(f"Found {len(files)} files, processing...")
+    logger.info(f"Found {len(files)} files, processing...")
 
     worker_id = Value("i", 0)
     lock = Lock()
@@ -133,4 +132,4 @@ if __name__ == "__main__":
         for i in tqdm(as_completed(futures), total=len(futures)):
             assert i.exception() is None, i.exception()
 
-    print("Done!")
+    logger.info("Done!")
