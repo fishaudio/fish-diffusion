@@ -28,7 +28,7 @@ model = dict(
             dropout=0.2,
         ),
         spec_stats_path="dataset/stats.json",
-        sampler_speed_up=10,
+        sampler_interval=10,
     ),
     text_encoder=dict(
         type="NaiveProjectionEncoder",
