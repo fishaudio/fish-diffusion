@@ -130,6 +130,7 @@ def get_pitch_crepe(
 
     if sampling_rate != 16000:
         x = torchaudio.functional.resample(x, sampling_rate, 16000)
+        sampling_rate = 16000
 
     # 重采样后按照 hopsize=80, 也就是 5ms 一帧分析 f0
     f0, pd = torchcrepe.predict(
