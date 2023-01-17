@@ -122,11 +122,11 @@ def inference(
             non_vocals[0], orig_sr=model.samplerate, target_sr=sr
         )
 
+        # Normalize loudness
+        non_vocals = loudness_norm.loudness_norm(non_vocals, sr)
+
     # Normalize loudness
     audio = loudness_norm.loudness_norm(audio, sr)
-
-    if extract_vocals and merge_non_vocals:
-        non_vocals = loudness_norm.loudness_norm(non_vocals, sr)
 
     # Slice into segments
     segments = list(
@@ -182,11 +182,12 @@ def inference(
         wav = model.vocoder.spec2wav(result[0].T, f0=pitch).cpu().numpy()
         max_wav_len = generated_audio.shape[-1] - start
         generated_audio[start : start + wav.shape[-1]] = wav[:max_wav_len]
-    
+
     # Loudness normalization
     generated_audio = loudness_norm.loudness_norm(generated_audio, sr)
 
     # Merge non-vocals
+    # TODO: there is a bug here, the non-vocals is not merged correctly
     if extract_vocals and merge_non_vocals:
         generated_audio = (generated_audio + non_vocals * non_vocals_loudness) / (
             1 + non_vocals_loudness
@@ -203,13 +204,13 @@ if __name__ == "__main__":
     inference(
         Config.fromfile("configs/svc_hubert_soft_continuous_pitch.py"),
         "logs/diff-svc/5w6yytnv/checkpoints",
-        "data/sources/小泠/我 的 鸡 它 八 岁 了-.aac",
-        "output.wav",
+        "raw/生命的云彩干音2.wav",
+        "results/生命的云彩干音2.wav",
         speaker_id=0,
         pitch_adjust=0,
-        extract_vocals=True,
+        extract_vocals=False,
         merge_non_vocals=True,
-        non_vocals_loudness=0.5,
+        non_vocals_loudness=1,
         device=device,
         max_slice_duration=30.0,
         silence_threshold=60,

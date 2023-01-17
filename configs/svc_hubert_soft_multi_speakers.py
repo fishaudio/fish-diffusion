@@ -6,6 +6,7 @@ _base_ = [
 
 dataset = dict(
     train=dict(
+        _delete_=True,  # Delete the default train dataset
         type="ConcatDataset",
         datasets=[
             dict(
