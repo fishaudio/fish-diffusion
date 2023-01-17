@@ -13,6 +13,6 @@ audio, sr = torchaudio.load(source)
 mel = gan.wav2spec(audio)
 f0 = get_pitch_parselmouth(audio, sr, pad_to=mel.shape[-1])
 
-a = gan.spec2wav(mel, f0)
+out = gan.spec2wav(mel, f0)
 
-sf.write("result.wav", a, 44100)
+sf.write("result.wav", out, sr)
