@@ -1,9 +1,7 @@
 import torch
-
 from transformers import Wav2Vec2FeatureExtractor, Wav2Vec2ForCTC
 
 from .base import BaseFeatureExtractor
-
 from .builder import FEATURE_EXTRACTORS
 
 

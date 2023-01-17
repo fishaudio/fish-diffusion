@@ -1,6 +1,6 @@
+import matplotlib
 import torch
 from matplotlib import pyplot as plt
-import matplotlib
 
 matplotlib.use("Agg")
 

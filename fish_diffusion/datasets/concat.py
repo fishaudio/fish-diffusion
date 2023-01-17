@@ -1,6 +1,8 @@
-from torch.utils.data import ConcatDataset as _ConcatDataset
-from .builder import DATASETS
 from typing import Iterable
+
+from torch.utils.data import ConcatDataset as _ConcatDataset
+
+from .builder import DATASETS
 
 
 @DATASETS.register_module()

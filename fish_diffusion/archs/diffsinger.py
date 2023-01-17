@@ -1,9 +1,8 @@
+import torch
 import torch.nn as nn
 
-import torch
-
-from fish_diffusion.encoders import ENCODERS
 from fish_diffusion.diffusions import DIFFUSIONS
+from fish_diffusion.encoders import ENCODERS
 
 
 class DiffSinger(nn.Module):

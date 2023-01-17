@@ -1,10 +1,12 @@
-import torch
-
 import json
 import os
-from .models import Generator, AttrDict
-from fish_diffusion.utils.audio import get_mel_from_audio
+
 import pytorch_lightning as pl
+import torch
+
+from fish_diffusion.utils.audio import get_mel_from_audio
+
+from .models import AttrDict, Generator
 
 
 class NsfHifiGAN(pl.LightningModule):

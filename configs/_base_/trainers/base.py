@@ -1,5 +1,5 @@
+from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.strategies import DDPStrategy
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 trainer = dict(
     accelerator="gpu",

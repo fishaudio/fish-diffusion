@@ -1,13 +1,7 @@
 import torch
-
-from transformers import (
-    Wav2Vec2FeatureExtractor,
-    HubertModel,
-)
+from transformers import HubertModel, Wav2Vec2FeatureExtractor
 
 from .base import BaseFeatureExtractor
-
-
 from .builder import FEATURE_EXTRACTORS
 
 

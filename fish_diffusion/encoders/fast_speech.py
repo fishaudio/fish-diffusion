@@ -5,9 +5,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from fish_diffusion.modules.positional_embedding import (
-    SinusoidalPositionalEmbedding,
     RelPositionalEncoding,
+    SinusoidalPositionalEmbedding,
 )
+
 from .builder import ENCODERS
 
 

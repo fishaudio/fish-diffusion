@@ -1,8 +1,8 @@
 import numpy as np
 import parselmouth
 import torch
-import torchcrepe
 import torchaudio
+import torchcrepe
 
 _f0_bin = 256
 _f0_max = 1100.0
