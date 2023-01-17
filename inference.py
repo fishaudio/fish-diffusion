@@ -1,19 +1,20 @@
+import math
 import os
 from typing import Iterable
+
 import librosa
 import numpy as np
+import soundfile as sf
 import torch
+from fish_audio_preprocess.utils import loudness_norm, separate_audio, slice_audio
+from loguru import logger
+from mmengine import Config
+
 from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS
-from fish_audio_preprocess.utils import separate_audio, slice_audio, loudness_norm
 from fish_diffusion.utils.audio import get_mel_from_audio
 from fish_diffusion.utils.pitch import PITCH_EXTRACTORS
 from fish_diffusion.utils.tensor import repeat_expand_2d
 from train import DiffSVC
-from mmengine import Config
-from loguru import logger
-import soundfile as sf
-import os
-import math
 
 
 def slice_audio(
@@ -70,7 +71,7 @@ def inference(
     max_slice_duration=30.0,
     extract_vocals=True,
     merge_non_vocals=True,
-    non_vocals_loudness=1.0,
+    vocals_loudness_gain=0.0,
     device="cuda",
 ):
     """Inference
@@ -86,7 +87,7 @@ def inference(
         max_slice_duration: maximum duration of each slice
         extract_vocals: extract vocals
         merge_non_vocals: merge non-vocals, only works when extract_vocals is True
-        non_vocals_loudness: loudness of non-vocals, only works when extract_vocals is True
+        vocals_loudness_gain: loudness gain of vocals (dB)
         device: device
     """
 
@@ -186,15 +187,15 @@ def inference(
     # Loudness normalization
     generated_audio = loudness_norm.loudness_norm(generated_audio, sr)
 
+    # Loudness gain
+    loudness_float = 10 ** (vocals_loudness_gain / 20)
+    generated_audio = generated_audio * loudness_float
+
     # Merge non-vocals
-    # TODO: there is a bug here, the non-vocals is not merged correctly
     if extract_vocals and merge_non_vocals:
-        generated_audio = (generated_audio + non_vocals * non_vocals_loudness) / (
-            1 + non_vocals_loudness
-        )
+        generated_audio = (generated_audio + non_vocals) / 2
 
     sf.write(output_path, generated_audio, sr)
-
     logger.info("Done")
 
 
@@ -204,14 +205,14 @@ if __name__ == "__main__":
     inference(
         Config.fromfile("configs/svc_hubert_soft_continuous_pitch.py"),
         "logs/diff-svc/5w6yytnv/checkpoints",
-        "raw/生命的云彩干音2.wav",
-        "results/生命的云彩干音2.wav",
+        "raw/sources/【Mia米娅】《百万个吻》Mua版-.wav",
+        "results/【Mia米娅】《百万个吻》Mua版-.wav",
         speaker_id=0,
         pitch_adjust=0,
-        extract_vocals=False,
+        extract_vocals=True,
         merge_non_vocals=True,
-        non_vocals_loudness=1,
         device=device,
         max_slice_duration=30.0,
         silence_threshold=60,
+        vocals_loudness_gain=0,
     )

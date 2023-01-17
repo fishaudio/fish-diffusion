@@ -1,4 +1,4 @@
 #!/bin/sh
 
-python -m black **/*.py
-python -m isort --profile black **/*.py
+python -m black **/*.py *.py
+python -m isort --profile black **/*.py *.py
