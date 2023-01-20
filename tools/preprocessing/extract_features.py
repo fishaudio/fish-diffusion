@@ -38,6 +38,7 @@ def init(worker_id: Value, lock: Lock, config):
         config.preprocessing.text_features_extractor
     )
     text_features_extractor.to(device)
+    text_features_extractor.eval()
 
     if config.preprocessing.pitch_extractor == "crepe":
         torchcrepe.load.model(device, "full")
