@@ -1,4 +1,5 @@
 import torch
+from torch import nn
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
 
 from .base import BaseFeatureExtractor
@@ -41,3 +42,32 @@ class ChineseHubert(BaseFeatureExtractor):
         dist = torch.cdist(features, self.cluster_centers)
 
         return dist.log_softmax(2).transpose(1, 2)
+
+
+@FEATURE_EXTRACTORS.register_module()
+class ChineseHubertSoft(BaseFeatureExtractor):
+    def __init__(self, ckpt_path=None):
+        super().__init__()
+
+        self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(
+            "TencentGameMate/chinese-hubert-base"
+        )
+        self.model = HubertModel.from_pretrained("TencentGameMate/chinese-hubert-base")
+        self.proj = nn.Sequential(nn.Dropout(0.1), nn.Linear(768, 128))
+
+        if ckpt_path is not None:
+            self.load_state_dict(torch.load(ckpt_path, map_location="cpu"))
+
+    @torch.no_grad()
+    def forward(self, path_or_audio, sampling_rate=None):
+        audio = self.preprocess(path_or_audio, sampling_rate)
+
+        input_values = self.feature_extractor(
+            audio, sampling_rate=16000, return_tensors="pt"
+        ).input_values
+        input_values = input_values.to(self.model.device)
+
+        features = self.model(input_values)
+        features = self.proj(features.last_hidden_state)
+
+        return features.transpose(1, 2)
