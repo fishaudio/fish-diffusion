@@ -36,7 +36,6 @@ def get_mel_from_audio(
     power=1.0,
     pad_mode="reflect",
     norm="slaney",
-    onesided=True,
     mel_scale="slaney",
 ) -> torch.Tensor:
     """Get mel spectrogram from audio
@@ -63,7 +62,6 @@ def get_mel_from_audio(
         power=power,
         pad_mode=pad_mode,
         norm=norm,
-        onesided=onesided,
         mel_scale=mel_scale,
     ).to(audio.device)
 
