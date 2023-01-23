@@ -1,4 +1,4 @@
-from fish_diffusion.utils.pitch import pitch_to_coarse
+from fish_diffusion.utils.pitch import pitch_to_scale
 
 _base_ = [
     "./_base_/trainers/base.py",
@@ -43,10 +43,10 @@ model = dict(
     ),
     pitch_encoder=dict(
         type="NaiveProjectionEncoder",
-        input_size=256,
-        output_size=hidden_size,
-        use_embedding=True,
-        preprocessing=pitch_to_coarse,
+        input_size=1,
+        output_size=256,
+        use_embedding=False,
+        preprocessing=pitch_to_scale,
     ),
     vocoder=dict(
         type="NsfHifiGAN",
