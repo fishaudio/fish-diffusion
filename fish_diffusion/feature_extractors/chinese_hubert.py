@@ -53,7 +53,7 @@ class ChineseHubertSoft(BaseFeatureExtractor):
             "TencentGameMate/chinese-hubert-base"
         )
         self.model = HubertModel.from_pretrained("TencentGameMate/chinese-hubert-base")
-        self.proj = nn.Sequential(nn.Dropout(0.1), nn.Linear(768, 128))
+        self.proj = nn.Sequential(nn.Dropout(0.1), nn.Linear(768, 256))
 
         if ckpt_path is not None:
             self.load_state_dict(torch.load(ckpt_path, map_location="cpu"))
@@ -69,5 +69,8 @@ class ChineseHubertSoft(BaseFeatureExtractor):
 
         features = self.model(input_values)
         features = self.proj(features.last_hidden_state)
+
+        # features = features.softmax(2)
+        # features[features < 0.1] = 0
 
         return features.transpose(1, 2)
