@@ -1,3 +1,4 @@
+import argparse
 import math
 import os
 from typing import Iterable
@@ -199,20 +200,98 @@ def inference(
     logger.info("Done")
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="configs/svc_hubert_soft.py",
+        help="Path to the config file",
+    )
+
+    parser.add_argument(
+        "--checkpoint",
+        type=str,
+        required=True,
+        help="Path to the checkpoint file",
+    )
+
+    parser.add_argument(
+        "--input",
+        type=str,
+        required=True,
+        help="Path to the input audio file",
+    )
+
+    parser.add_argument(
+        "--output",
+        type=str,
+        required=True,
+        help="Path to the output audio file",
+    )
+
+    parser.add_argument(
+        "--speaker_id",
+        type=int,
+        default=0,
+        help="Speaker id",
+    )
+
+    parser.add_argument(
+        "--pitch_adjust",
+        type=int,
+        default=0,
+        help="Pitch adjustment in semitones",
+    )
+
+    parser.add_argument(
+        "--extract_vocals",
+        action="store_true",
+        help="Extract vocals",
+    )
+
+    parser.add_argument(
+        "--merge_non_vocals",
+        action="store_true",
+        help="Merge non-vocals",
+    )
+
+    parser.add_argument(
+        "--vocals_loudness_gain",
+        type=float,
+        default=0,
+        help="Loudness gain for vocals",
+    )
+
+    parser.add_argument(
+        "--device",
+        type=str,
+        default=None,
+        required=False,
+        help="Device to use",
+    )
+
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    args = parse_args()
+
+    if args.device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    else:
+        device = torch.device(args.device)
 
     inference(
-        Config.fromfile("configs/svc_hubert_soft_continuous_pitch.py"),
-        "logs/diff-svc/5w6yytnv/checkpoints",
-        "raw/sources/【Mia米娅】《百万个吻》Mua版-.wav",
-        "results/【Mia米娅】《百万个吻》Mua版-.wav",
-        speaker_id=0,
-        pitch_adjust=0,
-        extract_vocals=True,
-        merge_non_vocals=True,
+        Config.fromfile(args.config),
+        args.checkpoint,
+        args.input,
+        args.output,
+        speaker_id=args.speaker_id,
+        pitch_adjust=args.pitch_adjust,
+        extract_vocals=args.extract_vocals,
+        merge_non_vocals=args.merge_non_vocals,
+        vocals_loudness_gain=args.vocals_loudness_gain,
         device=device,
-        max_slice_duration=30.0,
-        silence_threshold=60,
-        vocals_loudness_gain=0,
     )

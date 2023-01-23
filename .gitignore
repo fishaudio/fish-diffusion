@@ -144,3 +144,4 @@ raw
 results
 
 configs/exp_*.py
+exp_*.sh
