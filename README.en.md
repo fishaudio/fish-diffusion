@@ -57,6 +57,8 @@ python tools/preprocessing/generate_stats.py --input-dir dataset/train --output-
 ```
 
 ## Baseline training
+> The project is still under active development, please remember to back up your config file
+
 ```bash
 # Single machine single card / multi-card training
 python train.py --config configs/svc_hubert_soft.py

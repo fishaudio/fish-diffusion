@@ -57,6 +57,8 @@ python tools/preprocessing/generate_stats.py --input-dir dataset/train --output-
 ```
 
 ## 基本训练
+> 该项目仍在积极开发, 请记得备份你的 config 文件
+
 ```bash
 # 单机单卡 / 单机多卡训练
 python train.py --config configs/svc_hubert_soft.py
