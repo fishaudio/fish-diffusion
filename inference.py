@@ -15,7 +15,7 @@ from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS
 from fish_diffusion.utils.audio import get_mel_from_audio
 from fish_diffusion.utils.pitch import PITCH_EXTRACTORS
 from fish_diffusion.utils.tensor import repeat_expand_2d
-from train import DiffSVC
+from train import FishDiffusion
 
 
 def slice_audio(
@@ -142,7 +142,7 @@ def inference(
     text_features_extractor = FEATURE_EXTRACTORS.build(
         config.preprocessing.text_features_extractor
     ).to(device)
-    model = DiffSVC.load_from_checkpoint(checkpoint).to(device)
+    model = FishDiffusion.load_from_checkpoint(checkpoint).to(device)
 
     pitch_extractor = PITCH_EXTRACTORS.get(config.preprocessing.pitch_extractor)
     assert pitch_extractor is not None, "Pitch extractor not found"

@@ -17,7 +17,7 @@ from fish_diffusion.utils.viz import viz_synth_sample
 from fish_diffusion.vocoders import NsfHifiGAN
 
 
-class DiffSVC(pl.LightningModule):
+class FishDiffusion(pl.LightningModule):
     def __init__(self, model_config):
         super().__init__()
         self.save_hyperparameters()
@@ -120,7 +120,7 @@ if __name__ == "__main__":
 
     cfg = Config.fromfile(args.config)
 
-    model = DiffSVC(cfg.model)
+    model = FishDiffusion(cfg.model)
 
     train_dataset = DATASETS.build(cfg.dataset.train)
     train_loader = DataLoader(
