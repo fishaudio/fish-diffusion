@@ -103,7 +103,3 @@ dataset = dict(
         speaker_id=0,
     ),
 )
-
-trainer = dict(
-    precision=32,
-)
