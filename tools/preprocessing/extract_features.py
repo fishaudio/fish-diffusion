@@ -71,7 +71,7 @@ def process(config, audio_path: Path, override: bool = False):
 
     if text_features_path.exists() is False or override:
         if config.model.type == "DiffSinger":
-            text_features = text_features_extractor(audio_path)
+            text_features = text_features_extractor(audio_path, mel.shape[-1])
         else:
             text_features = text_features_extractor(audio, sr)[0]
             text_features = repeat_expand_2d(text_features, mel.shape[-1])

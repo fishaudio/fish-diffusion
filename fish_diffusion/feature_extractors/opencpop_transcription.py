@@ -23,7 +23,7 @@ class OpenCpopTranscriptionToPhonemesDuration(BaseFeatureExtractor):
         for i in open(transcription_path):
             id, _, phones, _, _, durations, _ = i.split("|")
             phones = phones.split(" ")
-            durations = durations.split(" ")
+            durations = [float(i) for i in durations.split(" ")]
 
             assert len(phones) == len(durations)
 
@@ -32,16 +32,26 @@ class OpenCpopTranscriptionToPhonemesDuration(BaseFeatureExtractor):
         return results
 
     @torch.no_grad()
-    def forward(self, audio_path: Path):
+    def forward(self, audio_path: Path, mel_len: int):
         id = audio_path.stem
         phones, durations = self.transcriptions[id]
 
-        features = torch.zeros(
-            (len(phones), len(self.phonemes) + 1), dtype=torch.float32
-        )
+        cumsum_durations = np.cumsum(durations)
+        alignment_factor = mel_len / cumsum_durations[-1]
 
-        for i, (phone, duration) in enumerate(zip(phones, durations)):
-            features[i, self.phonemes.index(phone)] = 1.0
-            features[i, -1] = float(duration)
+        features = torch.zeros((mel_len, len(self.phonemes) + 1), dtype=torch.float32)
 
-        return features
+        for i, (phone, duration, sum_duration) in enumerate(
+            zip(phones, durations, cumsum_durations)
+        ):
+            current_idx = int(sum_duration * alignment_factor)
+            previous_idx = (
+                int(cumsum_durations[i - 1] * alignment_factor) if i > 0 else 0
+            )
+            _temp = torch.zeros(len(self.phonemes) + 1, dtype=torch.float32)
+            _temp[self.phonemes.index(phone)] = 1
+            _temp[-1] = duration
+
+            features[previous_idx:current_idx] = _temp
+
+        return features.T
