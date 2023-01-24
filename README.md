@@ -1,4 +1,6 @@
 # Fish Diffusion
+![CI Status](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml/badge.svg)
+
 一个简单易懂的 TTS / SVS / SVC 框架.
 
 [English Document](README.en.md)

@@ -1,4 +1,6 @@
 # Fish Diffusion
+![CI Status](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml/badge.svg)
+
 An easy to understand TTS / SVS / SVC training framework.
 
 [中文文档](README.md)
