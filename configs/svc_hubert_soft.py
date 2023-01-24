@@ -10,6 +10,7 @@ mel_channels = 128
 hidden_size = 256
 
 model = dict(
+    type="DiffSVC",
     diffusion=dict(
         type="GaussianDiffusion",
         mel_channels=mel_channels,

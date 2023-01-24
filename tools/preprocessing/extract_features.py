@@ -19,10 +19,11 @@ from fish_diffusion.utils.pitch import PITCH_EXTRACTORS
 from fish_diffusion.utils.tensor import repeat_expand_2d
 
 text_features_extractor = None
+device = None
 
 
 def init(worker_id: Value, lock: Lock, config):
-    global text_features_extractor
+    global text_features_extractor, device
 
     with lock:
         current_id = worker_id.value
@@ -63,14 +64,18 @@ def process(config, audio_path: Path, override: bool = False):
         mel = np.load(mel_path)
 
     # Move audio to appropriate device
-    audio = torch.from_numpy(audio).unsqueeze(0).to(text_features_extractor.device)
+    audio = torch.from_numpy(audio).unsqueeze(0).to(device)
 
     # Extract text features
     text_features_path = audio_path.parent / f"{audio_path.name}.text_features.npy"
 
     if text_features_path.exists() is False or override:
-        text_features = text_features_extractor(audio, sr)[0]
-        text_features = repeat_expand_2d(text_features, mel.shape[-1])
+        if config.model.type == "DiffSinger":
+            text_features = text_features_extractor(audio_path)
+        else:
+            text_features = text_features_extractor(audio, sr)[0]
+            text_features = repeat_expand_2d(text_features, mel.shape[-1])
+
         np.save(text_features_path, text_features.cpu().numpy())
 
     # Extract f0
