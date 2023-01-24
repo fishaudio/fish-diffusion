@@ -77,3 +77,7 @@ model = dict(
         output_size=256,
     ),
 )
+
+trainer = dict(
+    precision=16,
+)
