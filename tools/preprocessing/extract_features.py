@@ -47,7 +47,7 @@ def init(worker_id: Value, lock: Lock, config):
 
 def process(config, audio_path: Path, override: bool = False):
     # Important for multiprocessing
-    global text_features_extractor
+    global text_features_extractor, device
 
     audio, sr = librosa.load(str(audio_path), sr=None, mono=True)
     # audio: (1, T)
