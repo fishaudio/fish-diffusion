@@ -139,9 +139,9 @@ if __name__ == "__main__":
 
     trainer = pl.Trainer(
         logger=WandbLogger(
-            project="diff-svc",
+            project=cfg.model.type,
             save_dir="logs",
-            log_model="all",
+            log_model=True,
             entity="fish-audio",
             resume="must" if args.resume_id else False,
             id=args.resume_id,
