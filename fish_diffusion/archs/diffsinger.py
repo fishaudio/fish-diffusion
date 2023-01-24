@@ -48,11 +48,13 @@ class DiffSinger(nn.Module):
             else None
         )
 
+        features = self.text_encoder(contents, src_masks)
+
         speaker_embed = (
             self.speaker_encoder(speakers).unsqueeze(1).expand(-1, max_src_len, -1)
         )
 
-        features = self.text_encoder(contents, src_masks, speaker_embed)
+        features += speaker_embed
         features += self.pitch_encoder(pitches)
 
         mel_masks = (

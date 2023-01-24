@@ -726,7 +726,7 @@ class FastSpeech2Encoder(FFTBlocks):
         else:
             self.proj = nn.Linear(input_size, hidden_size)
 
-    def forward(self, contents, encoder_padding_mask, spk_emb):
+    def forward(self, contents, encoder_padding_mask):
         """
 
         :param txt_tokens: [B, T]
@@ -737,7 +737,6 @@ class FastSpeech2Encoder(FFTBlocks):
         """
 
         x = self.proj(contents)
-        x += spk_emb
         x = super(FastSpeech2Encoder, self).forward(x, encoder_padding_mask)
 
         return x
