@@ -357,7 +357,7 @@ testing = ["covdefaults (>=2.2.2)", "coverage (>=7.0.1)", "pytest (>=7.2)", "pyt
 
 [[package]]
 name = "fish-audio-preprocess"
-version = "0.1.2"
+version = "0.1.4"
 description = "Preprocess audio data"
 category = "main"
 optional = false
@@ -1655,7 +1655,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "34f77d6ff4bfcb760c2b6ee092362b357ee2cbc474c6b2f371e624a891ca4ec2"
+content-hash = "f384d56cb19460686a7076d1d933adcca6ffe3fac1830b960e9bee5507dbd6c6"
 
 [metadata.files]
 absl-py = [
@@ -2080,8 +2080,8 @@ filelock = [
     {file = "filelock-3.9.0.tar.gz", hash = "sha256:7b319f24340b51f55a2bf7a12ac0755a9b03e718311dac567a0f4f7fabd2f5de"},
 ]
 fish-audio-preprocess = [
-    {file = "fish-audio-preprocess-0.1.2.tar.gz", hash = "sha256:17d1182579142bfc02410c8e14c09870db16327a26ae5cf9b0b4952f5823136b"},
-    {file = "fish_audio_preprocess-0.1.2-py3-none-any.whl", hash = "sha256:b0cf15f3b417e50c351950f0fd064b5676c5b68d886b5377b5e8918ee325a81e"},
+    {file = "fish-audio-preprocess-0.1.4.tar.gz", hash = "sha256:e1ba4581b87846ed0a53e5ce4cd65022ddf1bac3854821d7acfbca5f22f4a2fb"},
+    {file = "fish_audio_preprocess-0.1.4-py3-none-any.whl", hash = "sha256:d43e09c0201d36ef3f005453deb4cf6fefc33d7125fe9d5cc125e2f173a3c473"},
 ]
 fonttools = [
     {file = "fonttools-4.38.0-py3-none-any.whl", hash = "sha256:820466f43c8be8c3009aef8b87e785014133508f0de64ec469e4efb643ae54fb"},
