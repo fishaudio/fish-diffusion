@@ -1,7 +1,7 @@
 import matplotlib
 import torch
-from matplotlib import pyplot as plt
 from fish_audio_preprocess.utils.loudness_norm import loudness_norm
+from matplotlib import pyplot as plt
 
 matplotlib.use("Agg")
 
