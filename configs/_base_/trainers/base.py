@@ -1,3 +1,4 @@
+import torch
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.strategies import DDPStrategy
 
@@ -10,7 +11,9 @@ trainer = dict(
     val_check_interval=1000,
     check_val_every_n_epoch=None,
     max_steps=300000,
-    precision=16,
+    # Note: bf16 is not supported on GPUs older than 30 series
+    # Warning: If you are training the model with fs2, you should either use bf16 or fp32
+    precision="bf16" if torch.cuda.is_bf16_supported() else 16,
     callbacks=[
         ModelCheckpoint(
             filename="diff-svc-{epoch:02d}-{valid_loss:.2f}",

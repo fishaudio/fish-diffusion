@@ -743,8 +743,6 @@ class FastSpeech2Encoder(FFTBlocks):
         # Positional encoding
         x = self.embed_positions(x)
 
-        # Loss maybe NaN if use autocast
-        with torch.autocast(enabled=False, device_type=x.device.type):
-            x = super(FastSpeech2Encoder, self).forward(x, encoder_padding_mask)
+        x = super(FastSpeech2Encoder, self).forward(x, encoder_padding_mask)
 
         return x
