@@ -49,8 +49,12 @@ def viz_synth_sample(
     wav_reconstruction = vocoder.spec2wav(mel_target, pitch)
     wav_prediction = vocoder.spec2wav(mel_prediction, pitch)
 
-    wav_reconstruction = loudness_norm(wav_reconstruction.cpu().float().numpy(), 44100)
-    wav_prediction = loudness_norm(wav_prediction.cpu().float().numpy(), 44100)
+    wav_reconstruction = loudness_norm(
+        wav_reconstruction.cpu().float().numpy(), 44100, block_size=0.1
+    )
+    wav_prediction = loudness_norm(
+        wav_prediction.cpu().float().numpy(), 44100, block_size=0.1
+    )
 
     wav_reconstruction = torch.from_numpy(wav_reconstruction)
     wav_prediction = torch.from_numpy(wav_prediction)
