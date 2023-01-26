@@ -39,7 +39,7 @@ class FishDiffusion(pl.LightningModule):
 
         # scheduler = LambdaLR(optimizer, lr_lambda=lambda_func)
 
-        scheduler = StepLR(optimizer, step_size=40000, gamma=0.5)
+        scheduler = StepLR(optimizer, step_size=50000, gamma=0.5)
 
         return [optimizer], dict(scheduler=scheduler, interval="step")
 
@@ -65,8 +65,8 @@ class FishDiffusion(pl.LightningModule):
         if mode == "valid":
             x = self.model.diffusion.inference(output["features"])
 
-            for path, gt_mel, gt_pitch, predict_mel, predict_mel_len in zip(
-                batch["paths"], batch["mels"], pitches, x, batch["mel_lens"]
+            for gt_mel, gt_pitch, predict_mel, predict_mel_len in zip(
+                batch["mels"], pitches, x, batch["mel_lens"]
             ):
                 mel_fig, wav_reconstruction, wav_prediction = viz_synth_sample(
                     gt_mel=gt_mel,
