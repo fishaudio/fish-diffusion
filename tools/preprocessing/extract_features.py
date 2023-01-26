@@ -49,22 +49,20 @@ def process(config, audio_path: Path, override: bool = False):
     # Important for multiprocessing
     global text_features_extractor, device
 
-    audio, sr = librosa.load(str(audio_path), sr=None, mono=True)
+    audio, sr = librosa.load(str(audio_path), sr=config.sampling_rate, mono=True)
     # audio: (1, T)
+
+    # Move audio to appropriate device
+    audio = torch.from_numpy(audio).unsqueeze(0).to(device)
 
     # Obtain mel spectrogram
     mel_path = audio_path.parent / f"{audio_path.name}.mel.npy"
 
     if mel_path.exists() is False or override:
-        audio_44k = librosa.resample(audio, orig_sr=sr, target_sr=44100)
-        audio_44k = torch.from_numpy(audio_44k).unsqueeze(0)
-        mel = get_mel_from_audio(audio_44k, 44100)
+        mel = get_mel_from_audio(audio, sr)
         np.save(mel_path, mel.cpu().numpy())
     else:
         mel = np.load(mel_path)
-
-    # Move audio to appropriate device
-    audio = torch.from_numpy(audio).unsqueeze(0).to(device)
 
     # Extract text features
     text_features_path = audio_path.parent / f"{audio_path.name}.text_features.npy"
