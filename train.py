@@ -130,12 +130,15 @@ if __name__ == "__main__":
     )
 
     valid_dataset = DATASETS.build(cfg.dataset.valid)
-
     valid_loader = DataLoader(
         valid_dataset,
         collate_fn=valid_dataset.collate_fn,
         **cfg.dataloader.valid,
     )
+
+    # Check if dataset is empty
+    assert len(train_dataset) > 0, "Train dataset is empty, please double check!"
+    assert len(valid_dataset) > 0, "Valid dataset is empty, please double check!"
 
     trainer = pl.Trainer(
         logger=WandbLogger(
