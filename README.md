@@ -52,7 +52,7 @@ dataset
 
 ```bash
 # 1. 提取全部数据的特征, 如 pitch, text features, mel features 等
-python tools/preprocess/extract_features.py --config configs/svc_hubert_soft.py --path dataset --clean
+python tools/preprocessing/extract_features.py --config configs/svc_hubert_soft.py --path dataset --clean
 
 # 2. 生成训练集统计信息
 python tools/preprocessing/generate_stats.py --input-dir dataset/train --output-file dataset/stats.json

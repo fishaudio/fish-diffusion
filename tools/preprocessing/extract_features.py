@@ -126,17 +126,24 @@ if __name__ == "__main__":
     worker_id = Value("i", 0)
     lock = Lock()
 
-    with ProcessPoolExecutor(
-        max_workers=args.num_workers,
-        initializer=init,
-        initargs=(worker_id, lock, config),
-    ) as executor:
-        futures = [
-            executor.submit(process, config, audio_path, args.override)
-            for audio_path in files
-        ]
+    if args.num_workers <= 1:
+        init(worker_id, lock, config)
 
-        for i in tqdm(as_completed(futures), total=len(futures)):
-            assert i.exception() is None, i.exception()
+        for audio_path in tqdm(files):
+            process(config, audio_path, args.override)
+    else:
+        with ProcessPoolExecutor(
+            max_workers=args.num_workers,
+            initializer=init,
+            initargs=(worker_id, lock, config),
+        ) as executor:
+            # TODO: change to map
+            futures = [
+                executor.submit(process, config, audio_path, args.override)
+                for audio_path in files
+            ]
+
+            for i in tqdm(as_completed(futures), total=len(futures)):
+                assert i.exception() is None, i.exception()
 
     logger.info("Done!")
