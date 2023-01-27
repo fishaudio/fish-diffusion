@@ -19,7 +19,7 @@ dataloader = dict(
         persistent_workers=True,
     ),
     valid=dict(
-        batch_size=20,
+        batch_size=2,
         shuffle=False,
         num_workers=2,
         persistent_workers=True,
