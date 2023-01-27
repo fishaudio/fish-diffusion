@@ -117,7 +117,7 @@ class FishDiffusion(pl.LightningModule):
 
             if isinstance(image_mels, plt.Figure):
                 plt.close(image_mels)
-        
+
         return output["loss"]
 
     def training_step(self, batch, batch_idx):
