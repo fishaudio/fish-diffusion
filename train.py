@@ -105,13 +105,13 @@ class FishDiffusion(pl.LightningModule):
 
             # Save figs and wavs to local, TODO: we need a better way to do this.
             save_dir = Path(
-                f"logs/results/step={self.global_step}-rank={self.global_rank}"
+                f"logs/results/step={self.global_step}-rank={self.global_rank}-idx={idx}"
             )
             save_dir.mkdir(exist_ok=True, parents=True)
 
-            plt.savefig(save_dir / f"mels-{idx}.png")
-            sf.write(str(save_dir / f"gt-{idx}.wav"), wav_reconstruction, 44100)
-            sf.write(str(save_dir / f"prediction-{idx}.wav"), wav_prediction, 44100)
+            plt.savefig(save_dir / f"mels.png")
+            sf.write(str(save_dir / f"gt.wav"), wav_reconstruction, 44100)
+            sf.write(str(save_dir / f"prediction.wav"), wav_prediction, 44100)
 
             if isinstance(image_mels, plt.Figure):
                 plt.close(image_mels)
