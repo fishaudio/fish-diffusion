@@ -142,7 +142,10 @@ def inference(
     text_features_extractor = FEATURE_EXTRACTORS.build(
         config.preprocessing.text_features_extractor
     ).to(device)
-    model = FishDiffusion.load_from_checkpoint(checkpoint).to(device)
+
+    model = FishDiffusion(config)
+    model.load_state_dict(torch.load(checkpoint, map_location="cpu"))
+    model.to(device)
 
     pitch_extractor = PITCH_EXTRACTORS.get(config.preprocessing.pitch_extractor)
     assert pitch_extractor is not None, "Pitch extractor not found"

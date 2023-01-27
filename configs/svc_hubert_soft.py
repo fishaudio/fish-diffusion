@@ -26,7 +26,6 @@ model = dict(
             d_encoder=hidden_size,
             residual_channels=512,
             residual_layers=20,
-            dropout=0.2,
         ),
         spec_stats_path="dataset/stats.json",
         sampler_interval=10,

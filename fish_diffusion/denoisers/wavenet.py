@@ -120,7 +120,7 @@ class ConvNorm(nn.Module):
 class ResidualBlock(nn.Module):
     """Residual Block"""
 
-    def __init__(self, d_encoder, residual_channels, dropout):
+    def __init__(self, d_encoder, residual_channels, use_linear_bias=False):
         super(ResidualBlock, self).__init__()
         self.conv_layer = ConvNorm(
             residual_channels,
@@ -130,7 +130,9 @@ class ResidualBlock(nn.Module):
             padding=int((3 - 1) / 2),
             dilation=1,
         )
-        self.diffusion_projection = LinearNorm(residual_channels, residual_channels)
+        self.diffusion_projection = LinearNorm(
+            residual_channels, residual_channels, use_linear_bias
+        )
         self.conditioner_projection = ConvNorm(
             d_encoder, 2 * residual_channels, kernel_size=1
         )
@@ -165,20 +167,22 @@ class WaveNetDenoiser(nn.Module):
         d_encoder=256,
         residual_channels=512,
         residual_layers=20,
-        dropout=0.2,
+        use_linear_bias=False,
     ):
         super(WaveNetDenoiser, self).__init__()
 
         self.input_projection = ConvNorm(mel_channels, residual_channels, kernel_size=1)
         self.diffusion_embedding = DiffusionEmbedding(residual_channels)
         self.mlp = nn.Sequential(
-            LinearNorm(residual_channels, residual_channels * 4),
+            LinearNorm(residual_channels, residual_channels * 4, use_linear_bias),
             Mish(),
-            LinearNorm(residual_channels * 4, residual_channels),
+            LinearNorm(residual_channels * 4, residual_channels, use_linear_bias),
         )
         self.residual_layers = nn.ModuleList(
             [
-                ResidualBlock(d_encoder, residual_channels, dropout=dropout)
+                ResidualBlock(
+                    d_encoder, residual_channels, use_linear_bias=use_linear_bias
+                )
                 for _ in range(residual_layers)
             ]
         )

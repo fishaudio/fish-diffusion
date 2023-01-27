@@ -43,6 +43,17 @@ class NaiveProjectionEncoder(nn.Module):
         else:
             self.projection = nn.Linear(input_size, output_size)
 
+        self.reset_params()
+
+    def reset_params(self):
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0.0)
+            elif isinstance(m, nn.Embedding):
+                nn.init.normal_(m.weight, mean=0, std=m.embedding_dim**-0.5)
+
     def forward(self, x, *args, **kwargs):
         if self.preprocessing is not None:
             x = self.preprocessing(x)
