@@ -8,7 +8,7 @@ trainer = dict(
     strategy=DDPStrategy(find_unused_parameters=True),
     gradient_clip_val=0.5,
     log_every_n_steps=10,
-    val_check_interval=1000,
+    val_check_interval=5000,
     check_val_every_n_epoch=None,
     max_steps=250000,
     # Note: bf16 is not supported on GPUs older than 30 series
@@ -17,7 +17,7 @@ trainer = dict(
     callbacks=[
         ModelCheckpoint(
             filename="diff-svc-{epoch:02d}-{valid_loss:.2f}",
-            every_n_train_steps=1000,
+            every_n_train_steps=10000,
         ),
         LearningRateMonitor(logging_interval="step"),
     ],
