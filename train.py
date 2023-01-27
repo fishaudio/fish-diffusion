@@ -7,14 +7,14 @@ import soundfile as sf
 import torch
 import wandb
 from mmengine import Config
-from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import LambdaLR, StepLR
+from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 
 from fish_diffusion.archs.diffsinger import DiffSinger
 from fish_diffusion.datasets import DATASETS
-from fish_diffusion.schedulers.cosine_scheduler import LambdaCosineScheduler
+from fish_diffusion.datasets.repeat import RepeatDataset
 from fish_diffusion.utils.viz import viz_synth_sample
 from fish_diffusion.vocoders import NsfHifiGAN
 
@@ -32,15 +32,6 @@ class FishDiffusion(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=8e-4, betas=(0.9, 0.98), eps=1e-9)
-
-        # lambda_func = LambdaCosineScheduler(
-        #     lr_min=1e-5,
-        #     lr_max=8e-4,
-        #     max_decay_steps=150000,
-        # )
-
-        # scheduler = LambdaLR(optimizer, lr_lambda=lambda_func)
-
         scheduler = StepLR(optimizer, step_size=50000, gamma=0.5)
 
         return [optimizer], dict(scheduler=scheduler, interval="step")
@@ -85,33 +76,44 @@ class FishDiffusion(pl.LightningModule):
             wav_prediction = wav_prediction.to(torch.float32).cpu().numpy()
 
             # WanDB logger
-            self.logger.experiment.log(
-                {
-                    f"reconstruction_mel": wandb.Image(image_mels, caption="mels"),
-                    f"wavs": [
-                        wandb.Audio(
-                            wav_reconstruction,
-                            sample_rate=44100,
-                            caption=f"reconstruction (gt)",
-                        ),
-                        wandb.Audio(
-                            wav_prediction,
-                            sample_rate=44100,
-                            caption=f"prediction",
-                        ),
-                    ],
-                },
-            )
+            if isinstance(self.logger, WandbLogger):
+                self.logger.experiment.log(
+                    {
+                        f"reconstruction_mel": wandb.Image(image_mels, caption="mels"),
+                        f"wavs": [
+                            wandb.Audio(
+                                wav_reconstruction,
+                                sample_rate=44100,
+                                caption=f"reconstruction (gt)",
+                            ),
+                            wandb.Audio(
+                                wav_prediction,
+                                sample_rate=44100,
+                                caption=f"prediction",
+                            ),
+                        ],
+                    },
+                )
 
-            # Save figs and wavs to local, TODO: we need a better way to do this.
-            save_dir = Path(
-                f"logs/results/step={self.global_step}-rank={self.global_rank}-idx={idx}"
-            )
-            save_dir.mkdir(exist_ok=True, parents=True)
-
-            plt.savefig(save_dir / f"mels.png")
-            sf.write(str(save_dir / f"gt.wav"), wav_reconstruction, 44100)
-            sf.write(str(save_dir / f"prediction.wav"), wav_prediction, 44100)
+            # TensorBoard logger
+            if isinstance(self.logger, TensorBoardLogger):
+                self.logger.experiment.add_figure(
+                    f"sample-{idx}/mels",
+                    image_mels,
+                    global_step=self.global_step,
+                )
+                self.logger.experiment.add_audio(
+                    f"sample-{idx}/wavs/gt",
+                    wav_reconstruction,
+                    self.global_step,
+                    sample_rate=44100,
+                )
+                self.logger.experiment.add_audio(
+                    f"sample-{idx}/wavs/prediction",
+                    wav_prediction,
+                    self.global_step,
+                    sample_rate=44100,
+                )
 
             if isinstance(image_mels, plt.Figure):
                 plt.close(image_mels)
@@ -124,17 +126,46 @@ class FishDiffusion(pl.LightningModule):
 
 
 if __name__ == "__main__":
+    pl.seed_everything(42, workers=True)
+
     parser = ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
     parser.add_argument("--resume", type=str, default=None)
-    parser.add_argument("--resume-id", type=str, default=None)
-    parser.add_argument("--name", type=str, default=None)
-    parser.add_argument("--entity", type=str, default=None)
+    parser.add_argument(
+        "--tensorboard",
+        action="store_true",
+        default=False,
+        help="Use tensorboard logger, default is wandb.",
+    )
+    parser.add_argument("--resume-id", type=str, default=None, help="Wandb run id.")
+    parser.add_argument("--entity", type=str, default=None, help="Wandb entity.")
+    parser.add_argument("--name", type=str, default=None, help="Wandb run name.")
+
     args = parser.parse_args()
 
     cfg = Config.fromfile(args.config)
 
     model = FishDiffusion(cfg.model)
+
+    logger = (
+        TensorBoardLogger("logs", name=cfg.model.type)
+        if args.tensorboard
+        else WandbLogger(
+            project=cfg.model.type,
+            save_dir="logs",
+            log_model=True,
+            name=args.name,
+            entity=args.entity,
+            resume="must" if args.resume_id else False,
+            id=args.resume_id,
+        )
+    )
+
+    trainer = pl.Trainer(
+        logger=logger,
+        resume_from_checkpoint=args.resume,
+        **cfg.trainer,
+    )
 
     train_dataset = DATASETS.build(cfg.dataset.train)
     train_loader = DataLoader(
@@ -144,6 +175,10 @@ if __name__ == "__main__":
     )
 
     valid_dataset = DATASETS.build(cfg.dataset.valid)
+    valid_dataset = RepeatDataset(
+        valid_dataset, repeat=trainer.num_devices, collate_fn=valid_dataset.collate_fn
+    )
+
     valid_loader = DataLoader(
         valid_dataset,
         collate_fn=valid_dataset.collate_fn,
@@ -153,19 +188,5 @@ if __name__ == "__main__":
     # Check if dataset is empty
     assert len(train_dataset) > 0, "Train dataset is empty, please double check!"
     assert len(valid_dataset) > 0, "Valid dataset is empty, please double check!"
-
-    trainer = pl.Trainer(
-        logger=WandbLogger(
-            project=cfg.model.type,
-            save_dir="logs",
-            log_model=True,
-            name=args.name,
-            entity=args.entity,
-            resume="must" if args.resume_id else False,
-            id=args.resume_id,
-        ),
-        resume_from_checkpoint=args.resume,
-        **cfg.trainer,
-    )
 
     trainer.fit(model, train_loader, valid_loader)

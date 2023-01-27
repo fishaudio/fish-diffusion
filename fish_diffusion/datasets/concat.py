@@ -12,6 +12,7 @@ class ConcatDataset(_ConcatDataset):
 
         Args:
             datasets (Iterable[dict]): Datasets to concatenate.
+            collate_fn (Callable, optional): Collate function. Defaults to None.
         """
 
         super().__init__([DATASETS.build(dataset) for dataset in datasets])

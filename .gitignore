@@ -136,6 +136,7 @@ dataset
 hifigan/model
 output
 lightning_logs
+logs
 wandb
 *.ckpt
 checkpoints
