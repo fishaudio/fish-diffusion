@@ -1,4 +1,7 @@
+import io
+
 import matplotlib
+import numpy as np
 import torch
 from fish_audio_preprocess.utils.loudness_norm import loudness_norm
 from matplotlib import pyplot as plt
@@ -32,6 +35,7 @@ def viz_synth_sample(
     predict_mel,
     predict_mel_len,
     vocoder,
+    return_image=False,
 ):
     mel_len = predict_mel_len.item()
     pitch = gt_pitch[:mel_len]
@@ -59,7 +63,18 @@ def viz_synth_sample(
     wav_reconstruction = torch.from_numpy(wav_reconstruction)
     wav_prediction = torch.from_numpy(wav_prediction)
 
-    return fig_mels, wav_reconstruction, wav_prediction
+    if return_image:
+        f = io.BytesIO()
+        fig_mels.savefig(f, format="raw")
+        image_mels = np.reshape(
+            np.frombuffer(f.getvalue(), dtype=np.uint8),
+            newshape=(int(fig_mels.bbox.bounds[3]), int(fig_mels.bbox.bounds[2]), -1),
+        )
+        plt.close(fig_mels)
+    else:
+        image_mels = fig_mels
+
+    return image_mels, wav_reconstruction, wav_prediction
 
 
 def spec_to_figure(spec, vmin=None, vmax=None):

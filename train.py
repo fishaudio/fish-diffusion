@@ -1,7 +1,9 @@
-import argparse
+from argparse import ArgumentParser
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
+import soundfile as sf
 import torch
 import wandb
 from mmengine import Config
@@ -62,44 +64,57 @@ class FishDiffusion(pl.LightningModule):
 
         self.log(f"{mode}_loss", output["loss"], batch_size=batch_size, sync_dist=True)
 
-        if mode == "valid":
-            x = self.model.diffusion.inference(output["features"])
+        if mode != "valid":
+            return output["loss"]
 
-            for gt_mel, gt_pitch, predict_mel, predict_mel_len in zip(
-                batch["mels"], pitches, x, batch["mel_lens"]
-            ):
-                mel_fig, wav_reconstruction, wav_prediction = viz_synth_sample(
-                    gt_mel=gt_mel,
-                    gt_pitch=gt_pitch,
-                    predict_mel=predict_mel,
-                    predict_mel_len=predict_mel_len,
-                    vocoder=self.vocoder,
-                )
+        x = self.model.diffusion.inference(output["features"])
 
-                # WanDB logger
-                self.logger.experiment.log(
-                    {
-                        "reconstruction_mel": wandb.Image(
-                            mel_fig, caption="reconstruction_mel"
+        for idx, (gt_mel, gt_pitch, predict_mel, predict_mel_len) in enumerate(
+            zip(batch["mels"], pitches, x, batch["mel_lens"])
+        ):
+            image_mels, wav_reconstruction, wav_prediction = viz_synth_sample(
+                gt_mel=gt_mel,
+                gt_pitch=gt_pitch,
+                predict_mel=predict_mel,
+                predict_mel_len=predict_mel_len,
+                vocoder=self.vocoder,
+                return_image=False,
+            )
+
+            wav_reconstruction = wav_reconstruction.to(torch.float32).cpu().numpy()
+            wav_prediction = wav_prediction.to(torch.float32).cpu().numpy()
+
+            # WanDB logger
+            self.logger.experiment.log(
+                {
+                    f"reconstruction_mel": wandb.Image(image_mels, caption="mels"),
+                    f"wavs": [
+                        wandb.Audio(
+                            wav_reconstruction,
+                            sample_rate=44100,
+                            caption=f"reconstruction (gt)",
                         ),
-                        "wavs": [
-                            wandb.Audio(
-                                wav_reconstruction.to(torch.float32).cpu().numpy(),
-                                sample_rate=44100,
-                                caption="reconstruction_wav (gt)",
-                            ),
-                            wandb.Audio(
-                                wav_prediction.to(torch.float32).cpu().numpy(),
-                                sample_rate=44100,
-                                caption="prediction_wav",
-                            ),
-                        ],
-                    },
-                )
+                        wandb.Audio(
+                            wav_prediction,
+                            sample_rate=44100,
+                            caption=f"prediction",
+                        ),
+                    ],
+                },
+            )
 
-                plt.close(mel_fig)
+            # Save figs and wavs to local, TODO: we need a better way to do this.
+            save_dir = Path(
+                f"logs/results/step={self.global_step}-rank={self.global_rank}"
+            )
+            save_dir.mkdir(exist_ok=True, parents=True)
 
-        return output["loss"]
+            plt.savefig(save_dir / f"mels-{idx}.png")
+            sf.write(str(save_dir / f"gt-{idx}.wav"), wav_reconstruction, 44100)
+            sf.write(str(save_dir / f"prediction-{idx}.wav"), wav_prediction, 44100)
+
+            if isinstance(image_mels, plt.Figure):
+                plt.close(image_mels)
 
     def training_step(self, batch, batch_idx):
         return self._step(batch, batch_idx, mode="train")
@@ -109,13 +124,12 @@ class FishDiffusion(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    from argparse import ArgumentParser
-
     parser = ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
     parser.add_argument("--resume", type=str, default=None)
     parser.add_argument("--resume-id", type=str, default=None)
-
+    parser.add_argument("--name", type=str, default=None)
+    parser.add_argument("--entity", type=str, default=None)
     args = parser.parse_args()
 
     cfg = Config.fromfile(args.config)
@@ -145,7 +159,8 @@ if __name__ == "__main__":
             project=cfg.model.type,
             save_dir="logs",
             log_model=True,
-            entity="fish-audio",
+            name=args.name,
+            entity=args.entity,
             resume="must" if args.resume_id else False,
             id=args.resume_id,
         ),
