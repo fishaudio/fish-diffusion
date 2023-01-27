@@ -20,11 +20,12 @@ from fish_diffusion.vocoders import NsfHifiGAN
 
 
 class FishDiffusion(pl.LightningModule):
-    def __init__(self, model_config):
+    def __init__(self, config):
         super().__init__()
         self.save_hyperparameters()
 
-        self.model = DiffSinger(model_config)
+        self.model = DiffSinger(config.model)
+        self.config = config
 
         # 音频编码器, 将梅尔谱转换为音频
         self.vocoder = NsfHifiGAN()
@@ -147,7 +148,7 @@ if __name__ == "__main__":
 
     cfg = Config.fromfile(args.config)
 
-    model = FishDiffusion(cfg.model)
+    model = FishDiffusion(cfg)
 
     logger = (
         TensorBoardLogger("logs", name=cfg.model.type)
