@@ -71,7 +71,10 @@ python train.py --config configs/svc_hubert_soft.py --resume [checkpoint]
 
 ## 推理
 ```bash
-python inference.py
+python inference.py --config configs/svc_hubert_soft.py \
+    --checkpoint [checkpoint] \
+    --input [input audio] \
+    --output [output audio]
 ```
 
 ## 参与本项目
