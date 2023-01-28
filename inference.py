@@ -144,7 +144,12 @@ def inference(
     ).to(device)
 
     model = FishDiffusion(config)
-    model.load_state_dict(torch.load(checkpoint, map_location="cpu"))
+    state_dict = torch.load(checkpoint, map_location="cpu")
+
+    if "state_dict" in state_dict:  # Checkpoint is saved by pl
+        state_dict = state_dict["state_dict"]
+
+    model.load_state_dict(state_dict)
     model.to(device)
 
     pitch_extractor = PITCH_EXTRACTORS.get(config.preprocessing.pitch_extractor)
