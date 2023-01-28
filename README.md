@@ -77,6 +77,13 @@ python inference.py --config configs/svc_hubert_soft.py \
     --output [output audio]
 ```
 
+## 将 DiffSVC 模型转换为 Fish Diffusion 模型
+```bash
+python tools/diff_svc_converter.py --config configs/svc_hubert_soft_diff_svc.py \
+    --input-path [DiffSVC ckpt] \
+    --output-path [Fish Diffusion ckpt]
+```
+
 ## 参与本项目
 如果你有任何问题, 请提交 issue 或 pull request.  
 你应该在提交 pull request 之前运行 `tools/lint.sh`

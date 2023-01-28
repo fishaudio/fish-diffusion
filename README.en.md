@@ -77,6 +77,13 @@ python inference.py --config configs/svc_hubert_soft.py \
     --output [output audio]
 ```
 
+## Convert a DiffSVC model to Fish Diffusion
+```bash
+python tools/diff_svc_converter.py --config configs/svc_hubert_soft_diff_svc.py \
+    --input-path [DiffSVC ckpt] \
+    --output-path [Fish Diffusion ckpt]
+```
+
 ## Contributing
 If you have any questions, please submit an issue or pull request.  
 You should run `tools/lint.sh` before submitting a pull request.
