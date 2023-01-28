@@ -28,8 +28,9 @@ model = dict(
     ),
     diffusion=dict(
         denoiser=dict(
-            use_linear_bias=True,
             residual_channels=384,
+            use_linear_bias=True,
+            dilation_cycle=4,
         ),
         keep_bins=1,  # It should be 128 if you are using the pretrained model
     ),

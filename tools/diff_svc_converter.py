@@ -1,3 +1,5 @@
+from argparse import ArgumentParser
+
 import torch
 from mmengine import Config
 
@@ -8,12 +10,12 @@ KEYS_MAPPING = {
 }
 
 
-def convert():
-    config = Config.fromfile("configs/svc_hubert_soft_diff_svc.py")
+def convert(config_path, input_path, output_path):
+    config = Config.fromfile(config_path)
     model = FishDiffusion(config)
 
     diff_svc_state_dict = torch.load(
-        "/home/lengyue/workspace/ml-toys/diff-svc/checkpoints/aria-2h/model_ckpt_steps_218000.ckpt",
+        input_path,
         map_location="cpu",
     )["state_dict"]
     # diff_svc_state_dict_clean = {k[6:]: v for k, v in diff_svc_state_dict.items() if k.startswith("model.") and "fs2" not in k}
@@ -59,8 +61,6 @@ def convert():
 
     # The Main diffusion is done now
 
-    print(fs2_state_dict.keys())
-
     # Fix Pitch Encoder
     model.model.pitch_encoder.embedding.weight.data = fs2_state_dict[
         "pitch_embed.weight"
@@ -69,8 +69,22 @@ def convert():
     # TODO: Support multi speaker
     model.model.speaker_encoder.embedding.weight.data.zero_()
 
-    torch.save(model.state_dict(), "aria-2h.pth")
+    torch.save(model.state_dict(), output_path)
+
+    print("Done")
 
 
 if __name__ == "__main__":
-    convert()
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--config", type=str, default="configs/svc_hubert_soft_diff_svc.py"
+    )
+    parser.add_argument(
+        "--input-path", type=str, required=True, help="The input checkpoint (Diff-SVC)"
+    )
+    parser.add_argument(
+        "--output-path", type=str, help="The output checkpoint (Fish-Diffusion)"
+    )
+    args = parser.parse_args()
+
+    convert(args.config, args.input_path, args.output_path)

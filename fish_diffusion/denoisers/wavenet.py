@@ -120,15 +120,15 @@ class ConvNorm(nn.Module):
 class ResidualBlock(nn.Module):
     """Residual Block"""
 
-    def __init__(self, d_encoder, residual_channels, use_linear_bias=False):
+    def __init__(self, d_encoder, residual_channels, use_linear_bias=False, dilation=1):
         super(ResidualBlock, self).__init__()
         self.conv_layer = ConvNorm(
             residual_channels,
             2 * residual_channels,
             kernel_size=3,
             stride=1,
-            padding=int((3 - 1) / 2),
-            dilation=1,
+            padding=dilation,
+            dilation=dilation,
         )
         self.diffusion_projection = LinearNorm(
             residual_channels, residual_channels, use_linear_bias
@@ -140,12 +140,13 @@ class ResidualBlock(nn.Module):
             residual_channels, 2 * residual_channels, kernel_size=1
         )
 
-    def forward(self, x, conditioner, diffusion_step, mask=None):
+    def forward(self, x, conditioner, diffusion_step):
 
         diffusion_step = self.diffusion_projection(diffusion_step).unsqueeze(-1)
         conditioner = self.conditioner_projection(conditioner)
 
         y = x + diffusion_step
+
         y = self.conv_layer(y) + conditioner
 
         gate, filter = torch.chunk(y, 2, dim=1)
@@ -168,6 +169,7 @@ class WaveNetDenoiser(nn.Module):
         residual_channels=512,
         residual_layers=20,
         use_linear_bias=False,
+        dilation_cycle=None,
     ):
         super(WaveNetDenoiser, self).__init__()
 
@@ -181,9 +183,12 @@ class WaveNetDenoiser(nn.Module):
         self.residual_layers = nn.ModuleList(
             [
                 ResidualBlock(
-                    d_encoder, residual_channels, use_linear_bias=use_linear_bias
+                    d_encoder,
+                    residual_channels,
+                    use_linear_bias=use_linear_bias,
+                    dilation=2 ** (i % dilation_cycle) if dilation_cycle else 1,
                 )
-                for _ in range(residual_layers)
+                for i in range(residual_layers)
             ]
         )
         self.skip_projection = ConvNorm(
@@ -194,7 +199,7 @@ class WaveNetDenoiser(nn.Module):
         )
         nn.init.zeros_(self.output_projection.conv.weight)
 
-    def forward(self, mel, diffusion_step, conditioner, mask=None):
+    def forward(self, mel, diffusion_step, conditioner):
         """
 
         :param mel: [B, 1, M, T]
@@ -211,7 +216,7 @@ class WaveNetDenoiser(nn.Module):
 
         skip = []
         for layer in self.residual_layers:
-            x, skip_connection = layer(x, conditioner, diffusion_step, mask)
+            x, skip_connection = layer(x, conditioner, diffusion_step)
             skip.append(skip_connection)
 
         x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
