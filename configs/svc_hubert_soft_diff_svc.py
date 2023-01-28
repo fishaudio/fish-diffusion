@@ -33,4 +33,7 @@ model = dict(
         ),
         keep_bins=1,  # It should be 128 if you are using the pretrained model
     ),
+    vocoder=dict(
+        use_natural_log=False,
+    ),
 )

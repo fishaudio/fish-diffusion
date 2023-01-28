@@ -53,6 +53,7 @@ model = dict(
         checkpoint_path="checkpoints/nsf_hifigan/model",
         sampling_rate=sampling_rate,
         mel_channels=mel_channels,
+        use_natural_log=True,
     ),
 )
 

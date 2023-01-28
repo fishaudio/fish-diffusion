@@ -16,7 +16,7 @@ from fish_diffusion.archs.diffsinger import DiffSinger
 from fish_diffusion.datasets import DATASETS
 from fish_diffusion.datasets.repeat import RepeatDataset
 from fish_diffusion.utils.viz import viz_synth_sample
-from fish_diffusion.vocoders import NsfHifiGAN
+from fish_diffusion.vocoders import VOCODERS
 
 
 class FishDiffusion(pl.LightningModule):
@@ -28,7 +28,7 @@ class FishDiffusion(pl.LightningModule):
         self.config = config
 
         # 音频编码器, 将梅尔谱转换为音频
-        self.vocoder = NsfHifiGAN()
+        self.vocoder = VOCODERS.build(config.model.vocoder)
         self.vocoder.freeze()
 
     def configure_optimizers(self):
