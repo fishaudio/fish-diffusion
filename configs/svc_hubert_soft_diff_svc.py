@@ -38,3 +38,9 @@ model = dict(
         use_natural_log=False,
     ),
 )
+
+preprocessing = dict(
+    # You need to choose either "parselmouth" or "crepe" for pitch_extractor
+    # But crepe seems buggy, I will debug it later
+    pitch_extractor="parselmouth"
+)
