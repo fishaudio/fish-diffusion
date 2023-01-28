@@ -95,6 +95,7 @@ def inference(
     if os.path.isdir(checkpoint):
         # Find the latest checkpoint
         checkpoints = sorted(os.listdir(checkpoint))
+        logger.info(f"Found {len(checkpoints)} checkpoints, using {checkpoints[-1]}")
         checkpoint = os.path.join(checkpoint, checkpoints[-1])
 
     audio, sr = librosa.load(input_path, sr=config.sampling_rate, mono=True)
