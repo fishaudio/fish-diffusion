@@ -1,6 +1,5 @@
 import torch
 
-
 from .base import BaseFeatureExtractor
 from .builder import FEATURE_EXTRACTORS
 

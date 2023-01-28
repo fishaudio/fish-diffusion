@@ -1,7 +1,11 @@
 from .builder import FEATURE_EXTRACTORS
-
-from .chinese_hubert import ChineseHubert
-from .wav2vec2_xlsr import Wav2Vec2XLSR
+from .chinese_hubert import ChineseHubertSoft
 from .hubert_soft import HubertSoft
+from .opencpop_transcription import OpenCpopTranscriptionToPhonemesDuration
 
-__all__ = ["ChineseHubert", "Wav2Vec2XLSR", "FEATURE_EXTRACTORS", "HubertSoft"]
+__all__ = [
+    "ChineseHubertSoft",
+    "FEATURE_EXTRACTORS",
+    "HubertSoft",
+    "OpenCpopTranscriptionToPhonemesDuration",
+]

@@ -1,5 +1,9 @@
 # Fish Diffusion
-基于 [diff-svc](https://github.com/innnky/diff-svc/) 实现的 TTS / SVS / SVC 的训练框架
+![CI Status](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml/badge.svg)
+
+一个简单易懂的 TTS / SVS / SVC 框架.
+
+[English Document](README.en.md)
 
 ## 简介
 基于 DiffSinger 实现歌声音色转换。相较于原 diffsvc 仓库，本仓库优缺点如下
@@ -48,13 +52,15 @@ dataset
 
 ```bash
 # 1. 提取全部数据的特征, 如 pitch, text features, mel features 等
-python tools/preprocess/extract_features.py --config configs/svc_hubert_soft.py --path dataset --clean
+python tools/preprocessing/extract_features.py --config configs/svc_hubert_soft.py --path dataset --clean
 
 # 2. 生成训练集统计信息
 python tools/preprocessing/generate_stats.py --input-dir dataset/train --output-file dataset/stats.json
 ```
 
 ## 基本训练
+> 该项目仍在积极开发, 请记得备份你的 config 文件
+
 ```bash
 # 单机单卡 / 单机多卡训练
 python train.py --config configs/svc_hubert_soft.py
@@ -64,5 +70,27 @@ python train.py --config configs/svc_hubert_soft.py --resume [checkpoint]
 ```
 
 ## 推理
+```bash
+python inference.py --config configs/svc_hubert_soft.py \
+    --checkpoint [checkpoint] \
+    --input [input audio] \
+    --output [output audio]
+```
 
-> 推理脚本仍在优化, 请耐心等待
+## 将 DiffSVC 模型转换为 Fish Diffusion 模型
+```bash
+python tools/diff_svc_converter.py --config configs/svc_hubert_soft_diff_svc.py \
+    --input-path [DiffSVC ckpt] \
+    --output-path [Fish Diffusion ckpt]
+```
+
+## 参与本项目
+如果你有任何问题, 请提交 issue 或 pull request.  
+你应该在提交 pull request 之前运行 `tools/lint.sh`
+
+
+## 参考项目
++ [diff-svc original](https://github.com/prophesier/diff-svc)
++ [diff-svc optimized](https://github.com/innnky/diff-svc/)
++ [DiffSinger](https://github.com/openvpi/DiffSinger/)
++ [diffusers](https://github.com/huggingface/diffusers)

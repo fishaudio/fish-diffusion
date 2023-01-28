@@ -1,6 +1,6 @@
 import librosa
-from torch import nn
 import torchaudio
+from torch import nn
 
 
 class BaseFeatureExtractor(nn.Module):

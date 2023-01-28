@@ -1,11 +1,11 @@
 import json
+from pathlib import Path
 
 import numpy as np
 import torch
+from fish_audio_preprocess.utils.file import list_files
 from torch.utils.data import Dataset
 
-from fish_audio_preprocess.utils.file import list_files
-from pathlib import Path
 from .builder import DATASETS
 
 
@@ -58,7 +58,7 @@ class AudioFolderDataset(Dataset):
         }
 
         # Create contents and padding
-        contents = [torch.from_numpy(d["content"]) for d in data]
+        contents = [torch.from_numpy(d["content"]).float() for d in data]
         content_lens = torch.LongTensor([c.shape[0] for c in contents])
         max_content_len = torch.max(content_lens)
         contents = torch.stack(
@@ -73,7 +73,7 @@ class AudioFolderDataset(Dataset):
         info["max_content_len"] = max_content_len
 
         # Create mels and padding
-        mels = [torch.from_numpy(d["mel"]) for d in data]
+        mels = [torch.from_numpy(d["mel"]).float() for d in data]
         mel_lens = torch.LongTensor([mel.shape[0] for mel in mels])
         max_mel_len = torch.max(mel_lens)
         mels = torch.stack(
@@ -88,7 +88,7 @@ class AudioFolderDataset(Dataset):
         info["max_mel_len"] = max_mel_len
 
         # Create pitches and padding
-        pitches = [torch.from_numpy(d["pitch"]) for d in data]
+        pitches = [torch.from_numpy(d["pitch"]).float() for d in data]
         pitch_lens = torch.LongTensor([pitch.shape[0] for pitch in pitches])
         max_pitch_len = torch.max(pitch_lens)
         pitches = torch.stack(

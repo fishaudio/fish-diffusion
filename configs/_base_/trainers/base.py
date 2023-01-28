@@ -1,5 +1,6 @@
+import torch
+from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.strategies import DDPStrategy
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 trainer = dict(
     accelerator="gpu",
@@ -7,14 +8,16 @@ trainer = dict(
     strategy=DDPStrategy(find_unused_parameters=True),
     gradient_clip_val=0.5,
     log_every_n_steps=10,
-    val_check_interval=1000,
+    val_check_interval=5000,
     check_val_every_n_epoch=None,
     max_steps=300000,
+    # Warning: If you are training the model with fs2 (and see nan), you should either use bf16 or fp32
     precision=16,
     callbacks=[
         ModelCheckpoint(
-            filename="diff-svc-{epoch:02d}-{valid_loss:.2f}",
-            every_n_train_steps=1000,
+            filename="{epoch}-{step}-{valid_loss:.2f}",
+            every_n_train_steps=10000,
+            save_top_k=-1,
         ),
         LearningRateMonitor(logging_interval="step"),
     ],

@@ -5,9 +5,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from fish_diffusion.modules.positional_embedding import (
-    SinusoidalPositionalEmbedding,
     RelPositionalEncoding,
+    SinusoidalPositionalEmbedding,
 )
+
 from .builder import ENCODERS
 
 
@@ -725,18 +726,23 @@ class FastSpeech2Encoder(FFTBlocks):
         else:
             self.proj = nn.Linear(input_size, hidden_size)
 
-    def forward(self, contents, encoder_padding_mask, spk_emb):
+    def forward(self, contents, encoder_padding_mask):
+        """Forward pass for the encoder.
+
+        Args:
+            contents: [B, T, N] FloatTensor, where N is the number of features.
+            encoder_padding_mask: [B, T] LongTensor.
+
+        Returns:
+            x: [B, T, C] FloatTensor, where C is the number of channels.
         """
 
-        :param txt_tokens: [B, T]
-        :param encoder_padding_mask: [B, T]
-        :return: {
-            "encoder_out": [T x B x C]
-        }
-        """
+        # Embedding
+        x = self.embed_scale * self.proj(contents)
 
-        x = self.proj(contents)
-        x += spk_emb
+        # Positional encoding
+        x = self.embed_positions(x)
+
         x = super(FastSpeech2Encoder, self).forward(x, encoder_padding_mask)
 
         return x

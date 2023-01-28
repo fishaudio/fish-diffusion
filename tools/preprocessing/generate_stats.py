@@ -1,8 +1,8 @@
+import argparse
 import json
 
 import numpy as np
 from fish_audio_preprocess.utils.file import list_files
-import argparse
 
 
 def parse_args():

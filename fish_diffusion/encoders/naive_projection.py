@@ -1,4 +1,5 @@
 from torch import nn
+
 from .builder import ENCODERS
 
 
@@ -11,6 +12,7 @@ class NaiveProjectionEncoder(nn.Module):
         use_embedding: bool = False,
         use_softmax_bottleneck: bool = False,
         hidden_size=128,
+        preprocessing=None,
     ):
         """Naive projection encoder.
 
@@ -20,6 +22,7 @@ class NaiveProjectionEncoder(nn.Module):
             use_embedding (bool, optional): Use embedding. Defaults to False.
             use_softmax_bottleneck (bool, optional): Use softmax bottleneck. Defaults to False.
             hidden_size (int, optional): Hidden size. Defaults to 128. Only used when use_softmax_bottleneck is True.
+            preprocessing (function, optional): Preprocessing function. Defaults to None.
         """
 
         super().__init__()
@@ -27,6 +30,7 @@ class NaiveProjectionEncoder(nn.Module):
         self.use_embedding = use_embedding
         self.input_size = input_size
         self.output_size = output_size
+        self.preprocessing = preprocessing
 
         if use_embedding:
             self.embedding = nn.Embedding(input_size, output_size)
@@ -39,5 +43,19 @@ class NaiveProjectionEncoder(nn.Module):
         else:
             self.projection = nn.Linear(input_size, output_size)
 
+        self.reset_params()
+
+    def reset_params(self):
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0.0)
+            elif isinstance(m, nn.Embedding):
+                nn.init.normal_(m.weight, mean=0, std=m.embedding_dim**-0.5)
+
     def forward(self, x, *args, **kwargs):
+        if self.preprocessing is not None:
+            x = self.preprocessing(x)
+
         return self.embedding(x) if self.use_embedding else self.projection(x)

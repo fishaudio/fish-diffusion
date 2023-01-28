@@ -1,5 +1,11 @@
 from .builder import ENCODERS
-from .naive_projection import NaiveProjectionEncoder
 from .fast_speech import FastSpeech2Encoder
+from .identity import IdentityEncoder
+from .naive_projection import NaiveProjectionEncoder
 
-__all__ = ["ENCODERS", "NaiveProjectionEncoder", "FastSpeech2Encoder"]
+__all__ = [
+    "ENCODERS",
+    "NaiveProjectionEncoder",
+    "FastSpeech2Encoder",
+    "IdentityEncoder",
+]

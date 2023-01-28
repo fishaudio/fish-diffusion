@@ -1,47 +1,39 @@
-import argparse
-import pytorch_lightning as pl
-import torch
-from fish_diffusion.datasets import DATASETS
+from argparse import ArgumentParser
+from pathlib import Path
 
-from fish_diffusion.schedulers.cosine_scheduler import (
-    LambdaCosineScheduler,
-)
-from torch.optim.lr_scheduler import LambdaLR, StepLR
+import matplotlib.pyplot as plt
+import pytorch_lightning as pl
+import soundfile as sf
+import torch
+import wandb
+from mmengine import Config
+from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.optim import AdamW
+from torch.optim.lr_scheduler import StepLR
+from torch.utils.data import DataLoader
 
 from fish_diffusion.archs.diffsinger import DiffSinger
+from fish_diffusion.datasets import DATASETS
+from fish_diffusion.datasets.repeat import RepeatDataset
 from fish_diffusion.utils.viz import viz_synth_sample
-from torch.utils.data import DataLoader
-from pytorch_lightning.loggers import WandbLogger
-import wandb
-import matplotlib.pyplot as plt
-from fish_diffusion.vocoders import NsfHifiGAN
-from mmengine import Config
+from fish_diffusion.vocoders import VOCODERS
 
 
-class DiffSVC(pl.LightningModule):
-    def __init__(self, model_config):
+class FishDiffusion(pl.LightningModule):
+    def __init__(self, config):
         super().__init__()
         self.save_hyperparameters()
 
-        self.model = DiffSinger(model_config)
+        self.model = DiffSinger(config.model)
+        self.config = config
 
         # 音频编码器, 将梅尔谱转换为音频
-        self.vocoder = NsfHifiGAN()
+        self.vocoder = VOCODERS.build(config.model.vocoder)
         self.vocoder.freeze()
 
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=8e-4, betas=(0.9, 0.98), eps=1e-9)
-
-        # lambda_func = LambdaCosineScheduler(
-        #     lr_min=1e-5,
-        #     lr_max=8e-4,
-        #     max_decay_steps=150000,
-        # )
-
-        # scheduler = LambdaLR(optimizer, lr_lambda=lambda_func)
-
-        scheduler = StepLR(optimizer, step_size=40000, gamma=0.5)
+        scheduler = StepLR(optimizer, step_size=50000, gamma=0.5)
 
         return [optimizer], dict(scheduler=scheduler, interval="step")
 
@@ -64,42 +56,68 @@ class DiffSVC(pl.LightningModule):
 
         self.log(f"{mode}_loss", output["loss"], batch_size=batch_size, sync_dist=True)
 
-        if mode == "valid":
-            x = self.model.diffusion.inference(output["features"])
+        if mode != "valid":
+            return output["loss"]
 
-            for path, gt_mel, gt_pitch, predict_mel, predict_mel_len in zip(
-                batch["paths"], batch["mels"], pitches, x, batch["mel_lens"]
-            ):
-                mel_fig, wav_reconstruction, wav_prediction = viz_synth_sample(
-                    gt_mel=gt_mel,
-                    gt_pitch=gt_pitch,
-                    predict_mel=predict_mel,
-                    predict_mel_len=predict_mel_len,
-                    vocoder=self.vocoder,
-                )
+        x = self.model.diffusion.inference(output["features"])
 
-                # WanDB logger
+        for idx, (gt_mel, gt_pitch, predict_mel, predict_mel_len) in enumerate(
+            zip(batch["mels"], pitches, x, batch["mel_lens"])
+        ):
+            image_mels, wav_reconstruction, wav_prediction = viz_synth_sample(
+                gt_mel=gt_mel,
+                gt_pitch=gt_pitch,
+                predict_mel=predict_mel,
+                predict_mel_len=predict_mel_len,
+                vocoder=self.vocoder,
+                return_image=False,
+            )
+
+            wav_reconstruction = wav_reconstruction.to(torch.float32).cpu().numpy()
+            wav_prediction = wav_prediction.to(torch.float32).cpu().numpy()
+
+            # WanDB logger
+            if isinstance(self.logger, WandbLogger):
                 self.logger.experiment.log(
                     {
-                        "reconstruction_mel": wandb.Image(
-                            mel_fig, caption="reconstruction_mel"
-                        ),
-                        "wavs": [
+                        f"reconstruction_mel": wandb.Image(image_mels, caption="mels"),
+                        f"wavs": [
                             wandb.Audio(
-                                wav_reconstruction.to(torch.float32).cpu().numpy(),
+                                wav_reconstruction,
                                 sample_rate=44100,
-                                caption="reconstruction_wav (gt)",
+                                caption=f"reconstruction (gt)",
                             ),
                             wandb.Audio(
-                                wav_prediction.to(torch.float32).cpu().numpy(),
+                                wav_prediction,
                                 sample_rate=44100,
-                                caption="prediction_wav",
+                                caption=f"prediction",
                             ),
                         ],
                     },
                 )
 
-                plt.close(mel_fig)
+            # TensorBoard logger
+            if isinstance(self.logger, TensorBoardLogger):
+                self.logger.experiment.add_figure(
+                    f"sample-{idx}/mels",
+                    image_mels,
+                    global_step=self.global_step,
+                )
+                self.logger.experiment.add_audio(
+                    f"sample-{idx}/wavs/gt",
+                    wav_reconstruction,
+                    self.global_step,
+                    sample_rate=44100,
+                )
+                self.logger.experiment.add_audio(
+                    f"sample-{idx}/wavs/prediction",
+                    wav_prediction,
+                    self.global_step,
+                    sample_rate=44100,
+                )
+
+            if isinstance(image_mels, plt.Figure):
+                plt.close(image_mels)
 
         return output["loss"]
 
@@ -111,18 +129,46 @@ class DiffSVC(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    from argparse import ArgumentParser
+    pl.seed_everything(42, workers=True)
 
     parser = ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
     parser.add_argument("--resume", type=str, default=None)
-    parser.add_argument("--resume-id", type=str, default=None)
+    parser.add_argument(
+        "--tensorboard",
+        action="store_true",
+        default=False,
+        help="Use tensorboard logger, default is wandb.",
+    )
+    parser.add_argument("--resume-id", type=str, default=None, help="Wandb run id.")
+    parser.add_argument("--entity", type=str, default=None, help="Wandb entity.")
+    parser.add_argument("--name", type=str, default=None, help="Wandb run name.")
 
     args = parser.parse_args()
 
     cfg = Config.fromfile(args.config)
 
-    model = DiffSVC(cfg.model)
+    model = FishDiffusion(cfg)
+
+    logger = (
+        TensorBoardLogger("logs", name=cfg.model.type)
+        if args.tensorboard
+        else WandbLogger(
+            project=cfg.model.type,
+            save_dir="logs",
+            log_model=True,
+            name=args.name,
+            entity=args.entity,
+            resume="must" if args.resume_id else False,
+            id=args.resume_id,
+        )
+    )
+
+    trainer = pl.Trainer(
+        logger=logger,
+        resume_from_checkpoint=args.resume,
+        **cfg.trainer,
+    )
 
     train_dataset = DATASETS.build(cfg.dataset.train)
     train_loader = DataLoader(
@@ -132,6 +178,9 @@ if __name__ == "__main__":
     )
 
     valid_dataset = DATASETS.build(cfg.dataset.valid)
+    valid_dataset = RepeatDataset(
+        valid_dataset, repeat=trainer.num_devices, collate_fn=valid_dataset.collate_fn
+    )
 
     valid_loader = DataLoader(
         valid_dataset,
@@ -139,17 +188,8 @@ if __name__ == "__main__":
         **cfg.dataloader.valid,
     )
 
-    trainer = pl.Trainer(
-        logger=WandbLogger(
-            project="diff-svc",
-            save_dir="logs",
-            log_model="all",
-            entity="fish-audio",
-            resume="must" if args.resume_id else False,
-            id=args.resume_id,
-        ),
-        resume_from_checkpoint=args.resume,
-        **cfg.trainer,
-    )
+    # Check if dataset is empty
+    assert len(train_dataset) > 0, "Train dataset is empty, please double check!"
+    assert len(valid_dataset) > 0, "Valid dataset is empty, please double check!"
 
     trainer.fit(model, train_loader, valid_loader)

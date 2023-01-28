@@ -1,8 +1,9 @@
-from torch import nn
+import math
 
 import torch
 import torch.nn.functional as F
-import math
+from torch import nn
+
 from .builder import DENOISERS
 
 
@@ -119,17 +120,19 @@ class ConvNorm(nn.Module):
 class ResidualBlock(nn.Module):
     """Residual Block"""
 
-    def __init__(self, d_encoder, residual_channels, dropout):
+    def __init__(self, d_encoder, residual_channels, use_linear_bias=False, dilation=1):
         super(ResidualBlock, self).__init__()
         self.conv_layer = ConvNorm(
             residual_channels,
             2 * residual_channels,
             kernel_size=3,
             stride=1,
-            padding=int((3 - 1) / 2),
-            dilation=1,
+            padding=dilation,
+            dilation=dilation,
         )
-        self.diffusion_projection = LinearNorm(residual_channels, residual_channels)
+        self.diffusion_projection = LinearNorm(
+            residual_channels, residual_channels, use_linear_bias
+        )
         self.conditioner_projection = ConvNorm(
             d_encoder, 2 * residual_channels, kernel_size=1
         )
@@ -137,12 +140,13 @@ class ResidualBlock(nn.Module):
             residual_channels, 2 * residual_channels, kernel_size=1
         )
 
-    def forward(self, x, conditioner, diffusion_step, mask=None):
+    def forward(self, x, conditioner, diffusion_step):
 
         diffusion_step = self.diffusion_projection(diffusion_step).unsqueeze(-1)
         conditioner = self.conditioner_projection(conditioner)
 
         y = x + diffusion_step
+
         y = self.conv_layer(y) + conditioner
 
         gate, filter = torch.chunk(y, 2, dim=1)
@@ -164,21 +168,27 @@ class WaveNetDenoiser(nn.Module):
         d_encoder=256,
         residual_channels=512,
         residual_layers=20,
-        dropout=0.2,
+        use_linear_bias=False,
+        dilation_cycle=None,
     ):
         super(WaveNetDenoiser, self).__init__()
 
         self.input_projection = ConvNorm(mel_channels, residual_channels, kernel_size=1)
         self.diffusion_embedding = DiffusionEmbedding(residual_channels)
         self.mlp = nn.Sequential(
-            LinearNorm(residual_channels, residual_channels * 4),
+            LinearNorm(residual_channels, residual_channels * 4, use_linear_bias),
             Mish(),
-            LinearNorm(residual_channels * 4, residual_channels),
+            LinearNorm(residual_channels * 4, residual_channels, use_linear_bias),
         )
         self.residual_layers = nn.ModuleList(
             [
-                ResidualBlock(d_encoder, residual_channels, dropout=dropout)
-                for _ in range(residual_layers)
+                ResidualBlock(
+                    d_encoder,
+                    residual_channels,
+                    use_linear_bias=use_linear_bias,
+                    dilation=2 ** (i % dilation_cycle) if dilation_cycle else 1,
+                )
+                for i in range(residual_layers)
             ]
         )
         self.skip_projection = ConvNorm(
@@ -189,7 +199,7 @@ class WaveNetDenoiser(nn.Module):
         )
         nn.init.zeros_(self.output_projection.conv.weight)
 
-    def forward(self, mel, diffusion_step, conditioner, mask=None):
+    def forward(self, mel, diffusion_step, conditioner):
         """
 
         :param mel: [B, 1, M, T]
@@ -206,7 +216,7 @@ class WaveNetDenoiser(nn.Module):
 
         skip = []
         for layer in self.residual_layers:
-            x, skip_connection = layer(x, conditioner, diffusion_step, mask)
+            x, skip_connection = layer(x, conditioner, diffusion_step)
             skip.append(skip_connection)
 
         x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))

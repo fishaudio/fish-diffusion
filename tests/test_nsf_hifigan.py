@@ -1,18 +1,18 @@
-import numpy as np
 import soundfile as sf
-import torch
 import torchaudio
 
+from fish_diffusion.utils.pitch import get_pitch_parselmouth
 from fish_diffusion.vocoders import NsfHifiGAN
 
-source = "INPUT.wav"
-f0 = np.load(source + ".f0.npy")
-f0 = torch.from_numpy(f0).float()
+source = "dataset/valid-for-opencpop/TruE-干音_0000/0000.wav"
 
 gan = NsfHifiGAN()
 
 audio, sr = torchaudio.load(source)
-mel = gan.wav2spec(audio)
-a = gan.spec2wav(mel, f0)
 
-sf.write("result.wav", a, 44100)
+mel = gan.wav2spec(audio)
+f0 = get_pitch_parselmouth(audio, sr, pad_to=mel.shape[-1])
+
+out = gan.spec2wav(mel, f0)
+
+sf.write("result.wav", out, sr)

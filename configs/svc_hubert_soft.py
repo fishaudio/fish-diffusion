@@ -1,3 +1,5 @@
+from fish_diffusion.utils.pitch import pitch_to_scale
+
 _base_ = [
     "./_base_/trainers/base.py",
     "./_base_/datasets/audio_folder.py",
@@ -8,6 +10,7 @@ mel_channels = 128
 hidden_size = 256
 
 model = dict(
+    type="DiffSVC",
     diffusion=dict(
         type="GaussianDiffusion",
         mel_channels=mel_channels,
@@ -23,9 +26,9 @@ model = dict(
             d_encoder=hidden_size,
             residual_channels=512,
             residual_layers=20,
-            dropout=0.2,
         ),
         spec_stats_path="dataset/stats.json",
+        sampler_interval=10,
     ),
     text_encoder=dict(
         type="NaiveProjectionEncoder",
@@ -40,15 +43,17 @@ model = dict(
     ),
     pitch_encoder=dict(
         type="NaiveProjectionEncoder",
-        input_size=256,
-        output_size=hidden_size,
-        use_embedding=True,
+        input_size=1,
+        output_size=256,
+        use_embedding=False,
+        preprocessing=pitch_to_scale,
     ),
     vocoder=dict(
         type="NsfHifiGAN",
         checkpoint_path="checkpoints/nsf_hifigan/model",
         sampling_rate=sampling_rate,
         mel_channels=mel_channels,
+        use_natural_log=True,
     ),
 )
 
@@ -56,5 +61,5 @@ preprocessing = dict(
     text_features_extractor=dict(
         type="HubertSoft",
     ),
-    pitch_extractor="crepe",
+    pitch_extractor="parselmouth",
 )
