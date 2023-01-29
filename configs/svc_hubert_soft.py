@@ -61,5 +61,7 @@ preprocessing = dict(
     text_features_extractor=dict(
         type="HubertSoft",
     ),
-    pitch_extractor="parselmouth",
+    pitch_extractor=dict(
+        type="ParselMouthPitchExtractor",
+    ),
 )

@@ -152,8 +152,9 @@ def inference(
 
     model.load_state_dict(state_dict)
     model.to(device)
+    model.eval()
 
-    pitch_extractor = PITCH_EXTRACTORS.get(config.preprocessing.pitch_extractor)
+    pitch_extractor = PITCH_EXTRACTORS.build(config.preprocessing.pitch_extractor)
     assert pitch_extractor is not None, "Pitch extractor not found"
 
     generated_audio = np.zeros_like(audio)

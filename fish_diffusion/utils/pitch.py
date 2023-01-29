@@ -3,6 +3,9 @@ import parselmouth
 import torch
 import torchaudio
 import torchcrepe
+from mmengine import Registry
+
+PITCH_EXTRACTORS = Registry("pitch_extractors")
 
 _f0_bin = 256
 _f0_max = 1100.0
@@ -132,6 +135,11 @@ def get_pitch_crepe(
         x = torchaudio.functional.resample(x, sampling_rate, 16000)
         sampling_rate = 16000
 
+    x = torch.load("/home/lengyue/workspace/ml-toys/diff-svc/wav16k_torch.pt").to(
+        x.device
+    )
+    print(threshold, f0_min, f0_max)
+
     # 重采样后按照 hopsize=80, 也就是 5ms 一帧分析 f0
     f0, pd = torchcrepe.predict(
         x,
@@ -169,7 +177,42 @@ def get_pitch_crepe(
     return torch.from_numpy(f0).to(x.device)
 
 
-PITCH_EXTRACTORS = {
-    "crepe": get_pitch_crepe,
-    "parselmouth": get_pitch_parselmouth,
-}
+class BasePitchExtractor:
+    def __init__(self, hop_length=512, f0_min=_f0_min, f0_max=_f0_max):
+        self.hop_length = hop_length
+        self.f0_min = f0_min
+        self.f0_max = f0_max
+
+    def __call__(self, x, sampling_rate=44100, pad_to=None):
+        raise NotImplementedError
+
+
+@PITCH_EXTRACTORS.register_module()
+class ParselMouthPitchExtractor(BasePitchExtractor):
+    def __call__(self, x, sampling_rate=44100, pad_to=None):
+        return get_pitch_parselmouth(
+            x,
+            sampling_rate,
+            self.hop_length,
+            self.f0_min,
+            self.f0_max,
+            pad_to,
+        )
+
+
+@PITCH_EXTRACTORS.register_module()
+class CrepePitchExtractor(BasePitchExtractor):
+    def __init__(self, hop_length=512, f0_min=_f0_min, f0_max=_f0_max, threshold=0.05):
+        super().__init__(hop_length, f0_min, f0_max)
+        self.threshold = threshold
+
+    def __call__(self, x, sampling_rate=44100, pad_to=None):
+        return get_pitch_crepe(
+            x,
+            sampling_rate,
+            self.hop_length,
+            self.f0_min,
+            self.f0_max,
+            self.threshold,
+            pad_to,
+        )
