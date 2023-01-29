@@ -135,11 +135,6 @@ def get_pitch_crepe(
         x = torchaudio.functional.resample(x, sampling_rate, 16000)
         sampling_rate = 16000
 
-    x = torch.load("/home/lengyue/workspace/ml-toys/diff-svc/wav16k_torch.pt").to(
-        x.device
-    )
-    print(threshold, f0_min, f0_max)
-
     # 重采样后按照 hopsize=80, 也就是 5ms 一帧分析 f0
     f0, pd = torchcrepe.predict(
         x,
