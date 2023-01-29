@@ -190,8 +190,4 @@ if __name__ == "__main__":
         **cfg.dataloader.valid,
     )
 
-    # Check if dataset is empty
-    assert len(train_dataset) > 0, "Train dataset is empty, please double check!"
-    assert len(valid_dataset) > 0, "Valid dataset is empty, please double check!"
-
     trainer.fit(model, train_loader, valid_loader)
