@@ -73,6 +73,7 @@ def inference(
     extract_vocals=True,
     merge_non_vocals=True,
     vocals_loudness_gain=0.0,
+    sampler_interval=None,
     device="cuda",
 ):
     """Inference
@@ -89,8 +90,12 @@ def inference(
         extract_vocals: extract vocals
         merge_non_vocals: merge non-vocals, only works when extract_vocals is True
         vocals_loudness_gain: loudness gain of vocals (dB)
+        sampler_interval: sampler interval, only works when extract_vocals is True
         device: device
     """
+
+    if sampler_interval is not None:
+        config.model.diffusion.sampler_interval = sampler_interval
 
     if os.path.isdir(checkpoint):
         # Find the latest checkpoint
@@ -275,6 +280,14 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--sampler_interval",
+        type=int,
+        default=None,
+        required=False,
+        help="Sampler interval, if not specified, will be taken from config",
+    )
+
+    parser.add_argument(
         "--device",
         type=str,
         default=None,
@@ -303,5 +316,6 @@ if __name__ == "__main__":
         extract_vocals=args.extract_vocals,
         merge_non_vocals=args.merge_non_vocals,
         vocals_loudness_gain=args.vocals_loudness_gain,
+        sampler_interval=args.sampler_interval,
         device=device,
     )

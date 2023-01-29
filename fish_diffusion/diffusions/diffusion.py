@@ -175,9 +175,7 @@ class GaussianDiffusion(nn.Module):
         return model_mean + nonzero_mask * (0.5 * model_log_variance).exp() * noise
 
     @torch.no_grad()
-    def p_sample_plms(
-        self, x, t, interval, cond, clip_denoised=True, repeat_noise=False
-    ):
+    def p_sample_plms(self, x, t, cond, interval, noise_list):
         """
         Use the PLMS method from [Pseudo Numerical Methods for Diffusion Models on Manifolds](https://arxiv.org/abs/2202.09778).
         """
@@ -201,7 +199,6 @@ class GaussianDiffusion(nn.Module):
 
             return x_pred
 
-        noise_list = self.noise_list
         noise_pred = self.denoise_fn(x, t, cond)
 
         if len(noise_list) == 0:
@@ -288,7 +285,6 @@ class GaussianDiffusion(nn.Module):
         )
 
     def inference(self, features, progress=False):
-        # Cond 基本就是 hubert / fs2 参数
         b, *_, device = *features.shape, features.device
         features = features.transpose(1, 2)
 
@@ -296,20 +292,25 @@ class GaussianDiffusion(nn.Module):
         shape = (features.shape[0], 1, self.mel_bins, features.shape[2])
         x = torch.randn(shape, device=device)
 
-        self.noise_list = deque(maxlen=4)
-
         chunks = list(reversed(range(0, t, self.sampler_interval)))
 
         if progress:
             chunks = tqdm(chunks)
 
+        # Noise list for denoising
+        noise_list = deque(maxlen=4)
+
         for i in chunks:
-            x = self.p_sample_plms(
-                x,
-                torch.full((b,), i, device=device, dtype=torch.long),
-                self.sampler_interval,
-                features,
-            )
+            args = (x, torch.full((b,), i, device=device, dtype=torch.long), features)
+            if self.sampler_interval == 1:
+                # If plms is not used, use the original sampling method
+                x = self.p_sample(*args)
+            else:
+                x = self.p_sample_plms(
+                    *args,
+                    interval=self.sampler_interval,
+                    noise_list=noise_list,
+                )
 
         x = x[:, 0].transpose(1, 2)
 
