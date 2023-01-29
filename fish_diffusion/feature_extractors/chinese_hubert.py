@@ -10,7 +10,12 @@ from .builder import FEATURE_EXTRACTORS
 
 @FEATURE_EXTRACTORS.register_module()
 class ChineseHubertSoft(BaseFeatureExtractor):
-    def __init__(self, pretrained: bool = True, checkpoint_path: Optional[str] = None):
+    def __init__(
+        self,
+        pretrained: bool = True,
+        checkpoint_path: Optional[str] = None,
+        gate_size: int = 10,
+    ):
         super().__init__()
 
         self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(
@@ -18,6 +23,7 @@ class ChineseHubertSoft(BaseFeatureExtractor):
         )
         self.model = HubertModel.from_pretrained("TencentGameMate/chinese-hubert-base")
         self.proj = nn.Sequential(nn.Dropout(0.1), nn.Linear(768, 256))
+        self.gate_size = gate_size
 
         state_dict = None
 
@@ -46,7 +52,7 @@ class ChineseHubertSoft(BaseFeatureExtractor):
         features = self.proj(features.last_hidden_state)
 
         # Top-k gating
-        topk, indices = torch.topk(features, 10, dim=2)
+        topk, indices = torch.topk(features, self.gate_size, dim=2)
         features = torch.zeros_like(features).scatter(2, indices, topk)
         features = features / features.sum(2, keepdim=True)
 
