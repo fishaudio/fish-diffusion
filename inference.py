@@ -74,6 +74,7 @@ def inference(
     merge_non_vocals=True,
     vocals_loudness_gain=0.0,
     sampler_interval=None,
+    sampler_progress=False,
     device="cuda",
 ):
     """Inference
@@ -90,7 +91,8 @@ def inference(
         extract_vocals: extract vocals
         merge_non_vocals: merge non-vocals, only works when extract_vocals is True
         vocals_loudness_gain: loudness gain of vocals (dB)
-        sampler_interval: sampler interval, only works when extract_vocals is True
+        sampler_interval: sampler interval, lower value means higher quality
+        sampler_progress: show sampler progress
         device: device
     """
 
@@ -195,7 +197,9 @@ def inference(
             pitches=pitch[None].to(device),
         )
 
-        result = model.model.diffusion.inference(features["features"], progress=False)
+        result = model.model.diffusion.inference(
+            features["features"], progress=sampler_progress
+        )
         wav = model.vocoder.spec2wav(result[0].T, f0=pitch).cpu().numpy()
         max_wav_len = generated_audio.shape[-1] - start
         generated_audio[start : start + wav.shape[-1]] = wav[:max_wav_len]
@@ -288,6 +292,12 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--sampler_progress",
+        action="store_true",
+        help="Show sampler progress",
+    )
+
+    parser.add_argument(
         "--device",
         type=str,
         default=None,
@@ -317,5 +327,6 @@ if __name__ == "__main__":
         merge_non_vocals=args.merge_non_vocals,
         vocals_loudness_gain=args.vocals_loudness_gain,
         sampler_interval=args.sampler_interval,
+        sampler_progress=args.sampler_progress,
         device=device,
     )
