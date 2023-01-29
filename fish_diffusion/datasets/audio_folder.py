@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
@@ -99,3 +100,27 @@ class AudioFolderDataset(Dataset):
         info["max_pitch_len"] = max_pitch_len
 
         return info
+
+    @staticmethod
+    def get_speaker_map_from_subfolder(path, existing_speaker_map=None):
+        if speaker_map is None:
+            speaker_map = {}
+        else:
+            speaker_map = deepcopy(existing_speaker_map)
+
+        for speaker_path in Path(path).iterdir():
+            speaker_map[str(speaker_path.name)] = len(speaker_map)
+
+        return speaker_map
+
+    @staticmethod
+    def get_datasets_from_subfolder(
+        path, speaker_map: dict[str, int]
+    ) -> list["AudioFolderDataset"]:
+        datasets = []
+        for speaker_path in Path(path).iterdir():
+            speaker_id = speaker_map[str(speaker_path.name)]
+            dataset = AudioFolderDataset(speaker_path, speaker_id)
+            datasets.append(dataset)
+
+        return datasets
