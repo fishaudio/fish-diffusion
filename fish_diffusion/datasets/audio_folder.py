@@ -16,7 +16,9 @@ class AudioFolderDataset(Dataset):
         self.dataset_path = Path(path)
         self.speaker_id = speaker_id
 
-        assert len(self.wav_paths) > 0, f"No wav files found in {path}, please check your path."
+        assert (
+            len(self.wav_paths) > 0
+        ), f"No wav files found in {path}, please check your path."
 
     def __len__(self):
         return len(self.wav_paths)
