@@ -1,3 +1,7 @@
+from functools import partial
+
+import numpy as np
+
 from fish_diffusion.utils.pitch import pitch_to_coarse
 
 _base_ = [
@@ -20,7 +24,10 @@ model = dict(
         input_size=300,
         output_size=hidden_size,
         use_embedding=True,
-        preprocessing=pitch_to_coarse,
+        # Since the pretrained model uses a 40.0 Hz minimum pitch,
+        preprocessing=partial(
+            pitch_to_coarse, f0_mel_min=1127 * np.log(1 + 40.0 / 700)
+        ),
     ),
     text_encoder=dict(
         _delete_=True,
@@ -41,6 +48,10 @@ model = dict(
 
 preprocessing = dict(
     # You need to choose either "parselmouth" or "crepe" for pitch_extractor
-    # But crepe seems buggy, I will debug it later
-    pitch_extractor="parselmouth"
+    pitch_extractor=dict(
+        _delete_=True,
+        type="ParselMouthPitchExtractor",
+        f0_min=40.0,
+        f0_max=1100.0,
+    )
 )
