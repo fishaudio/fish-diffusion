@@ -44,14 +44,6 @@ class AudioFolderDataset(Dataset):
 
         return sample
 
-    def parse_wav_paths(self, filename):
-        with open(filename, "r", encoding="utf-8") as f:
-            wavpaths = []
-            for line in f.readlines():
-                wavpath = line.strip("\n")
-                wavpaths.append(Path(wavpath))
-            return wavpaths
-
     @staticmethod
     def collate_fn(data):
         info = {
