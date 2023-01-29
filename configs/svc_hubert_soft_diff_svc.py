@@ -50,7 +50,7 @@ preprocessing = dict(
     # You need to choose either "parselmouth" or "crepe" for pitch_extractor
     pitch_extractor=dict(
         _delete_=True,
-        type="ParselMouthPitchExtractor",
+        type="CrepePitchExtractor",
         f0_min=40.0,
         f0_max=1100.0,
     )
