@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 
 import torch
+from loguru import logger
 from mmengine import Config
 
 from train import FishDiffusion
@@ -14,64 +15,82 @@ def convert(config_path, input_path, output_path):
     config = Config.fromfile(config_path)
     model = FishDiffusion(config)
 
+    logger.info("Loading Diff-SVC checkpoint...")
+
     diff_svc_state_dict = torch.load(
         input_path,
         map_location="cpu",
     )["state_dict"]
-    # diff_svc_state_dict_clean = {k[6:]: v for k, v in diff_svc_state_dict.items() if k.startswith("model.") and "fs2" not in k}
 
+    residual_channels = diff_svc_state_dict[
+        "model.denoise_fn.input_projection.weight"
+    ].shape[0]
+    if residual_channels != config.model.diffusion.denoiser.residual_channels:
+        logger.error(
+            f"Residual channels mismatch: {residual_channels} vs {config.model.diffusion.denoiser.residual_channels}. "
+            f"Please update the residual_channels to {residual_channels} in the config file."
+        )
+        return
+
+    logger.info(f"Residual channels: {residual_channels}")
+
+    # Solving diffusion and denoisr params
+    fish_denoiser_keys = list(model.model.diffusion.state_dict().keys())
     diffusion_state_dict = {}
-    denoiser_state_dict = {}
-    fs2_state_dict = (
-        {}
-    )  # FS2 is not used in this model, only projection layers are keeped.
-
-    for k, v in diff_svc_state_dict.items():
-        if not k.startswith("model."):
-            raise ValueError(f"Key {k} does not start with model.")
-
-        k = k[6:]
-
-        if k.startswith("fs2."):
-            fs2_state_dict[k[4:]] = v
-            continue
-
-        if k.startswith("denoise_fn."):
-            denoiser_state_dict[k[11:]] = v
-            continue
-
-        assert "." not in k, f"Key {k} contains dot, which is not supported yet."
-
-        diffusion_state_dict[k] = v
-
-    fish_denoiser_keys = list(model.model.diffusion.denoise_fn.state_dict().keys())
 
     for i in fish_denoiser_keys:
-        fixed = (
+        fixed = "model." + (
             i.replace(".conv.", ".")
             .replace(".linear.", ".")
             .replace(".conv_layer.", ".dilated_conv.")
         )
-        diffusion_state_dict[f"denoise_fn.{i}"] = denoiser_state_dict.pop(fixed)
+        diffusion_state_dict[i] = diff_svc_state_dict.pop(fixed)
 
-    assert (
-        len(denoiser_state_dict) == 0
-    ), f"Unmapped denoiser keys: {denoiser_state_dict.keys()}"
+    # If any keys not beginning with "model.fs2" are left, they are not mapped
+    if any(not k.startswith("model.fs2") for k in diff_svc_state_dict.keys()):
+        logger.error(f"Keys not mapped: {diff_svc_state_dict.keys()}")
+        return
+
     model.model.diffusion.load_state_dict(diffusion_state_dict, strict=True)
+    logger.info("Diffusion and Denoiser are converted.")
 
-    # The Main diffusion is done now
+    # Restoring Pitch Encoder
+    pitch_encoder_state_dict = {
+        "embedding.weight": diff_svc_state_dict.pop("model.fs2.pitch_embed.weight"),
+    }
+    model.model.pitch_encoder.load_state_dict(pitch_encoder_state_dict, strict=True)
+    logger.info("Pitch Encoder is converted.")
 
-    # Fix Pitch Encoder
-    model.model.pitch_encoder.embedding.weight.data = fs2_state_dict[
-        "pitch_embed.weight"
-    ]
+    # Restoring Speaker Encoder
+    if "model.fs2.spk_embed_proj.weight" in diff_svc_state_dict:
+        speaker_encoder_state_dict = {
+            "embedding.weight": diff_svc_state_dict.pop(
+                "model.fs2.spk_embed_proj.weight"
+            ),
+        }
 
-    # TODO: Support multi speaker
-    model.model.speaker_encoder.embedding.weight.data.zero_()
+        num_speakers = model.model.speaker_encoder.embedding.weight.shape[0]
+        diff_svc_num_speakers = speaker_encoder_state_dict["embedding.weight"].shape[0]
+
+        if diff_svc_num_speakers != num_speakers:
+            logger.error(
+                f"Speaker number mismatch: {diff_svc_num_speakers} vs {num_speakers}. "
+                f"Please update the speaker_encoder.input_size to {diff_svc_num_speakers} in the config file."
+            )
+            return
+
+        model.model.speaker_encoder.load_state_dict(
+            speaker_encoder_state_dict, strict=True
+        )
+        logger.info("Speaker Encoder is converted.")
+    else:
+        logger.info("Speaker Encoder not found in the checkpoint, set to zero.")
+        model.model.speaker_encoder.embedding.weight.data.zero_()
 
     torch.save(model.state_dict(), output_path)
 
-    print("Done")
+    logger.info("All components are converted.")
+    logger.info(f"Saved to {output_path}")
 
 
 if __name__ == "__main__":
