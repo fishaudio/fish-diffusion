@@ -68,7 +68,7 @@ def inference(
     output_path,
     speaker_id=0,
     pitch_adjust=0,
-    silence_threshold=50,
+    silence_threshold=60,
     max_slice_duration=30.0,
     extract_vocals=True,
     merge_non_vocals=True,
