@@ -7,7 +7,6 @@ import wandb
 from mmengine import Config
 from mmengine.optim import OPTIMIZERS
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
-from torch.optim import AdamW
 from torch.utils.data import DataLoader
 
 from fish_diffusion.archs.diffsinger import DiffSinger
