@@ -1,20 +1,19 @@
 from argparse import ArgumentParser
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-import soundfile as sf
 import torch
 import wandb
 from mmengine import Config
+from mmengine.optim import OPTIMIZERS
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 
 from fish_diffusion.archs.diffsinger import DiffSinger
 from fish_diffusion.datasets import DATASETS
 from fish_diffusion.datasets.repeat import RepeatDataset
+from fish_diffusion.utils.scheduler import LR_SCHEUDLERS
 from fish_diffusion.utils.viz import viz_synth_sample
 from fish_diffusion.vocoders import VOCODERS
 
@@ -32,8 +31,11 @@ class FishDiffusion(pl.LightningModule):
         self.vocoder.freeze()
 
     def configure_optimizers(self):
-        optimizer = AdamW(self.parameters(), lr=8e-4, betas=(0.9, 0.98), eps=1e-9)
-        scheduler = StepLR(optimizer, step_size=50000, gamma=0.5)
+        self.config.optimizer.params = self.parameters()
+        optimizer = OPTIMIZERS.build(self.config.optimizer)
+
+        self.config.scheduler.optimizer = optimizer
+        scheduler = LR_SCHEUDLERS.build(self.config.scheduler)
 
         return [optimizer], dict(scheduler=scheduler, interval="step")
 
@@ -187,9 +189,5 @@ if __name__ == "__main__":
         collate_fn=valid_dataset.collate_fn,
         **cfg.dataloader.valid,
     )
-
-    # Check if dataset is empty
-    assert len(train_dataset) > 0, "Train dataset is empty, please double check!"
-    assert len(valid_dataset) > 0, "Valid dataset is empty, please double check!"
 
     trainer.fit(model, train_loader, valid_loader)

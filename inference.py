@@ -68,11 +68,13 @@ def inference(
     output_path,
     speaker_id=0,
     pitch_adjust=0,
-    silence_threshold=60,
+    silence_threshold=50,
     max_slice_duration=30.0,
     extract_vocals=True,
     merge_non_vocals=True,
     vocals_loudness_gain=0.0,
+    sampler_interval=None,
+    sampler_progress=False,
     device="cuda",
 ):
     """Inference
@@ -89,8 +91,13 @@ def inference(
         extract_vocals: extract vocals
         merge_non_vocals: merge non-vocals, only works when extract_vocals is True
         vocals_loudness_gain: loudness gain of vocals (dB)
+        sampler_interval: sampler interval, lower value means higher quality
+        sampler_progress: show sampler progress
         device: device
     """
+
+    if sampler_interval is not None:
+        config.model.diffusion.sampler_interval = sampler_interval
 
     if os.path.isdir(checkpoint):
         # Find the latest checkpoint
@@ -152,8 +159,9 @@ def inference(
 
     model.load_state_dict(state_dict)
     model.to(device)
+    model.eval()
 
-    pitch_extractor = PITCH_EXTRACTORS.get(config.preprocessing.pitch_extractor)
+    pitch_extractor = PITCH_EXTRACTORS.build(config.preprocessing.pitch_extractor)
     assert pitch_extractor is not None, "Pitch extractor not found"
 
     generated_audio = np.zeros_like(audio)
@@ -189,7 +197,9 @@ def inference(
             pitches=pitch[None].to(device),
         )
 
-        result = model.model.diffusion.inference(features["features"], progress=False)
+        result = model.model.diffusion.inference(
+            features["features"], progress=sampler_progress
+        )
         wav = model.vocoder.spec2wav(result[0].T, f0=pitch).cpu().numpy()
         max_wav_len = generated_audio.shape[-1] - start
         generated_audio[start : start + wav.shape[-1]] = wav[:max_wav_len]
@@ -274,6 +284,20 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--sampler_interval",
+        type=int,
+        default=None,
+        required=False,
+        help="Sampler interval, if not specified, will be taken from config",
+    )
+
+    parser.add_argument(
+        "--sampler_progress",
+        action="store_true",
+        help="Show sampler progress",
+    )
+
+    parser.add_argument(
         "--device",
         type=str,
         default=None,
@@ -302,5 +326,7 @@ if __name__ == "__main__":
         extract_vocals=args.extract_vocals,
         merge_non_vocals=args.merge_non_vocals,
         vocals_loudness_gain=args.vocals_loudness_gain,
+        sampler_interval=args.sampler_interval,
+        sampler_progress=args.sampler_progress,
         device=device,
     )

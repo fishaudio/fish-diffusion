@@ -152,3 +152,4 @@ results
 
 configs/exp_*.py
 exp_*.sh
+.DS_Store

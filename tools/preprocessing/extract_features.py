@@ -80,7 +80,7 @@ def process(config, audio_path: Path, override: bool = False):
     f0_path = audio_path.parent / f"{audio_path.name}.f0.npy"
 
     if f0_path.exists() is False or override:
-        pitch_extractor = PITCH_EXTRACTORS.get(config.preprocessing.pitch_extractor)
+        pitch_extractor = PITCH_EXTRACTORS.build(config.preprocessing.pitch_extractor)
 
         assert (
             pitch_extractor is not None
