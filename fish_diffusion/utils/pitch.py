@@ -1,6 +1,6 @@
-import librosa
 import numpy as np
 import parselmouth
+import resampy
 import torch
 import torchcrepe
 from mmengine import Registry
@@ -132,9 +132,7 @@ def get_pitch_crepe(
     assert x.shape[0] == 1, f"Expected 1 channel, got {x.shape[0]} channels."
 
     if sampling_rate != 16000:
-        x0 = librosa.resample(
-            x[0].cpu().numpy(), orig_sr=sampling_rate, target_sr=16000
-        )
+        x0 = resampy.resample(x[0].cpu().numpy(), sampling_rate, 16000)
         x = torch.from_numpy(x0).to(x.device)[None]
 
     # 重采样后按照 hopsize=80, 也就是 5ms 一帧分析 f0
