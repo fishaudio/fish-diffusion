@@ -29,9 +29,17 @@ poetry install
 ```
 
 ## Vocoder preparation
+Fish Diffusion requires the [OPENVPI 441khz NSF-HiFiGAN](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) vocoder to generate audio.
+
+### Automatic download
+```bash
+python tools/download_nsf_hifigan.py
+```
+
+### Manual download
 Download and unzip `nsf_hifigan_20221211.zip` from [441khz vocoder](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1)
 
-Copy `model` file to `checkpoints/nsf_hifigan` directory
+Copy the `nsf_hifigan` folder to the `checkpoints` directory (create if not exist)
 
 ## Dataset preparation
 You only need to put the dataset into the `dataset` directory in the following file structure

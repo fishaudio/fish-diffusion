@@ -29,9 +29,17 @@ poetry install
 ```
 
 ## 声码器准备
+Fish Diffusion 需要 [OPENVPI 441khz NSF-HiFiGAN](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) 声码器来生成音频.
+
+### 自动下载
+```bash
+python tools/download_nsf_hifigan.py
+```
+
+### 手动下载
 下载 [441khz 声码器](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) 中的 `nsf_hifigan_20221211.zip`
 
-复制 `model` 文件到 `checkpoints/nsf_hifigan` 目录下
+解压 `nsf_hifigan` 文件夹到 `checkpoints` 目录下 (如果没有则创建)
 
 ## 数据集准备
 仅需要以以下文件结构将数据集放入 dataset 目录即可
