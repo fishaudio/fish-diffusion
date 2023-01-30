@@ -13,6 +13,8 @@ preprocessing = dict(
         type="HubertSoft",
     ),
     pitch_extractor=dict(
+        # ParselMouth is much faster than Crepe
+        # However, Crepe may have better performance in some cases
         type="ParselMouthPitchExtractor",
     ),
 )
