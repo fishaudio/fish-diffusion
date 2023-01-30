@@ -1,3 +1,13 @@
+"""
+DiffSVC architecture with WaveNet denoiser and NSF-HiFiGAN vocoder.
+
+Comparing to v1, this version 
+- Doesn't need spec stats anymore.
+- Added dilation cycle to WaveNet denoiser.
+- Used the log10 mel spectrogram.
+- Better matching DiffSinger architecture.
+"""
+
 from fish_diffusion.utils.pitch import pitch_to_scale
 
 sampling_rate = 44100
@@ -9,7 +19,6 @@ model = dict(
     diffusion=dict(
         type="GaussianDiffusion",
         mel_channels=mel_channels,
-        keep_bins=128,
         noise_schedule="linear",
         timesteps=1000,
         max_beta=0.01,
@@ -21,9 +30,12 @@ model = dict(
             d_encoder=hidden_size,
             residual_channels=512,
             residual_layers=20,
+            dilation_cycle=4,
+            use_linear_bias=True,
         ),
-        spec_stats_path="dataset/stats.json",
         sampler_interval=10,
+        spec_min=[-5],
+        spec_max=[0],
     ),
     text_encoder=dict(
         type="NaiveProjectionEncoder",
@@ -48,6 +60,6 @@ model = dict(
         checkpoint_path="checkpoints/nsf_hifigan/model",
         sampling_rate=sampling_rate,
         mel_channels=mel_channels,
-        use_natural_log=True,
+        use_natural_log=False,
     ),
 )

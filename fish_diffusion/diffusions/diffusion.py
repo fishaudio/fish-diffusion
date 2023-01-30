@@ -48,14 +48,15 @@ class GaussianDiffusion(nn.Module):
         self,
         denoiser,
         mel_channels=128,
-        keep_bins=128,
         noise_schedule="linear",
         timesteps=1000,
         max_beta=0.01,
         s=0.008,
         noise_loss="smoothed-l1",
-        spec_stats_path="dataset/stats.json",
         sampler_interval=10,
+        spec_stats_path="dataset/stats.json",
+        spec_min=None,
+        spec_max=None,
     ):
         super().__init__()
 
@@ -115,16 +116,24 @@ class GaussianDiffusion(nn.Module):
             ),
         )
 
-        with open(spec_stats_path) as f:
-            stats = json.load(f)
-            self.register_buffer(
-                "spec_min",
-                torch.FloatTensor(stats["spec_min"])[None, None, :keep_bins],
-            )
-            self.register_buffer(
-                "spec_max",
-                torch.FloatTensor(stats["spec_max"])[None, None, :keep_bins],
-            )
+        assert (spec_min is None and spec_max is None) or (
+            spec_min is not None and spec_max is not None
+        ), "spec_min and spec_max must be both None or both not None"
+
+        if spec_min is None:
+            with open(spec_stats_path) as f:
+                stats = json.load(f)
+
+            spec_min = stats["spec_min"]
+            spec_max = stats["spec_max"]
+
+        assert (
+            len(spec_min) == len(spec_max) == mel_channels
+            or len(spec_min) == len(spec_max) == 1
+        ), "spec_min and spec_max must be either of length 1 or mel_channels"
+
+        self.register_buffer("spec_min", torch.FloatTensor(spec_min).view(1, 1, -1))
+        self.register_buffer("spec_max", torch.FloatTensor(spec_max).view(1, 1, -1))
 
         self.sampler_interval = sampler_interval
 
