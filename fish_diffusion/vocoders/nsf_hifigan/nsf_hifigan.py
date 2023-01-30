@@ -1,6 +1,7 @@
 import json
 import os
 
+import librosa
 import pytorch_lightning as pl
 import torch
 
@@ -84,7 +85,16 @@ class NsfHifiGAN(pl.LightningModule):
     def device(self):
         return next(self.model.parameters()).device
 
-    def wav2spec(self, wav_torch):
+    def wav2spec(self, wav_torch, sr=None):
+        if sr is None:
+            sr = self.h.sampling_rate
+
+        if sr != self.h.sampling_rate:
+            _wav_torch = librosa.resample(
+                wav_torch.cpu().numpy(), orig_sr=sr, target_sr=self.h.sampling_rate
+            )
+            wav_torch = torch.from_numpy(_wav_torch).to(wav_torch.device)
+
         mel_torch = get_mel_from_audio(
             audio=wav_torch,
             sample_rate=self.h.sampling_rate,

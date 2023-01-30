@@ -14,16 +14,17 @@ from mmengine import Config
 from tqdm import tqdm
 
 from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS
-from fish_diffusion.utils.audio import get_mel_from_audio
 from fish_diffusion.utils.pitch import PITCH_EXTRACTORS
 from fish_diffusion.utils.tensor import repeat_expand_2d
+from fish_diffusion.vocoders import VOCODERS
 
 text_features_extractor = None
+vocoder = None
 device = None
 
 
 def init(worker_id: Value, lock: Lock, config):
-    global text_features_extractor, device
+    global text_features_extractor, vocoder, device
 
     with lock:
         current_id = worker_id.value
@@ -44,10 +45,12 @@ def init(worker_id: Value, lock: Lock, config):
     if config.preprocessing.pitch_extractor == "crepe":
         torchcrepe.load.model(device, "full")
 
+    vocoder = VOCODERS.build(config.model.vocoder)
+
 
 def process(config, audio_path: Path, override: bool = False):
     # Important for multiprocessing
-    global text_features_extractor, device
+    global text_features_extractor, vocoder, device
 
     audio, sr = librosa.load(str(audio_path), sr=config.sampling_rate, mono=True)
     # audio: (1, T)
@@ -59,7 +62,7 @@ def process(config, audio_path: Path, override: bool = False):
     mel_path = audio_path.parent / f"{audio_path.name}.mel.npy"
 
     if mel_path.exists() is False or override:
-        mel = get_mel_from_audio(audio, sr)
+        mel = vocoder.wav2spec(audio, sr)
         np.save(mel_path, mel.cpu().numpy())
     else:
         mel = np.load(mel_path)
