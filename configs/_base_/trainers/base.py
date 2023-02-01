@@ -1,3 +1,5 @@
+import sys
+
 import torch
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.strategies import DDPStrategy
@@ -5,7 +7,6 @@ from pytorch_lightning.strategies import DDPStrategy
 trainer = dict(
     accelerator="gpu",
     devices=-1,
-    strategy=DDPStrategy(find_unused_parameters=True),
     gradient_clip_val=0.5,
     log_every_n_steps=10,
     val_check_interval=5000,
@@ -22,3 +23,12 @@ trainer = dict(
         LearningRateMonitor(logging_interval="step"),
     ],
 )
+
+# Use DDP for multi-gpu training
+if torch.cuda.is_available() and torch.cuda.device_count() > 1:
+    # Use gloo for windows
+    process_group_backend = "nccl" if sys.platform != "win32" else "gloo"
+
+    trainer["strategy"] = DDPStrategy(
+        find_unused_parameters=True, process_group_backend=process_group_backend
+    )
