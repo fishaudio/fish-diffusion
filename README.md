@@ -1,5 +1,6 @@
 # Fish Diffusion
 ![CI Status](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml/badge.svg)
+[![Discord](https://img.shields.io/discord/1044927142900809739?color=%23738ADB&label=Discord&logo=discord&logoColor=white)](https://discord.gg/3CtFhTsvuG)
 
 一个简单易懂的 TTS / SVS / SVC 框架.
 
