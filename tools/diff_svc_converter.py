@@ -18,17 +18,30 @@ def convert(config_path, input_path, output_path):
         map_location="cpu",
     )["state_dict"]
 
+    # Detect if residual channels mismatch
     residual_channels = diff_svc_state_dict[
         "model.denoise_fn.input_projection.weight"
     ].shape[0]
     if residual_channels != config.model.diffusion.denoiser.residual_channels:
         logger.error(
             f"Residual channels mismatch: {residual_channels} vs {config.model.diffusion.denoiser.residual_channels}. "
-            f"Please update the residual_channels to {residual_channels} in the config file."
+            f"Please update the `model.diffusion.denoiser.residual_channels` to {residual_channels} in the config file."
         )
         return
 
     logger.info(f"Residual channels: {residual_channels}")
+
+    # Detect if spec_min and spec_max mismatch
+    spec_min = diff_svc_state_dict["model.spec_min"].shape[-1]
+    spec_max = diff_svc_state_dict["model.spec_max"].shape[-1]
+    config_spec_min = model.model.diffusion.spec_min.shape[-1]
+
+    if not spec_min == spec_max == config_spec_min:
+        logger.error(
+            f"Spec min and max shape mismatch: {spec_min} vs {spec_max} vs {config_spec_min}. "
+            f"Please update the `model.diffusion.spec_min` and `model.diffusion.spec_max` to [0] * {spec_min} in the config file."
+        )
+        return
 
     # Solving diffusion and denoisr params
     fish_denoiser_keys = list(model.model.diffusion.state_dict().keys())
