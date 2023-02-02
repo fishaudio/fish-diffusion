@@ -43,6 +43,8 @@ def convert(config_path, input_path, output_path):
         )
         return
 
+    logger.info(f"Spec min and max shape: {spec_min}")
+
     # Solving diffusion and denoisr params
     fish_denoiser_keys = list(model.model.diffusion.state_dict().keys())
     diffusion_state_dict = {}
