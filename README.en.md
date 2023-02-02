@@ -5,6 +5,8 @@ An easy to understand TTS / SVS / SVC training framework.
 
 [中文文档](README.md)
 
+[Quick English Guide](FISHSVC-eng.md)
+
 ## Summary
 Using Diffusion Model to solve different voice generating tasks. Compared with the original diffsvc repository, the advantages and disadvantages of this repository are as follows:
 + Support multi-speaker
