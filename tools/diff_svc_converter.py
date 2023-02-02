@@ -6,10 +6,6 @@ from mmengine import Config
 
 from train import FishDiffusion
 
-KEYS_MAPPING = {
-    "betas": "diffusion.betas",
-}
-
 
 def convert(config_path, input_path, output_path):
     config = Config.fromfile(config_path)
