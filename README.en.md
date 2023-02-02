@@ -3,6 +3,8 @@
 
 An easy to understand TTS / SVS / SVC training framework.
 
+> Check our [Wiki](https://github.com/fishaudio/fish-diffusion/wiki/Quick-Guide-ENG#quick-fishsvc-guide) to get started!
+
 [中文文档](README.md)
 
 ## Summary
@@ -102,4 +104,3 @@ You should run `tools/lint.sh` before submitting a pull request.
 + [diff-svc original](https://github.com/prophesier/diff-svc)
 + [diff-svc optimized](https://github.com/innnky/diff-svc/)
 + [DiffSinger](https://github.com/openvpi/DiffSinger/)
-+ [diffusers](https://github.com/huggingface/diffusers)

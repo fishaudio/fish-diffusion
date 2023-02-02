@@ -103,4 +103,3 @@ python tools/diff_svc_converter.py --config configs/svc_hubert_soft_diff_svc.py 
 + [diff-svc original](https://github.com/prophesier/diff-svc)
 + [diff-svc optimized](https://github.com/innnky/diff-svc/)
 + [DiffSinger](https://github.com/openvpi/DiffSinger/)
-+ [diffusers](https://github.com/huggingface/diffusers)
