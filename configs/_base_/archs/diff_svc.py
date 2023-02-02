@@ -9,7 +9,6 @@ model = dict(
     diffusion=dict(
         type="GaussianDiffusion",
         mel_channels=mel_channels,
-        keep_bins=128,
         noise_schedule="linear",
         timesteps=1000,
         max_beta=0.01,
