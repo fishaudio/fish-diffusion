@@ -71,7 +71,7 @@ class PartialFreezedAudioEncoder(AudioEncoder):
             param.requires_grad = True
 
 
-class WhisperForASR(nn.Module):
+class AlignedWhisper(nn.Module):
     def __init__(
         self,
         n_mels: int,
@@ -233,14 +233,14 @@ class WhisperForASR(nn.Module):
 
 
 @FEATURE_EXTRACTORS.register_module()
-class AlignedWhisper(BaseFeatureExtractor):
+class AlignedWhisperForAudio(BaseFeatureExtractor):
     def __init__(
         self,
         checkpoint_path: str,
     ):
         super().__init__()
 
-        self.model = WhisperForASR.load(checkpoint_path)
+        self.model = AlignedWhisper.load(checkpoint_path)
 
     @torch.no_grad()
     def forward(self, path_or_audio, sampling_rate=None):
@@ -250,17 +250,15 @@ class AlignedWhisper(BaseFeatureExtractor):
         mel = pad_or_trim(mel, 3000)
 
         features = self.model.forward_audio(mel[None])
-        # aux = self.model.forward_aux(features)
-        # phones = aux.argmax(-1)
-        # phones[:, feature_len:] = 0
-        # print(phones)
-        # text = [phonemes[i] for i in phones[0]]
-        # new_text = ["a" if i not in ["<AP>", "<SP>", "<PAD>"] else i for i in text]
-        # old_phones = phones
-        # phones = torch.tensor([phonemes.index(i) for i in new_text]).unsqueeze(0).to(phones.device)
-        # print(phones.shape)
-        # phones = pad_or_trim(phones, 1500)
-        # features = self.model.forward_phones(phones)
         features = features[:, :feature_len]
 
         return features.transpose(1, 2)
+
+    @torch.no_grad()
+    def forward_phones(self, phones: Tensor):
+        phones_len = phones.shape[-1]
+        phones = pad_or_trim(phones, 1500)
+        features = self.model.forward_phones(phones[None])
+        features = features[:, :phones_len]
+
+        return features
