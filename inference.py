@@ -150,6 +150,7 @@ def inference(
     text_features_extractor = FEATURE_EXTRACTORS.build(
         config.preprocessing.text_features_extractor
     ).to(device)
+    text_features_extractor.eval()
 
     model = FishDiffusion(config)
     state_dict = torch.load(checkpoint, map_location="cpu")
