@@ -241,6 +241,7 @@ class AlignedWhisperForAudio(BaseFeatureExtractor):
         super().__init__()
 
         self.model = AlignedWhisper.load(checkpoint_path)
+        self.model.eval()
 
     @torch.no_grad()
     def forward(self, path_or_audio, sampling_rate=None):
@@ -256,6 +257,27 @@ class AlignedWhisperForAudio(BaseFeatureExtractor):
 
     @torch.no_grad()
     def forward_phones(self, phones: Tensor):
+        phones_len = phones.shape[-1]
+        phones = pad_or_trim(phones, 1500)
+        features = self.model.forward_phones(phones[None])
+        features = features[:, :phones_len]
+
+        return features
+
+
+@FEATURE_EXTRACTORS.register_module()
+class AlignedWhisperForPhones(BaseFeatureExtractor):
+    def __init__(
+        self,
+        checkpoint_path: str,
+    ):
+        super().__init__()
+
+        self.model = AlignedWhisper.load(checkpoint_path)
+        self.model.eval()
+
+    @torch.no_grad()
+    def forward(self, phones: Tensor):
         phones_len = phones.shape[-1]
         phones = pad_or_trim(phones, 1500)
         features = self.model.forward_phones(phones[None])
