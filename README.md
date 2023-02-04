@@ -28,6 +28,10 @@ curl -sSL https://install.python-poetry.org | python3 -
 # 安装依赖
 poetry install
 ```
+# 国内九天等云平台安装依赖
+pip install requirements_no_torch.txt
+pip install -e git+https://github.com/fishaudio/fish-diffusion#egg=fish_diffusion
+```
 
 ## 声码器准备
 Fish Diffusion 需要 [OPENVPI 441khz NSF-HiFiGAN](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) 声码器来生成音频.
