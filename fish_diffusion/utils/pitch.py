@@ -106,6 +106,7 @@ class ParselMouthPitchExtractor(BasePitchExtractor):
 
         return f0
 
+
 @PITCH_EXTRACTORS.register_module()
 class CrepePitchExtractor(BasePitchExtractor):
     def __init__(self, hop_length=512, f0_min=_f0_min, f0_max=_f0_max, threshold=0.05):
