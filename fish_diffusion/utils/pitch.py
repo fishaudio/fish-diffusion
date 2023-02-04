@@ -4,6 +4,7 @@ import resampy
 import torch
 import torchcrepe
 from mmengine import Registry
+import pyworld as world
 
 PITCH_EXTRACTORS = Registry("pitch_extractors")
 
@@ -171,6 +172,27 @@ def get_pitch_crepe(
 
     return torch.from_numpy(f0).to(x.device)
 
+def get_pitch_world(
+    x,
+    sampling_rate=44100,
+    hop_length=512,
+    f0_min= 50,
+    f0_max= 1100,
+):
+    """Extract pitch using world harvest.
+
+    Args:
+        sampling_rate (int, optional): Sampling rate. Defaults to 44100.
+        hop_length (int, optional): Hop length. Defaults to 512.
+        f0_min (float, optional): Minimum pitch. Defaults to 50.
+        f0_max (float, optional): Maximum pitch. Defaults to 1100.
+    """
+
+    #I tried to add a pad handler in case it isnt none, i couldn't
+    time_step = hop_length / sampling_rate
+    f0, _ = world.harvest(sampling_rate, f0_min, f0_max, time_step)
+    return f0
+
 
 class BasePitchExtractor:
     def __init__(self, hop_length=512, f0_min=_f0_min, f0_max=_f0_max):
@@ -210,4 +232,15 @@ class CrepePitchExtractor(BasePitchExtractor):
             self.f0_max,
             self.threshold,
             pad_to,
+        )
+
+@PITCH_EXTRACTORS.register_module()
+class HarvestMouthPitchExtractor(BasePitchExtractor):
+    def __call__(self, x, sampling_rate=44100):
+        return get_pitch_world(
+            x,
+            sampling_rate,
+            self.hop_length,
+            self.f0_min,
+            self.f0_max,
         )
