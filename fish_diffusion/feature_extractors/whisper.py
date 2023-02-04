@@ -10,6 +10,10 @@ from whisper.model import AudioEncoder, LayerNorm, ResidualAttentionBlock, sinus
 from .base import BaseFeatureExtractor
 from .builder import FEATURE_EXTRACTORS
 
+_PRETRAINED_MODELS = {
+    "aligned-whisper-cn-25k-v1": "https://github.com/fishaudio/fish-diffusion/releases/download/v1.2b0/aligned-whisper-cn-25k-v1.ckpt"
+}
+
 
 class PhoneEncoder(nn.Module):
     def __init__(
@@ -138,8 +142,13 @@ class AlignedWhisper(nn.Module):
         n_outputs: int = None,
         n_audio_trainable_layers: int = 2,
     ):
+        # Load weights from the official repo
         if url in _MODELS:
             url = _MODELS[url]
+
+        # Load weights from pretrained model
+        if url in _PRETRAINED_MODELS:
+            url = _PRETRAINED_MODELS[url]
 
         if url.startswith("http"):
             state_dict = load_state_dict_from_url(url, map_location="cpu")
@@ -255,15 +264,6 @@ class AlignedWhisperForAudio(BaseFeatureExtractor):
 
         return features.transpose(1, 2)
 
-    @torch.no_grad()
-    def forward_phones(self, phones: Tensor):
-        phones_len = phones.shape[-1]
-        phones = pad_or_trim(phones, 1500)
-        features = self.model.forward_phones(phones[None])
-        features = features[:, :phones_len]
-
-        return features
-
 
 @FEATURE_EXTRACTORS.register_module()
 class AlignedWhisperForPhones(BaseFeatureExtractor):
@@ -283,4 +283,4 @@ class AlignedWhisperForPhones(BaseFeatureExtractor):
         features = self.model.forward_phones(phones[None])
         features = features[:, :phones_len]
 
-        return features
+        return features.transpose(1, 2)
