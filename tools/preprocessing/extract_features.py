@@ -93,6 +93,14 @@ def process(config, audio_path: Path, override: bool = False):
         np.save(f0_path, f0.cpu().numpy())
 
 
+def safe_process(config, audio_path: Path, override: bool = False):
+    try:
+        process(config, audio_path, override)
+    except Exception as e:
+        logger.error(f"Error processing {audio_path}")
+        logger.exception(e)
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
 
@@ -100,7 +108,7 @@ def parse_args():
     parser.add_argument("--path", type=str, required=True)
     parser.add_argument("--override", action="store_true")
     parser.add_argument("--clean", action="store_true")
-    parser.add_argument("--num-workers", type=int, default=4)
+    parser.add_argument("--num-workers", type=int, default=1)
 
     return parser.parse_args()
 
@@ -131,20 +139,16 @@ if __name__ == "__main__":
         init(worker_id, lock, config)
 
         for audio_path in tqdm(files):
-            process(config, audio_path, args.override)
+            safe_process(config, audio_path, args.override)
     else:
         with ProcessPoolExecutor(
             max_workers=args.num_workers,
             initializer=init,
             initargs=(worker_id, lock, config),
         ) as executor:
-            # TODO: change to map
-            futures = [
-                executor.submit(process, config, audio_path, args.override)
-                for audio_path in files
-            ]
+            params = [(config, audio_path, args.override) for audio_path in files]
 
-            for i in tqdm(as_completed(futures), total=len(futures)):
-                assert i.exception() is None, i.exception()
+            for i in tqdm(executor.map(safe_process, *zip(*params)), total=len(params)):
+                assert i is None, i
 
     logger.info("Done!")
