@@ -16,7 +16,7 @@
 ## 环境准备
 以下命令需要在 python 3.10 的 conda 环境下执行
 
-```
+```bash
 # 安装 PyTorch 相关核心依赖, 如果已安装则跳过
 # 参考 https://pytorch.org/get-started/locally/
 conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
@@ -25,12 +25,12 @@ conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvi
 # 参考 https://python-poetry.org/docs/#installation
 curl -sSL https://install.python-poetry.org | python3 -
 
-# 安装依赖
+# 安装依赖 (推荐)
 poetry install
 
-# 安装国内九天等云平台依赖
-pip install requirements_no_torch.txt
-pip install -e git+https://github.com/fishaudio/fish-diffusion#egg=fish_diffusion
+# 如果 Poetry 不可用, 或者速度较慢, 可以使用 pip 安装依赖
+pip install -r requirements.txt
+pip install -e .
 ```
 
 ## 声码器准备
