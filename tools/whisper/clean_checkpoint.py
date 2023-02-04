@@ -1,7 +1,6 @@
 # This code is for developers only.
 
 import torch
-
 from train_whisper import WhisperModel
 
 model = WhisperModel.load_from_checkpoint(
