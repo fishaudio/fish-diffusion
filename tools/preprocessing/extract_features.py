@@ -118,6 +118,13 @@ if __name__ == "__main__":
 
     args = parse_args()
 
+    logger.info(f"Using {args.num_workers} workers")
+
+    if torch.cuda.is_available():
+        logger.info(f"Found {torch.cuda.device_count()} GPUs")
+    else:
+        logger.warning("No GPU found, using CPU")
+
     if args.clean:
         logger.info("Cleaning *.npy files...")
 
