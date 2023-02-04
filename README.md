@@ -28,7 +28,7 @@ curl -sSL https://install.python-poetry.org | python3 -
 # 安装依赖
 poetry install
 ```
-# 国内九天等云平台安装依赖
+# 安装国内九天等云平台依赖
 pip install requirements_no_torch.txt
 pip install -e git+https://github.com/fishaudio/fish-diffusion#egg=fish_diffusion
 ```
