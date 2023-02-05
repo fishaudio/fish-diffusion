@@ -105,3 +105,9 @@ You should run `tools/lint.sh` before submitting a pull request.
 + [diff-svc original](https://github.com/prophesier/diff-svc)
 + [diff-svc optimized](https://github.com/innnky/diff-svc/)
 + [DiffSinger](https://github.com/openvpi/DiffSinger/)
+
+## Thanks to all contributors for their efforts
+
+<a href="https://github.com/fishaudio/fish-diffusion/graphs/contributors" target="_blank">
+  <img src="https://contrib.rocks/image?repo=fishaudio/fish-diffusion" />
+</a>
