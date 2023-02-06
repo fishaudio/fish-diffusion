@@ -11,9 +11,8 @@ from fish_audio_preprocess.utils import loudness_norm, separate_audio, slice_aud
 from loguru import logger
 from mmengine import Config
 
-from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS
+from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS, PITCH_EXTRACTORS
 from fish_diffusion.utils.audio import get_mel_from_audio
-from fish_diffusion.utils.pitch import PITCH_EXTRACTORS
 from fish_diffusion.utils.tensor import repeat_expand_2d
 from train import FishDiffusion
 

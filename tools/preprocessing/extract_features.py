@@ -13,8 +13,7 @@ from loguru import logger
 from mmengine import Config
 from tqdm import tqdm
 
-from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS
-from fish_diffusion.utils.pitch import PITCH_EXTRACTORS
+from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS, PITCH_EXTRACTORS
 from fish_diffusion.utils.tensor import repeat_expand_2d
 from fish_diffusion.vocoders import VOCODERS
 
