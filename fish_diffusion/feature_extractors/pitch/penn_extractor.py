@@ -1,4 +1,5 @@
 import torch
+
 from .builder import PITCH_EXTRACTORS, BasePitchExtractor
 
 

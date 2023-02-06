@@ -1,7 +1,8 @@
-import torch
-import torchcrepe
 import numpy as np
 import resampy
+import torch
+import torchcrepe
+
 from .builder import PITCH_EXTRACTORS, BasePitchExtractor
 
 

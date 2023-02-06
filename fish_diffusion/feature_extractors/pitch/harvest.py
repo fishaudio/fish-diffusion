@@ -1,7 +1,8 @@
-from .builder import PITCH_EXTRACTORS, BasePitchExtractor
-import torch
 import numpy as np
 import pyworld
+import torch
+
+from .builder import PITCH_EXTRACTORS, BasePitchExtractor
 
 
 @PITCH_EXTRACTORS.register_module()

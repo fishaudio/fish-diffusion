@@ -1,5 +1,6 @@
-import torch
 import parselmouth
+import torch
+
 from .builder import PITCH_EXTRACTORS, BasePitchExtractor
 
 

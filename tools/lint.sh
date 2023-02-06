@@ -1,4 +1,4 @@
 #!/bin/sh
 
 python -m black . 
-python -m isort **/*.py
+python -m isort .

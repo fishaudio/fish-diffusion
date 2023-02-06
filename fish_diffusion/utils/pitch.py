@@ -1,6 +1,5 @@
 import numpy as np
 
-
 _f0_bin = 256
 _f0_max = 1100.0
 _f0_min = 50.0
