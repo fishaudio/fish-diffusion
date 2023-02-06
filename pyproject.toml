@@ -26,6 +26,7 @@ openai-whisper = "^20230124"
 pypinyin = "^0.48.0"
 TextGrid = "^1.5"
 pyworld = "^0.3.2"
+penn = "^0.0.5"
 
 [tool.poetry.dev-dependencies]
 isort = "^5.11.4"

@@ -871,6 +871,23 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "penn"
+version = "0.0.5"
+description = "Pitch Estimating Neural Networks (PENN)"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+huggingface-hub = "*"
+numpy = "*"
+tensorboard = "*"
+torch = "*"
+torchaudio = "*"
+tqdm = "*"
+yapecs = "*"
+
+[[package]]
 name = "pillow"
 version = "9.4.0"
 description = "Python Imaging Library (Fork)"
@@ -1625,6 +1642,14 @@ python-versions = ">=3.5"
 dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 
 [[package]]
+name = "yapecs"
+version = "0.0.6"
+description = "Yet Another Python Experiment Configuration System (YAPECS)"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "yapf"
 version = "0.32.0"
 description = "A formatter for Python code."
@@ -1647,7 +1672,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "3be51692c12e2bec9340ae0d139d53054a9bbcb18df18be0a07c106b1db2fed6"
+content-hash = "c5799bfc2189aaf33b56c6a072a025fb073a449cbfcb30cc6053520dd3fd5ab6"
 
 [metadata.files]
 absl-py = [
@@ -2634,6 +2659,10 @@ pathspec = [
 pathtools = [
     {file = "pathtools-0.1.2.tar.gz", hash = "sha256:7c35c5421a39bb82e58018febd90e3b6e5db34c5443aaaf742b3f33d4655f1c0"},
 ]
+penn = [
+    {file = "penn-0.0.5-py3-none-any.whl", hash = "sha256:1f7d0157a2fed37dca35a836606139cd82763af5d5a0ccde255622bcc162cedd"},
+    {file = "penn-0.0.5.tar.gz", hash = "sha256:7a7128b6adb136b553338b11189b194351420aa28a654a3b116fb5adb140c9e6"},
+]
 pillow = [
     {file = "Pillow-9.4.0-1-cp310-cp310-macosx_10_10_x86_64.whl", hash = "sha256:1b4b4e9dda4f4e4c4e6896f93e84a8f0bcca3b059de9ddf67dac3c334b1195e1"},
     {file = "Pillow-9.4.0-1-cp311-cp311-macosx_10_10_x86_64.whl", hash = "sha256:fb5c1ad6bad98c57482236a21bf985ab0ef42bd51f7ad4e4538e89a997624e12"},
@@ -3356,6 +3385,10 @@ werkzeug = [
 win32-setctime = [
     {file = "win32_setctime-1.1.0-py3-none-any.whl", hash = "sha256:231db239e959c2fe7eb1d7dc129f11172354f98361c4fa2d6d2d7e278baa8aad"},
     {file = "win32_setctime-1.1.0.tar.gz", hash = "sha256:15cf5750465118d6929ae4de4eb46e8edae9a5634350c01ba582df868e932cb2"},
+]
+yapecs = [
+    {file = "yapecs-0.0.6-py3-none-any.whl", hash = "sha256:bafbbf5af76c814b9b0cb6f216b0c9b9097e3db42505da79ecbd94912f841f2d"},
+    {file = "yapecs-0.0.6.tar.gz", hash = "sha256:1d03cc0c9bb698331773a66043c679ebfcc02538f75045509e5ab5980d6401a5"},
 ]
 yapf = [
     {file = "yapf-0.32.0-py2.py3-none-any.whl", hash = "sha256:8fea849025584e486fd06d6ba2bed717f396080fd3cc236ba10cb97c4c51cf32"},
