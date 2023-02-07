@@ -11,7 +11,8 @@ from .base import BaseFeatureExtractor
 from .builder import FEATURE_EXTRACTORS
 
 _PRETRAINED_MODELS = {
-    "aligned-whisper-cn-25k-v1": "https://github.com/fishaudio/fish-diffusion/releases/download/v1.2b0/aligned-whisper-cn-25k-v1.ckpt"
+    "aligned-whisper-cn-25k-v1": "https://github.com/fishaudio/fish-diffusion/releases/download/v1.2b0/aligned-whisper-cn-25k-v1.ckpt",
+    "aligned-whisper-cn-40k-v1.1": "https://github.com/fishaudio/fish-diffusion/releases/download/v1.2b0/aligned-whisper-cn-40k-v1.1.ckpt",
 }
 
 
