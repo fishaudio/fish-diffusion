@@ -259,11 +259,11 @@ class GaussianDiffusion(nn.Module):
             noised_mel = noised_mel.masked_fill(mask, 0.0)
             epsilon = epsilon.masked_fill(mask, 0.0)
 
+        loss = self.get_mel_loss(self.noise_loss, noise, epsilon)
+
         noised_mel, epsilon = noised_mel.squeeze(1).transpose(1, 2), epsilon.squeeze(
             1
         ).transpose(1, 2)
-
-        loss = self.get_mel_loss(self.noise_loss, noised_mel, epsilon)
 
         return noised_mel, epsilon, loss
 
