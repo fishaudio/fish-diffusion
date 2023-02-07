@@ -9,6 +9,7 @@ from torch import nn
 from tqdm import tqdm
 
 from fish_diffusion.denoisers import DENOISERS
+from fish_diffusion.utils.ssim import ssim_loss
 
 from .builder import DIFFUSIONS
 
@@ -52,7 +53,7 @@ class GaussianDiffusion(nn.Module):
         timesteps=1000,
         max_beta=0.01,
         s=0.008,
-        noise_loss="smoothed-l1",
+        noise_loss="l1",
         sampler_interval=10,
         spec_stats_path="dataset/stats.json",
         spec_min=None,
@@ -255,25 +256,38 @@ class GaussianDiffusion(nn.Module):
             mask = mask[:, None, None, :]
 
             # Apply mask
-            noise = noise.masked_fill(mask, 0.0)
+            noised_mel = noised_mel.masked_fill(mask, 0.0)
             epsilon = epsilon.masked_fill(mask, 0.0)
-
-        if self.noise_loss == "l1":
-            loss = F.l1_loss(noise, epsilon)
-        elif self.noise_loss == "smoothed-l1":
-            loss = F.smooth_l1_loss(noise, epsilon)
-        elif self.noise_loss == "l2":
-            loss = F.mse_loss(noise, epsilon)
-        elif callable(self.noise_loss):
-            loss = self.noise_loss(noise, epsilon)
-        else:
-            raise NotImplementedError()
 
         noised_mel, epsilon = noised_mel.squeeze(1).transpose(1, 2), epsilon.squeeze(
             1
         ).transpose(1, 2)
 
+        loss = self.get_mel_loss(self.noise_loss, noised_mel, epsilon)
+
         return noised_mel, epsilon, loss
+
+    def get_mel_loss(self, loss_fn, noise, epsilon):
+        if isinstance(loss_fn, list):
+            loss = sum(
+                self.get_mel_loss(loss_fn, noise, epsilon) * weight
+                for weight, loss_fn in loss_fn
+            )
+        elif loss_fn == "l1":
+            loss = F.l1_loss(noise, epsilon)
+        elif loss_fn == "smoothed-l1":
+            loss = F.smooth_l1_loss(noise, epsilon)
+        elif loss_fn == "l2":
+            loss = F.mse_loss(noise, epsilon)
+        elif loss_fn == "ssim":
+            # There is a bug we need to fix in the SSIM implementation
+            loss = ssim_loss(noise, epsilon)
+        elif callable(loss_fn):
+            loss = loss_fn(noise, epsilon)
+        else:
+            raise NotImplementedError()
+
+        return loss
 
     def forward(self, features, mel, mel_mask=None):
         # Cond 基本就是 hubert / fs2 参数
