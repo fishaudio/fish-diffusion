@@ -109,6 +109,6 @@ def ssim_loss(decoder_output, target, bias=6.0):
     decoder_output = decoder_output[:, None] + bias
     target = target[:, None] + bias
     ssim_loss = 1 - ssim(decoder_output, target, size_average=False)
-    ssim_loss = ssim_loss.sum()
+    ssim_loss = ssim_loss.mean()
 
     return ssim_loss
