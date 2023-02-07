@@ -167,7 +167,6 @@ if __name__ == "__main__":
 
     trainer = pl.Trainer(
         logger=logger,
-        resume_from_checkpoint=args.resume,
         **cfg.trainer,
     )
 
@@ -189,4 +188,4 @@ if __name__ == "__main__":
         **cfg.dataloader.valid,
     )
 
-    trainer.fit(model, train_loader, valid_loader)
+    trainer.fit(model, train_loader, valid_loader, ckpt_path=args.resume)
