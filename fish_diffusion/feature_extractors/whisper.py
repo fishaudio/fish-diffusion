@@ -1,6 +1,7 @@
 from typing import Iterable
 
 import torch
+from loguru import logger
 from torch import Tensor, nn
 from torch.hub import load_state_dict_from_url
 from torch.nn import functional as F
@@ -270,11 +271,20 @@ class AlignedWhisperForAudio(BaseFeatureExtractor):
 class AlignedWhisperForPhones(BaseFeatureExtractor):
     def __init__(
         self,
-        checkpoint_path: str,
+        checkpoint: str = "aligned-whisper-cn-40k-v1.1",
+        checkpoint_path: str = None,
     ):
         super().__init__()
 
-        self.model = AlignedWhisper.load(checkpoint_path)
+        if checkpoint_path is not None:
+            checkpoint = checkpoint_path
+
+            logger.warning(
+                "The `checkpoint_path` argument is deprecated and will be removed in a future release. "
+                "Please use `checkpoint` instead."
+            )
+
+        self.model = AlignedWhisper.load(checkpoint)
         self.model.eval()
 
     @torch.no_grad()
