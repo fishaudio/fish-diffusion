@@ -11,13 +11,14 @@ from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning.strategies import DDPStrategy
 from textgrid import TextGrid
 from torch import nn
+from torch.nn import functional as F
 from torch.utils.data import DataLoader, Dataset
 from whisper import log_mel_spectrogram, pad_or_trim
 
 from fish_diffusion.feature_extractors.whisper import AlignedWhisper
 
 phonemes = []
-for i in open("dicts/opencpop-strict.txt"):
+for i in open("dictionaries/opencpop-strict.txt"):
     _, phones = i.strip().split("\t")
     for j in phones.split():
         if j not in phonemes:
@@ -102,9 +103,6 @@ class WhisperModel(LightningModule):
 
         self.model = AlignedWhisper.load("medium", len(phonemes), n_outputs=256)
 
-        self.loss0 = nn.SmoothL1Loss()
-        self.loss1 = nn.CrossEntropyLoss(ignore_index=0)
-
     def _step(self, batch, batch_idx, mode="train"):
         mels = batch["mel"]
         phones = batch["phones"]
@@ -114,15 +112,19 @@ class WhisperModel(LightningModule):
         audio_embeddings = self.model.forward_audio(mels)
         phones_embeddings = self.model.forward_phones(phones)
 
-        loss0 = self.loss0(audio_embeddings[mask], phones_embeddings[mask])
+        embedding_loss = F.l1_loss(
+            audio_embeddings[mask], phones_embeddings[mask]
+        ).mean()
 
         audio_aux = self.model.forward_decoder(audio_embeddings)
-        loss1 = self.loss1(audio_aux.transpose(1, 2), phones)
+        loss1 = F.cross_entropy(audio_aux.transpose(1, 2), phones)
 
-        self.log(f"{mode}_embedding_loss", loss0, prog_bar=True, sync_dist=True)
+        self.log(
+            f"{mode}_embedding_loss", embedding_loss, prog_bar=True, sync_dist=True
+        )
         self.log(f"{mode}_aux_loss", loss1, prog_bar=False, sync_dist=True)
 
-        loss = loss0 + 0.2 * loss1
+        loss = embedding_loss + 0.2 * loss1
         self.log(f"{mode}_loss", loss, prog_bar=False, sync_dist=True)
 
         # Calaculate accuracy
@@ -183,6 +185,7 @@ if __name__ == "__main__":
             save_dir="logs",
             entity="fish-audio",
         ),
+        resume_from_checkpoint="logs/whisper/d2mevxji/checkpoints/epoch=50-val_loss=0.0789-val_acc=0.8715.ckpt",
     )
 
     trainer.fit(model, train_loader, val_loader)
