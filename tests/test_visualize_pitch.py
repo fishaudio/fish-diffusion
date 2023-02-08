@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 
 from fish_diffusion.feature_extractors.pitch import (
     CrepePitchExtractor,
+    DioPitchExtractor,
     HarvestPitchExtractor,
     ParselMouthPitchExtractor,
     PennPitchExtractor,
@@ -41,6 +42,7 @@ extractors = {
     "ParselMouth": ParselMouthPitchExtractor,
     "Penn": PennPitchExtractor,
     "Harvest": HarvestPitchExtractor,
+    "Dio": DioPitchExtractor,
 }
 
 fig, axs = plt.subplots(len(extractors), 1, figsize=(10, len(extractors) * 3))
