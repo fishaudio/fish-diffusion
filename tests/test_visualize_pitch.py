@@ -25,8 +25,8 @@ f_to_mel = lambda x: (hz_to_mel(x) - min_mel) / (max_mel - min_mel) * n_mels
 mel_freqs = mel_frequencies(n_mels=n_mels, fmin=f_min, fmax=f_max)
 
 audio, sr = librosa.load(
-    "separated/htdemucs/45d0_a708_bbd2_0fafeaf9074ba98575a1f9caa709e90d/vocals.wav",
-    sr=16000,
+    "11-AudioTrack-11.wav",
+    sr=44100,
     mono=True,
 )
 audio = torch.from_numpy(audio).unsqueeze(0).to(device)
@@ -47,7 +47,12 @@ fig, axs = plt.subplots(len(extractors), 1, figsize=(10, len(extractors) * 3))
 fig.suptitle("Pitch on mel spectrogram")
 
 for idx, (name, extractor) in enumerate(extractors.items()):
-    pitch_extractor = extractor(f0_min=40.0, f0_max=1600)
+    extra_kwargs = {}
+
+    if name == "Crepe":
+        extra_kwargs["keep_zeros"] = True
+
+    pitch_extractor = extractor(f0_min=40.0, f0_max=1600, **extra_kwargs)
     f0 = pitch_extractor(audio, sr, pad_to=mel.shape[-1]).cpu().numpy()
     f0 = f_to_mel(f0)
     f0[f0 <= 0] = float("nan")
