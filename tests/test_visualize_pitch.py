@@ -10,7 +10,6 @@ from fish_diffusion.feature_extractors.pitch import (
     DioPitchExtractor,
     HarvestPitchExtractor,
     ParselMouthPitchExtractor,
-    PennPitchExtractor,
 )
 from fish_diffusion.utils.audio import get_mel_from_audio
 
@@ -40,7 +39,6 @@ logger.info(f"Got mel spectrogram with shape {mel.shape}")
 extractors = {
     "Crepe": CrepePitchExtractor,
     "ParselMouth": ParselMouthPitchExtractor,
-    "Penn": PennPitchExtractor,
     "Harvest": HarvestPitchExtractor,
     "Dio": DioPitchExtractor,
 }
