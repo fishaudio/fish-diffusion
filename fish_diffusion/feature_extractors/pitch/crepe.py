@@ -1,3 +1,5 @@
+from typing import Literal
+
 import numpy as np
 import resampy
 import torch
@@ -12,16 +14,18 @@ from .builder import PITCH_EXTRACTORS, BasePitchExtractor
 class CrepePitchExtractor(BasePitchExtractor):
     def __init__(
         self,
-        hop_length=512,
-        f0_min=50.0,
-        f0_max=1100.0,
-        threshold=0.05,
-        keep_zeros=False,
+        hop_length: int = 512,
+        f0_min: float = 50.0,
+        f0_max: float = 1100.0,
+        threshold: float = 0.05,
+        keep_zeros: bool = False,
+        model: Literal["full", "tiny"] = "full",
     ):
         super().__init__(hop_length, f0_min, f0_max)
 
         self.threshold = threshold
         self.keep_zeros = keep_zeros
+        self.model = model
 
     def __call__(self, x, sampling_rate=44100, pad_to=None):
         """Extract pitch using crepe.
@@ -51,7 +55,7 @@ class CrepePitchExtractor(BasePitchExtractor):
             self.f0_min,
             self.f0_max,
             pad=True,
-            model="full",
+            model=self.model,
             batch_size=1024,
             device=x.device,
             return_periodicity=True,
