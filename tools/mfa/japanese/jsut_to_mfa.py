@@ -1,6 +1,9 @@
 from pathlib import Path
 
+import pykakasi
 from fish_audio_preprocess.utils.file import list_files
+
+kks = pykakasi.kakasi()
 
 path = Path("dataset/mfa-data/japanese/jsut_ver1.1")
 
@@ -21,6 +24,7 @@ for subset in path.iterdir():
         file = subset / "wav" / file
 
         # Normalize text
-        text = " ".join([i for i in text if i not in ["，", "、", "。"]])
+        text = "".join([i for i in text if i not in ["，", "、", "。"]])
+        text = " ".join([i["kana"] for i in kks.convert(text)])
 
         file.with_suffix(".lab").write_text(text)

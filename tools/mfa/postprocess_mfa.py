@@ -4,21 +4,16 @@ This file is copied from https://github.com/openvpi/DiffSinger/blob/refactor/pip
 It aims to reduce errors for long utterances and detcect aspiration which is not detected by MFA.
 """
 
-import glob
-import os
-import shutil
 
 import librosa
-import matplotlib.pyplot as plt
 import numpy as np
 import parselmouth as pm
-import soundfile
 import textgrid as tg
 import tqdm
 from fish_audio_preprocess.utils.file import list_files
 
 # Load dictionary
-dict_path = "dataset/mfa-data/dicts/opencpop-strict.txt"
+dict_path = "dictionaries/english-arpa.txt"
 with open(dict_path, "r", encoding="utf8") as f:
     rules = [ln.strip().split("\t") for ln in f.readlines()]
 
@@ -53,7 +48,9 @@ br_win_sz = 0.05  # Size of sliding window in seconds for detecting aspiration
 
 # import utils.tg_optimizer as optimizer
 
-for file in tqdm.tqdm(list_files("dataset/mfa-data/aishell", ".wav", recursive=True)):
+for file in tqdm.tqdm(
+    list_files("dataset/mfa-data/english/LJSpeech/normed", ".wav", recursive=True)
+):
     try:
 
         textgrid = tg.TextGrid()
@@ -231,7 +228,7 @@ for file in tqdm.tqdm(list_files("dataset/mfa-data/aishell", ".wav", recursive=T
                 words.removeInterval(word)
                 phones.removeInterval(phone)
 
-        textgrid.write(str(file.with_suffix(".TextGrid.opt")))
+        # textgrid.write(str(file.with_suffix(".TextGrid.opt")))
 
     except Exception as e:
         print(file, e)
