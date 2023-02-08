@@ -13,7 +13,7 @@ from mmengine import Config
 
 from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS, PITCH_EXTRACTORS
 from fish_diffusion.utils.audio import get_mel_from_audio
-from fish_diffusion.utils.tensor import repeat_expand_2d
+from fish_diffusion.utils.tensor import repeat_expand
 from train import FishDiffusion
 
 
@@ -182,7 +182,7 @@ def inference(
 
         # Extract text features
         text_features = text_features_extractor(segment, sr)[0]
-        text_features = repeat_expand_2d(text_features, mel.shape[-1]).T
+        text_features = repeat_expand(text_features, mel.shape[-1]).T
 
         # Predict
         src_lens = torch.tensor([mel.shape[-1]]).to(device)

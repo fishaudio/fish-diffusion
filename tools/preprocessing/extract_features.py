@@ -14,7 +14,7 @@ from mmengine import Config
 from tqdm import tqdm
 
 from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS, PITCH_EXTRACTORS
-from fish_diffusion.utils.tensor import repeat_expand_2d
+from fish_diffusion.utils.tensor import repeat_expand
 from fish_diffusion.vocoders import VOCODERS
 
 text_features_extractor = None
@@ -74,7 +74,7 @@ def process(config, audio_path: Path, override: bool = False):
             text_features = text_features_extractor(audio_path, mel.shape[-1])
         else:
             text_features = text_features_extractor(audio, sr)[0]
-            text_features = repeat_expand_2d(text_features, mel.shape[-1])
+            text_features = repeat_expand(text_features, mel.shape[-1])
 
         np.save(text_features_path, text_features.cpu().numpy())
 

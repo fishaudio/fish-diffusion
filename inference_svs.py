@@ -11,7 +11,7 @@ from loguru import logger
 from mmengine import Config
 
 from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS, PITCH_EXTRACTORS
-from fish_diffusion.utils.tensor import repeat_expand_2d
+from fish_diffusion.utils.tensor import repeat_expand
 from train import FishDiffusion
 
 
@@ -102,6 +102,7 @@ def inference(
 
         f0_timestep = float(chunk["f0_timestep"])
         f0_seq = torch.FloatTensor([float(i) for i in chunk["f0_seq"].split(" ")])
+        f0_seq *= 2 ** (6 / 12)
 
         total_duration = f0_timestep * len(f0_seq)
 
@@ -110,10 +111,7 @@ def inference(
         )
 
         n_mels = round(total_duration * config.sampling_rate / 512)
-        # f0_seq = repeat_expand_2d(f0_seq[None], n_mels)[0]
-        f0_seq = torch.nn.functional.interpolate(
-            f0_seq[None, None], size=n_mels, mode="linear"
-        )[0, 0]
+        f0_seq = repeat_expand(f0_seq, n_mels, mode="linear")
         f0_seq = f0_seq.to(device)
 
         # aligned is in 20ms
@@ -128,7 +126,7 @@ def inference(
             aligned_phones.to(device)
         )[0]
 
-        phoneme_features = repeat_expand_2d(phoneme_features, n_mels).T
+        phoneme_features = repeat_expand(phoneme_features, n_mels).T
 
         # Predict
         src_lens = torch.tensor([phoneme_features.shape[0]]).to(device)
