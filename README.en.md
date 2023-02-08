@@ -105,6 +105,7 @@ You should run `tools/lint.sh` before submitting a pull request.
 + [diff-svc original](https://github.com/prophesier/diff-svc)
 + [diff-svc optimized](https://github.com/innnky/diff-svc/)
 + [DiffSinger](https://github.com/openvpi/DiffSinger/)
++ [SpeechSplit](https://github.com/auspicious3000/SpeechSplit)
 
 ## Thanks to all contributors for their efforts
 
