@@ -52,19 +52,30 @@ class ChineseHubertSoft(BaseFeatureExtractor):
         features = self.model(input_values)
         features = self.proj(features.last_hidden_state)
 
-        # Cosine similarity, otherwise top-k gating will be meaningless
-        # features = (
-        #     torch.cosine_similarity(
-        #         features.unsqueeze(2),
-        #         self.label_embedding.weight.unsqueeze(0).unsqueeze(0),
-        #         dim=-1,
-        #     )
-        #     / 0.1
-        # )
-
         # Top-k gating
         topk, indices = torch.topk(features, self.gate_size, dim=2)
         features = torch.zeros_like(features).scatter(2, indices, topk)
         features = features / features.sum(2, keepdim=True)
+
+        return features.transpose(1, 2)
+
+
+@FEATURE_EXTRACTORS.register_module()
+class ChineseHubert(BaseFeatureExtractor):
+    def __init__(self, model="TencentGameMate/chinese-hubert-base"):
+        super().__init__()
+        self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(model)
+        self.model = HubertModel.from_pretrained(model)
+
+    @torch.no_grad()
+    def forward(self, path_or_audio, sampling_rate=None):
+        audio = self.preprocess(path_or_audio, sampling_rate)
+
+        input_values = self.feature_extractor(
+            audio, sampling_rate=16000, return_tensors="pt"
+        ).input_values
+        input_values = input_values.to(self.model.device)
+
+        features = self.model(input_values).last_hidden_state
 
         return features.transpose(1, 2)
