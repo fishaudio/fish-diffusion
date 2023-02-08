@@ -1,11 +1,26 @@
 import parselmouth
 import torch
+from loguru import logger
+
+from fish_diffusion.utils.tensor import repeat_expand
 
 from .builder import PITCH_EXTRACTORS, BasePitchExtractor
 
 
 @PITCH_EXTRACTORS.register_module()
 class ParselMouthPitchExtractor(BasePitchExtractor):
+    def __init__(
+        self, hop_length=512, f0_min=50.0, f0_max=1100.0, use_repeat_expand=False
+    ):
+        super().__init__(hop_length=hop_length, f0_min=f0_min, f0_max=f0_max)
+
+        self.use_repeat_expand = use_repeat_expand
+
+        if self.use_repeat_expand is False:
+            logger.warning(
+                "You are using the old padding method. It's recommended to use the new padding method so all methods are consistent."
+            )
+
     def __call__(self, x, sampling_rate=44100, pad_to=None):
         """Extract pitch using parselmouth.
 
@@ -39,6 +54,12 @@ class ParselMouthPitchExtractor(BasePitchExtractor):
         if pad_to is None:
             return f0
 
+        if self.use_repeat_expand:
+            assert abs(pad_to - len(f0)) < self.hop_length
+
+            return repeat_expand(f0, pad_to)
+
+        # For backward compatibility
         assert len(f0) <= pad_to and pad_to - len(f0) < self.hop_length
 
         pad_size = (pad_to - len(f0)) // 2

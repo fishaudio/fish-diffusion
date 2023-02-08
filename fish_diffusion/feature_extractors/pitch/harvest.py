@@ -2,6 +2,8 @@ import numpy as np
 import pyworld
 import torch
 
+from fish_diffusion.utils.tensor import repeat_expand
+
 from .builder import PITCH_EXTRACTORS, BasePitchExtractor
 
 
@@ -31,9 +33,9 @@ class HarvestPitchExtractor(BasePitchExtractor):
         )
         f0 = torch.from_numpy(f0).float().to(x.device)
 
-        assert len(f0) <= pad_to and pad_to - len(f0) < self.hop_length
+        if pad_to is None:
+            return f0
 
-        pad_size = (pad_to - len(f0)) // 2
-        f0 = torch.nn.functional.pad(f0, [pad_size, pad_to - len(f0) - pad_size])
+        assert abs(pad_to - len(f0)) < self.hop_length
 
-        return f0
+        return repeat_expand(f0, pad_to)

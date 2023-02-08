@@ -1,5 +1,7 @@
 import torch
 
+from fish_diffusion.utils.tensor import repeat_expand
+
 from .builder import PITCH_EXTRACTORS, BasePitchExtractor
 
 
@@ -43,9 +45,6 @@ class PennPitchExtractor(BasePitchExtractor):
         if pad_to is None:
             return f0
 
-        assert len(f0) <= pad_to and pad_to - len(f0) < self.hop_length
+        assert abs(pad_to - len(f0)) < self.hop_length
 
-        pad_size = (pad_to - len(f0)) // 2
-        f0 = torch.nn.functional.pad(f0, [pad_size, pad_to - len(f0) - pad_size])
-
-        return f0
+        return repeat_expand(f0, pad_to)

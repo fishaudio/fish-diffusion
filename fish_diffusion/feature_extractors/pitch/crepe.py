@@ -10,6 +10,7 @@ from .builder import PITCH_EXTRACTORS, BasePitchExtractor
 class CrepePitchExtractor(BasePitchExtractor):
     def __init__(self, hop_length=512, f0_min=50.0, f0_max=1100.0, threshold=0.05):
         super().__init__(hop_length, f0_min, f0_max)
+
         self.threshold = threshold
 
     def __call__(self, x, sampling_rate=44100, pad_to=None):
