@@ -5,6 +5,7 @@ from loguru import logger
 from matplotlib import pyplot as plt
 
 from fish_diffusion.feature_extractors.pitch import (
+    CrepePitchExtractor,
     HarvestPitchExtractor,
     ParselMouthPitchExtractor,
     PennPitchExtractor,
@@ -19,43 +20,32 @@ min_mel = hz_to_mel(f_min)
 max_mel = hz_to_mel(f_max)
 f_to_mel = lambda x: (hz_to_mel(x) - min_mel) / (max_mel - min_mel) * n_mels
 
-audio, sr = torchaudio.load("raw/孤勇者_Unnamed_Track_1.wav")
+audio, sr = torchaudio.load("raw/炼丹组/干声.wav")
 mel = get_mel_from_audio(audio, sr, f_min=f_min, f_max=f_max, n_mels=n_mels).numpy()
 logger.info(f"Got mel spectrogram with shape {mel.shape}")
 
-parselmouth_pitch_extractor = ParselMouthPitchExtractor()
-parselmouth_pitch = parselmouth_pitch_extractor(audio, sr, pad_to=mel.shape[-1])
-parselmouth_pitch = f_to_mel(parselmouth_pitch)
-parselmouth_pitch[parselmouth_pitch <= 0] = float("nan")
-logger.info(f"Got parselmouth pitch with shape {parselmouth_pitch.shape}")
+extractors = {
+    "Crepe": CrepePitchExtractor,
+    "ParselMouth": ParselMouthPitchExtractor,
+    "Penn": PennPitchExtractor,
+    "Harvest": HarvestPitchExtractor,
+}
 
-penn_pitch_extractor = PennPitchExtractor()
-penn_pitch = penn_pitch_extractor(audio, sr, pad_to=mel.shape[-1])
-penn_pitch = f_to_mel(penn_pitch)
-penn_pitch[penn_pitch <= 0] = float("nan")
-logger.info(f"Got penn pitch with shape {penn_pitch.shape}")
-
-harvest_pitch_extractor = HarvestPitchExtractor()
-harvest_pitch = harvest_pitch_extractor(audio, sr, pad_to=mel.shape[-1])
-harvest_pitch = f_to_mel(harvest_pitch)
-harvest_pitch[harvest_pitch <= 0] = float("nan")
-logger.info(f"Got harvest pitch with shape {harvest_pitch.shape}")
-
-
-fig, axs = plt.subplots(3, 1, figsize=(10, 6))
+fig, axs = plt.subplots(len(extractors), 1, figsize=(10, len(extractors) * 3))
 fig.suptitle("Pitch on mel spectrogram")
 
-axs[0].set_title("parselmouth")
-axs[0].imshow(mel, aspect="auto", origin="lower")
-axs[0].plot(parselmouth_pitch, label="parselmouth", color="red")
+for idx, (name, extractor) in enumerate(extractors.items()):
+    pitch_extractor = extractor()
+    f0 = pitch_extractor(audio, sr, pad_to=mel.shape[-1])
+    f0 = f_to_mel(f0)
+    f0[f0 <= 0] = float("nan")
+    logger.info(f"Got {name} pitch with shape {f0.shape}")
 
-axs[1].set_title("penn")
-axs[1].imshow(mel, aspect="auto", origin="lower")
-axs[1].plot(penn_pitch, label="penn", color="red")
+    ax = axs[idx]
+    ax.set_title(name)
+    ax.imshow(mel, aspect="auto", origin="lower")
+    ax.plot(f0, label=name, color="red")
+    ax.legend()
 
-axs[2].set_title("harvest")
-axs[2].imshow(mel, aspect="auto", origin="lower")
-axs[2].plot(harvest_pitch, label="harvest", color="red")
-
-# plt.savefig("pitch.png")
+plt.savefig("pitch.png")
 plt.show()

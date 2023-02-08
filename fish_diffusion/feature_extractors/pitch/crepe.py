@@ -3,15 +3,25 @@ import resampy
 import torch
 import torchcrepe
 
+from fish_diffusion.utils.tensor import repeat_expand
+
 from .builder import PITCH_EXTRACTORS, BasePitchExtractor
 
 
 @PITCH_EXTRACTORS.register_module()
 class CrepePitchExtractor(BasePitchExtractor):
-    def __init__(self, hop_length=512, f0_min=50.0, f0_max=1100.0, threshold=0.05):
+    def __init__(
+        self,
+        hop_length=512,
+        f0_min=50.0,
+        f0_max=1100.0,
+        threshold=0.05,
+        keep_zeros=False,
+    ):
         super().__init__(hop_length, f0_min, f0_max)
 
         self.threshold = threshold
+        self.keep_zeros = keep_zeros
 
     def __call__(self, x, sampling_rate=44100, pad_to=None):
         """Extract pitch using crepe.
@@ -54,6 +64,9 @@ class CrepePitchExtractor(BasePitchExtractor):
         f0 = torchcrepe.filter.mean(f0, 3)
 
         f0 = torch.where(torch.isnan(f0), torch.full_like(f0, 0), f0)
+
+        if self.keep_zeros:
+            return repeat_expand(f0[0], pad_to)
 
         # 去掉0频率, 并线性插值
         nzindex = torch.nonzero(f0[0]).squeeze()
