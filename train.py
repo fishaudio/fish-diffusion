@@ -156,9 +156,11 @@ if __name__ == "__main__":
 
     # We only load the state_dict of the model, not the optimizer.
     if args.pretrained:
-        model.load_state_dict(
-            torch.load(args.pretrained, map_location="cpu")["state_dict"], strict=True
-        )
+        state_dict = torch.load(args.pretrained, map_location="cpu")["state_dict"]
+
+        # TODO: auto update the speaker embedding
+
+        model.load_state_dict(state_dict, strict=True)
 
     logger = (
         TensorBoardLogger("logs", name=cfg.model.type)
