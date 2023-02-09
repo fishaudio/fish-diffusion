@@ -144,12 +144,21 @@ if __name__ == "__main__":
     parser.add_argument("--resume-id", type=str, default=None, help="Wandb run id.")
     parser.add_argument("--entity", type=str, default=None, help="Wandb entity.")
     parser.add_argument("--name", type=str, default=None, help="Wandb run name.")
+    parser.add_argument(
+        "--pretrained", type=str, default=None, help="Pretrained model."
+    )
 
     args = parser.parse_args()
 
     cfg = Config.fromfile(args.config)
 
     model = FishDiffusion(cfg)
+
+    # We only load the state_dict of the model, not the optimizer.
+    if args.pretrained:
+        model.load_state_dict(
+            torch.load(args.pretrained, map_location="cpu")["state_dict"], strict=True
+        )
 
     logger = (
         TensorBoardLogger("logs", name=cfg.model.type)

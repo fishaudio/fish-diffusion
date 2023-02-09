@@ -82,6 +82,10 @@ python train.py --config configs/svc_hubert_soft.py
 
 # 继续训练
 python train.py --config configs/svc_hubert_soft.py --resume [checkpoint]
+
+# 微调预训练模型
+# 注意: 你应该调整配置文件中的学习率调度器为 warmup_cosine_finetune
+python train.py --config configs/svc_hubert_soft.py --pretrained [checkpoint]
 ```
 
 ## 推理

@@ -80,6 +80,10 @@ python train.py --config configs/svc_hubert_soft.py
 
 # Resume training
 python train.py --config configs/svc_hubert_soft.py --resume [checkpoint]
+
+# Fine-tune the pre-trained model
+# Note: You should adjust the learning rate scheduler in the config file to warmup_cosine_finetune
+python train.py --config configs/svc_hubert_soft.py --pretrained [checkpoint]
 ```
 
 ## Inference
