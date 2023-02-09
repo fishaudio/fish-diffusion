@@ -8,12 +8,11 @@ parser = argparse.ArgumentParser(description='Prepare data to use alongside a pr
 parser.add_argument('--config', type=str, required=True, help='Path to the config file')
 parser.add_argument('--pretrain', type=str, required=True, help='Path to the pretrained checkpoint file')
 parser.add_argument('--output', type=str, required=True, help='Path to the output checkpoint file')
- """This is to run training using a pretrain model to get better results faster
-    --pretrain takes the path of the model you want to use as pretrain
-    --config takes the config you want to use to train
-    --output saves the pretrained model in the path you like
-    Recommended lr is 0.0001 and decay step should be every 10000 or 5000
-   """
+#This is to run training using a pretrain model to get better results faster
+#    --pretrain takes the path of the model you want to use as pretrain
+#    --config takes the config you want to use to train
+#    --output saves the pretrained model in the path you like
+#    Recommended lr is 0.0001 and decay step should be every 10000 or 5000
 args = parser.parse_args()
 
 # Load the checkpoint file
