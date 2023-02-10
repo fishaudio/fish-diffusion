@@ -1,6 +1,7 @@
 # Fish Diffusion
-![CI Status](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml/badge.svg)
+[![CI Status](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml/badge.svg)](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml)
 [![Discord](https://img.shields.io/discord/1044927142900809739?color=%23738ADB&label=Discord&logo=discord&logoColor=white)](https://discord.gg/3CtFhTsvuG)
+[![BiliBili](https://img.shields.io/badge/BiliBili-%E5%86%B7%E6%9C%882333-00A1D6?logo=bilibili)](https://space.bilibili.com/23195420)
 
 一个简单易懂的 TTS / SVS / SVC 框架.
 

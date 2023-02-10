@@ -1,5 +1,5 @@
 # Fish Diffusion
-![CI Status](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml/badge.svg)
+[![CI Status](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml/badge.svg)](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml)
 [![Discord](https://img.shields.io/discord/1044927142900809739?color=%23738ADB&label=Discord&logo=discord&logoColor=white)](https://discord.gg/3CtFhTsvuG)
 
 An easy to understand TTS / SVS / SVC training framework.
