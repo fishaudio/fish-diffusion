@@ -103,7 +103,7 @@ class AudioFolderDataset(Dataset):
 
     @staticmethod
     def get_speaker_map_from_subfolder(path, existing_speaker_map=None):
-        if speaker_map is None:
+        if existing_speaker_map is None:
             speaker_map = {}
         else:
             speaker_map = deepcopy(existing_speaker_map)
