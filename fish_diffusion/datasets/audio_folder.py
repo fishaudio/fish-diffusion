@@ -109,7 +109,7 @@ class AudioFolderDataset(Dataset):
             speaker_map = deepcopy(existing_speaker_map)
 
         for speaker_path in sorted(Path(path).iterdir()):
-            if not speaker_path.is_dir():
+            if not speaker_path.is_dir() or speaker_path.name.startswith("."):
                 continue
 
             speaker_map[str(speaker_path.name)] = len(speaker_map)
@@ -123,6 +123,9 @@ class AudioFolderDataset(Dataset):
         datasets = []
 
         for speaker_path in sorted(Path(path).iterdir()):
+            if not speaker_path.is_dir() or speaker_path.name.startswith("."):
+                continue
+
             speaker_id = speaker_map[str(speaker_path.name)]
             dataset = AudioFolderDataset(speaker_path, speaker_id)
             datasets.append(dataset)
