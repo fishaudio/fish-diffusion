@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import wandb
+from loguru import logger
 from mmengine import Config
 from mmengine.optim import OPTIMIZERS
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
@@ -147,6 +148,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--pretrained", type=str, default=None, help="Pretrained model."
     )
+    parser.add_argument(
+        "--only-train-speaker-embeddings",
+        action="store_true",
+        default=False,
+        help="Only train speaker embeddings.",
+    )
 
     args = parser.parse_args()
 
@@ -160,6 +167,15 @@ if __name__ == "__main__":
         result = model.load_state_dict(state_dict, strict=False)
 
         assert result.missing_keys == ["model.speaker_encoder.embedding.weight"]
+
+        if args.only_train_speaker_embeddings:
+            for name, param in model.named_parameters():
+                if "speaker_encoder" not in name:
+                    param.requires_grad = False
+
+            logger.info(
+                "Only train speaker embeddings, all other parameters are frozen."
+            )
 
     logger = (
         TensorBoardLogger("logs", name=cfg.model.type)
