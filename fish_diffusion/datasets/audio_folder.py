@@ -128,6 +128,7 @@ class AudioFolderDataset(Dataset):
 
             speaker_id = speaker_map[str(speaker_path.name)]
             datasets.append(dict(
+                type="AudioFolderDataset",
                 path=str(speaker_path),
                 speaker_id=speaker_id,
             ))
