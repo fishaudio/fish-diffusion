@@ -1,5 +1,3 @@
-from fish_diffusion.utils.pitch import pitch_to_scale
-
 _base_ = [
     "./_base_/archs/diff_svc.py",
     "./_base_/trainers/base.py",

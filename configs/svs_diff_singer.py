@@ -1,7 +1,10 @@
-from fish_diffusion.datasets.audio_folder import AudioFolderDataset
+# Warning: This config is developing, and subject to change.
 
 _base_ = [
-    "./svc_hubert_soft.py",
+    "./_base_/archs/diff_svc_v2.py",
+    "./_base_/trainers/base.py",
+    "./_base_/schedulers/step.py",
+    "./_base_/datasets/audio_folder.py",
 ]
 
 phonemes = [
@@ -78,6 +81,9 @@ preprocessing = dict(
         phonemes=phonemes,
         transcription_path="dataset/transcriptions.txt",
     ),
+    pitch_extractor=dict(
+        type="ParselMouthPitchExtractor",
+    ),
 )
 
 model = dict(
@@ -85,7 +91,7 @@ model = dict(
     text_encoder=dict(
         _delete_=True,
         type="FastSpeech2Encoder",
-        input_size=len(phonemes) + 1,
+        input_size=len(phonemes) + 2,
         hidden_size=256,
     ),
 )

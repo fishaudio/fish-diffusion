@@ -5,7 +5,10 @@ import numpy as np
 from fish_diffusion.utils.pitch import pitch_to_coarse
 
 _base_ = [
-    "./svc_hubert_soft.py",
+    "./_base_/archs/diff_svc_v2.py",
+    "./_base_/trainers/base.py",
+    "./_base_/schedulers/step.py",
+    "./_base_/datasets/audio_folder.py",
 ]
 
 hidden_size = 256
@@ -13,6 +16,7 @@ hidden_size = 256
 model = dict(
     type="DiffSVC",
     speaker_encoder=dict(
+        _delete_=True,
         # This is currently not used, all params will be zeroed
         type="NaiveProjectionEncoder",
         input_size=10,
@@ -20,6 +24,7 @@ model = dict(
         use_embedding=True,
     ),
     pitch_encoder=dict(
+        _delete_=True,
         type="NaiveProjectionEncoder",
         input_size=300,
         output_size=hidden_size,
@@ -36,22 +41,18 @@ model = dict(
     diffusion=dict(
         denoiser=dict(
             residual_channels=384,
-            use_linear_bias=True,
-            dilation_cycle=4,
         ),
-        keep_bins=1,  # It should be 128 if you are using the pretrained model
-    ),
-    vocoder=dict(
-        use_natural_log=False,
     ),
 )
 
 preprocessing = dict(
     # You need to choose either "parselmouth" or "crepe" for pitch_extractor
     pitch_extractor=dict(
-        _delete_=True,
         type="CrepePitchExtractor",
         f0_min=40.0,
         f0_max=1100.0,
-    )
+    ),
+    text_features_extractor=dict(
+        type="HubertSoft",
+    ),
 )

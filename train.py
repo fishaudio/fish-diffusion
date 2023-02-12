@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import wandb
+from loguru import logger
 from mmengine import Config
 from mmengine.optim import OPTIMIZERS
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
-from torch.optim import AdamW
 from torch.utils.data import DataLoader
 
 from fish_diffusion.archs.diffsinger import DiffSinger
@@ -145,12 +145,37 @@ if __name__ == "__main__":
     parser.add_argument("--resume-id", type=str, default=None, help="Wandb run id.")
     parser.add_argument("--entity", type=str, default=None, help="Wandb entity.")
     parser.add_argument("--name", type=str, default=None, help="Wandb run name.")
+    parser.add_argument(
+        "--pretrained", type=str, default=None, help="Pretrained model."
+    )
+    parser.add_argument(
+        "--only-train-speaker-embeddings",
+        action="store_true",
+        default=False,
+        help="Only train speaker embeddings.",
+    )
 
     args = parser.parse_args()
 
     cfg = Config.fromfile(args.config)
 
     model = FishDiffusion(cfg)
+
+    # We only load the state_dict of the model, not the optimizer.
+    if args.pretrained:
+        state_dict = torch.load(args.pretrained, map_location="cpu")["state_dict"]
+        result = model.load_state_dict(state_dict, strict=False)
+
+        assert result.missing_keys == ["model.speaker_encoder.embedding.weight"]
+
+        if args.only_train_speaker_embeddings:
+            for name, param in model.named_parameters():
+                if "speaker_encoder" not in name:
+                    param.requires_grad = False
+
+            logger.info(
+                "Only train speaker embeddings, all other parameters are frozen."
+            )
 
     logger = (
         TensorBoardLogger("logs", name=cfg.model.type)
@@ -168,7 +193,6 @@ if __name__ == "__main__":
 
     trainer = pl.Trainer(
         logger=logger,
-        resume_from_checkpoint=args.resume,
         **cfg.trainer,
     )
 
@@ -190,4 +214,4 @@ if __name__ == "__main__":
         **cfg.dataloader.valid,
     )
 
-    trainer.fit(model, train_loader, valid_loader)
+    trainer.fit(model, train_loader, valid_loader, ckpt_path=args.resume)

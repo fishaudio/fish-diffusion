@@ -11,10 +11,9 @@ from fish_audio_preprocess.utils import loudness_norm, separate_audio, slice_aud
 from loguru import logger
 from mmengine import Config
 
-from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS
+from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS, PITCH_EXTRACTORS
 from fish_diffusion.utils.audio import get_mel_from_audio
-from fish_diffusion.utils.pitch import PITCH_EXTRACTORS
-from fish_diffusion.utils.tensor import repeat_expand_2d
+from fish_diffusion.utils.tensor import repeat_expand
 from train import FishDiffusion
 
 
@@ -68,7 +67,7 @@ def inference(
     output_path,
     speaker_id=0,
     pitch_adjust=0,
-    silence_threshold=50,
+    silence_threshold=60,
     max_slice_duration=30.0,
     extract_vocals=True,
     merge_non_vocals=True,
@@ -150,6 +149,7 @@ def inference(
     text_features_extractor = FEATURE_EXTRACTORS.build(
         config.preprocessing.text_features_extractor
     ).to(device)
+    text_features_extractor.eval()
 
     model = FishDiffusion(config)
     state_dict = torch.load(checkpoint, map_location="cpu")
@@ -182,7 +182,7 @@ def inference(
 
         # Extract text features
         text_features = text_features_extractor(segment, sr)[0]
-        text_features = repeat_expand_2d(text_features, mel.shape[-1]).T
+        text_features = repeat_expand(text_features, mel.shape[-1]).T
 
         # Predict
         src_lens = torch.tensor([mel.shape[-1]]).to(device)

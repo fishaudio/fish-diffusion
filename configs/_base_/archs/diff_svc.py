@@ -9,7 +9,6 @@ model = dict(
     diffusion=dict(
         type="GaussianDiffusion",
         mel_channels=mel_channels,
-        keep_bins=128,
         noise_schedule="linear",
         timesteps=1000,
         max_beta=0.01,
@@ -28,7 +27,7 @@ model = dict(
     text_encoder=dict(
         type="NaiveProjectionEncoder",
         input_size=256,
-        output_size=256,
+        output_size=hidden_size,
     ),
     speaker_encoder=dict(
         type="NaiveProjectionEncoder",
@@ -39,7 +38,7 @@ model = dict(
     pitch_encoder=dict(
         type="NaiveProjectionEncoder",
         input_size=1,
-        output_size=256,
+        output_size=hidden_size,
         use_embedding=False,
         preprocessing=pitch_to_scale,
     ),

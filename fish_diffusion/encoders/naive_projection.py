@@ -10,8 +10,8 @@ class NaiveProjectionEncoder(nn.Module):
         input_size,
         output_size,
         use_embedding: bool = False,
-        use_softmax_bottleneck: bool = False,
-        hidden_size=128,
+        use_neck: bool = False,
+        neck_size: int = 8,
         preprocessing=None,
     ):
         """Naive projection encoder.
@@ -20,8 +20,8 @@ class NaiveProjectionEncoder(nn.Module):
             input_size (int): Input size.
             output_size (int): Output size.
             use_embedding (bool, optional): Use embedding. Defaults to False.
-            use_softmax_bottleneck (bool, optional): Use softmax bottleneck. Defaults to False.
-            hidden_size (int, optional): Hidden size. Defaults to 128. Only used when use_softmax_bottleneck is True.
+            use_neck (bool, optional): Use bottleneck. Defaults to False.
+            neck_size (int, optional): Hidden size. Defaults to 8. Only used when use_bottleneck is True.
             preprocessing (function, optional): Preprocessing function. Defaults to None.
         """
 
@@ -34,11 +34,10 @@ class NaiveProjectionEncoder(nn.Module):
 
         if use_embedding:
             self.embedding = nn.Embedding(input_size, output_size)
-        elif use_softmax_bottleneck:
+        elif use_neck:
             self.projection = nn.Sequential(
-                nn.Linear(input_size, hidden_size),
-                nn.Softmax(dim=2),
-                nn.Linear(hidden_size, output_size),
+                nn.Linear(input_size, neck_size),
+                nn.Linear(neck_size, output_size),
             )
         else:
             self.projection = nn.Linear(input_size, output_size)

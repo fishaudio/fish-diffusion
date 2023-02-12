@@ -9,6 +9,7 @@ from torch import nn
 from tqdm import tqdm
 
 from fish_diffusion.denoisers import DENOISERS
+from fish_diffusion.utils.ssim import ssim_loss
 
 from .builder import DIFFUSIONS
 
@@ -48,14 +49,15 @@ class GaussianDiffusion(nn.Module):
         self,
         denoiser,
         mel_channels=128,
-        keep_bins=128,
         noise_schedule="linear",
         timesteps=1000,
         max_beta=0.01,
         s=0.008,
-        noise_loss="smoothed-l1",
-        spec_stats_path="dataset/stats.json",
+        noise_loss="l1",
         sampler_interval=10,
+        spec_stats_path="dataset/stats.json",
+        spec_min=None,
+        spec_max=None,
     ):
         super().__init__()
 
@@ -115,16 +117,24 @@ class GaussianDiffusion(nn.Module):
             ),
         )
 
-        with open(spec_stats_path) as f:
-            stats = json.load(f)
-            self.register_buffer(
-                "spec_min",
-                torch.FloatTensor(stats["spec_min"])[None, None, :keep_bins],
-            )
-            self.register_buffer(
-                "spec_max",
-                torch.FloatTensor(stats["spec_max"])[None, None, :keep_bins],
-            )
+        assert (spec_min is None and spec_max is None) or (
+            spec_min is not None and spec_max is not None
+        ), "spec_min and spec_max must be both None or both not None"
+
+        if spec_min is None:
+            with open(spec_stats_path) as f:
+                stats = json.load(f)
+
+            spec_min = stats["spec_min"]
+            spec_max = stats["spec_max"]
+
+        assert (
+            len(spec_min) == len(spec_max) == mel_channels
+            or len(spec_min) == len(spec_max) == 1
+        ), "spec_min and spec_max must be either of length 1 or mel_channels"
+
+        self.register_buffer("spec_min", torch.FloatTensor(spec_min).view(1, 1, -1))
+        self.register_buffer("spec_max", torch.FloatTensor(spec_max).view(1, 1, -1))
 
         self.sampler_interval = sampler_interval
 
@@ -246,25 +256,38 @@ class GaussianDiffusion(nn.Module):
             mask = mask[:, None, None, :]
 
             # Apply mask
-            noise = noise.masked_fill(mask, 0.0)
+            noised_mel = noised_mel.masked_fill(mask, 0.0)
             epsilon = epsilon.masked_fill(mask, 0.0)
 
-        if self.noise_loss == "l1":
-            loss = F.l1_loss(noise, epsilon)
-        elif self.noise_loss == "smoothed-l1":
-            loss = F.smooth_l1_loss(noise, epsilon)
-        elif self.noise_loss == "l2":
-            loss = F.mse_loss(noise, epsilon)
-        elif callable(self.noise_loss):
-            loss = self.noise_loss(noise, epsilon)
-        else:
-            raise NotImplementedError()
+        loss = self.get_mel_loss(self.noise_loss, noise, epsilon)
 
         noised_mel, epsilon = noised_mel.squeeze(1).transpose(1, 2), epsilon.squeeze(
             1
         ).transpose(1, 2)
 
         return noised_mel, epsilon, loss
+
+    def get_mel_loss(self, loss_fn, noise, epsilon):
+        if isinstance(loss_fn, list):
+            loss = sum(
+                self.get_mel_loss(loss_fn, noise, epsilon) * weight
+                for weight, loss_fn in loss_fn
+            )
+        elif loss_fn == "l1":
+            loss = F.l1_loss(noise, epsilon)
+        elif loss_fn == "smoothed-l1":
+            loss = F.smooth_l1_loss(noise, epsilon)
+        elif loss_fn == "l2":
+            loss = F.mse_loss(noise, epsilon)
+        elif loss_fn == "ssim":
+            # There is a bug we need to fix in the SSIM implementation
+            loss = ssim_loss(noise, epsilon)
+        elif callable(loss_fn):
+            loss = loss_fn(noise, epsilon)
+        else:
+            raise NotImplementedError()
+
+        return loss
 
     def forward(self, features, mel, mel_mask=None):
         # Cond 基本就是 hubert / fs2 参数

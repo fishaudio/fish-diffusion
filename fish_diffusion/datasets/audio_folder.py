@@ -103,12 +103,15 @@ class AudioFolderDataset(Dataset):
 
     @staticmethod
     def get_speaker_map_from_subfolder(path, existing_speaker_map=None):
-        if speaker_map is None:
+        if existing_speaker_map is None:
             speaker_map = {}
         else:
             speaker_map = deepcopy(existing_speaker_map)
 
-        for speaker_path in Path(path).iterdir():
+        for speaker_path in sorted(Path(path).iterdir()):
+            if not speaker_path.is_dir() or speaker_path.name.startswith("."):
+                continue
+
             speaker_map[str(speaker_path.name)] = len(speaker_map)
 
         return speaker_map
@@ -118,9 +121,18 @@ class AudioFolderDataset(Dataset):
         path, speaker_map: dict[str, int]
     ) -> list["AudioFolderDataset"]:
         datasets = []
-        for speaker_path in Path(path).iterdir():
+
+        for speaker_path in sorted(Path(path).iterdir()):
+            if not speaker_path.is_dir() or speaker_path.name.startswith("."):
+                continue
+
             speaker_id = speaker_map[str(speaker_path.name)]
-            dataset = AudioFolderDataset(speaker_path, speaker_id)
-            datasets.append(dataset)
+            datasets.append(
+                dict(
+                    type="AudioFolderDataset",
+                    path=str(speaker_path),
+                    speaker_id=speaker_id,
+                )
+            )
 
         return datasets

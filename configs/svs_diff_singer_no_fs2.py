@@ -1,5 +1,7 @@
+# Warning: This config is developing, and subject to change.
+
 _base_ = [
-    "./exp_diff_singer.py",
+    "./svs_diff_singer.py",
 ]
 
 phonemes = [
@@ -69,11 +71,17 @@ phonemes = [
     "zh",
 ]
 
+
 model = dict(
     text_encoder=dict(
         _delete_=True,
         type="NaiveProjectionEncoder",
-        input_size=len(phonemes) + 1,
+        input_size=len(phonemes) + 2,
         output_size=256,
+    ),
+    diffusion=dict(
+        denoiser=dict(
+            dilation_cycle=4,
+        ),
     ),
 )

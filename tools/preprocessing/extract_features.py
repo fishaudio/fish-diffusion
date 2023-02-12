@@ -13,17 +13,17 @@ from loguru import logger
 from mmengine import Config
 from tqdm import tqdm
 
-from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS
-from fish_diffusion.utils.audio import get_mel_from_audio
-from fish_diffusion.utils.pitch import PITCH_EXTRACTORS
-from fish_diffusion.utils.tensor import repeat_expand_2d
+from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS, PITCH_EXTRACTORS
+from fish_diffusion.utils.tensor import repeat_expand
+from fish_diffusion.vocoders import VOCODERS
 
 text_features_extractor = None
+vocoder = None
 device = None
 
 
 def init(worker_id: Value, lock: Lock, config):
-    global text_features_extractor, device
+    global text_features_extractor, vocoder, device
 
     with lock:
         current_id = worker_id.value
@@ -44,10 +44,12 @@ def init(worker_id: Value, lock: Lock, config):
     if config.preprocessing.pitch_extractor == "crepe":
         torchcrepe.load.model(device, "full")
 
+    vocoder = VOCODERS.build(config.model.vocoder)
+
 
 def process(config, audio_path: Path, override: bool = False):
     # Important for multiprocessing
-    global text_features_extractor, device
+    global text_features_extractor, vocoder, device
 
     audio, sr = librosa.load(str(audio_path), sr=config.sampling_rate, mono=True)
     # audio: (1, T)
@@ -59,7 +61,7 @@ def process(config, audio_path: Path, override: bool = False):
     mel_path = audio_path.parent / f"{audio_path.name}.mel.npy"
 
     if mel_path.exists() is False or override:
-        mel = get_mel_from_audio(audio, sr)
+        mel = vocoder.wav2spec(audio, sr)
         np.save(mel_path, mel.cpu().numpy())
     else:
         mel = np.load(mel_path)
@@ -72,7 +74,7 @@ def process(config, audio_path: Path, override: bool = False):
             text_features = text_features_extractor(audio_path, mel.shape[-1])
         else:
             text_features = text_features_extractor(audio, sr)[0]
-            text_features = repeat_expand_2d(text_features, mel.shape[-1])
+            text_features = repeat_expand(text_features, mel.shape[-1])
 
         np.save(text_features_path, text_features.cpu().numpy())
 
@@ -90,6 +92,14 @@ def process(config, audio_path: Path, override: bool = False):
         np.save(f0_path, f0.cpu().numpy())
 
 
+def safe_process(config, audio_path: Path, override: bool = False):
+    try:
+        process(config, audio_path, override)
+    except Exception as e:
+        logger.error(f"Error processing {audio_path}")
+        logger.exception(e)
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
 
@@ -97,7 +107,7 @@ def parse_args():
     parser.add_argument("--path", type=str, required=True)
     parser.add_argument("--override", action="store_true")
     parser.add_argument("--clean", action="store_true")
-    parser.add_argument("--num-workers", type=int, default=4)
+    parser.add_argument("--num-workers", type=int, default=1)
 
     return parser.parse_args()
 
@@ -106,6 +116,13 @@ if __name__ == "__main__":
     mp.set_start_method("spawn")
 
     args = parse_args()
+
+    logger.info(f"Using {args.num_workers} workers")
+
+    if torch.cuda.is_available():
+        logger.info(f"Found {torch.cuda.device_count()} GPUs")
+    else:
+        logger.warning("No GPU found, using CPU")
 
     if args.clean:
         logger.info("Cleaning *.npy files...")
@@ -128,20 +145,16 @@ if __name__ == "__main__":
         init(worker_id, lock, config)
 
         for audio_path in tqdm(files):
-            process(config, audio_path, args.override)
+            safe_process(config, audio_path, args.override)
     else:
         with ProcessPoolExecutor(
             max_workers=args.num_workers,
             initializer=init,
             initargs=(worker_id, lock, config),
         ) as executor:
-            # TODO: change to map
-            futures = [
-                executor.submit(process, config, audio_path, args.override)
-                for audio_path in files
-            ]
+            params = [(config, audio_path, args.override) for audio_path in files]
 
-            for i in tqdm(as_completed(futures), total=len(futures)):
-                assert i.exception() is None, i.exception()
+            for i in tqdm(executor.map(safe_process, *zip(*params)), total=len(params)):
+                assert i is None, i
 
     logger.info("Done!")

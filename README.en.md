@@ -1,7 +1,11 @@
 # Fish Diffusion
-![CI Status](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml/badge.svg)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/fishaudio/fish-diffusion/ci.yml?style=flat-square)](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml)
+[![Discord](https://img.shields.io/discord/1044927142900809739?color=%23738ADB&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/3CtFhTsvuG)
+[![Docker Hub](https://img.shields.io/docker/cloud/build/lengyue233/fish-diffusion?style=flat-square)](https://hub.docker.com/r/lengyue233/fish-diffusion)
 
 An easy to understand TTS / SVS / SVC training framework.
+
+> Check our [Wiki](https://github.com/fishaudio/fish-diffusion/wiki/Quick-Guide-ENG#quick-fishsvc-guide) to get started!
 
 [中文文档](README.md)
 
@@ -29,9 +33,23 @@ poetry install
 ```
 
 ## Vocoder preparation
+Fish Diffusion requires the [OPENVPI 441khz NSF-HiFiGAN](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) vocoder to generate audio.
+
+### Automatic download
+```bash
+python tools/download_nsf_hifigan.py
+```
+
+If you are using the script to download the model, you can use the `--agree-license` parameter to agree to the [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) license.
+
+```bash
+python tools/download_nsf_hifigan.py --agree-license
+```
+
+### Manual download
 Download and unzip `nsf_hifigan_20221211.zip` from [441khz vocoder](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1)
 
-Copy `model` file to `checkpoints/nsf_hifigan` directory
+Copy the `nsf_hifigan` folder to the `checkpoints` directory (create if not exist)
 
 ## Dataset preparation
 You only need to put the dataset into the `dataset` directory in the following file structure
@@ -51,15 +69,14 @@ dataset
 ```
 
 ```bash
-# 1. Extract all data features, such as pitch, text features, mel features, etc.
+# Extract all data features, such as pitch, text features, mel features, etc.
 python tools/preprocessing/extract_features.py --config configs/svc_hubert_soft.py --path dataset --clean
-
-# 2. Generate training set statistics
-python tools/preprocessing/generate_stats.py --input-dir dataset/train --output-file dataset/stats.json
 ```
 
 ## Baseline training
-> The project is still under active development, please remember to back up your config file
+> The project is under active development, please backup your config file  
+> The project is under active development, please backup your config file  
+> The project is under active development, please backup your config file  
 
 ```bash
 # Single machine single card / multi-card training
@@ -67,6 +84,10 @@ python train.py --config configs/svc_hubert_soft.py
 
 # Resume training
 python train.py --config configs/svc_hubert_soft.py --resume [checkpoint]
+
+# Fine-tune the pre-trained model
+# Note: You should adjust the learning rate scheduler in the config file to warmup_cosine_finetune
+python train.py --config configs/svc_hubert_soft.py --pretrained [checkpoint]
 ```
 
 ## Inference
@@ -92,4 +113,10 @@ You should run `tools/lint.sh` before submitting a pull request.
 + [diff-svc original](https://github.com/prophesier/diff-svc)
 + [diff-svc optimized](https://github.com/innnky/diff-svc/)
 + [DiffSinger](https://github.com/openvpi/DiffSinger/)
-+ [diffusers](https://github.com/huggingface/diffusers)
++ [SpeechSplit](https://github.com/auspicious3000/SpeechSplit)
+
+## Thanks to all contributors for their efforts
+
+<a href="https://github.com/fishaudio/fish-diffusion/graphs/contributors" target="_blank">
+  <img src="https://contrib.rocks/image?repo=fishaudio/fish-diffusion" />
+</a>
