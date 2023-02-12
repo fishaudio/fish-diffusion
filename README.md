@@ -1,6 +1,6 @@
 <div align="center">
 
-<img alt="LOGO" src="https://cdn.jsdelivr.net/gh/fishaudio/fish-diffusion@main/images/logo.png" width="128" height="128" style="border: 1px solid #fff; border-radius: 12px" />
+<img alt="LOGO" src="https://cdn.jsdelivr.net/gh/fishaudio/fish-diffusion@main/images/logo_512x512.png" width="256" height="256" />
 
 # Fish Diffusion
 
