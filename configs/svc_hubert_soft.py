@@ -1,7 +1,7 @@
 _base_ = [
-    "./_base_/archs/diff_svc.py",
+    "./_base_/archs/diff_svc_v2.py",
     "./_base_/trainers/base.py",
-    "./_base_/schedulers/step.py",
+    "./_base_/schedulers/warmup_cosine.py",
     "./_base_/datasets/audio_folder.py",
 ]
 
