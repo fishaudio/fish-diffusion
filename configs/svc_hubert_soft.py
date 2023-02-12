@@ -1,3 +1,6 @@
+# Warning: This config has a breaking change in Feb 12, 2023.
+# It updates the arch from diff_svc to diff_svc_v2 and switch to the cosine scheduler.
+
 _base_ = [
     "./_base_/archs/diff_svc_v2.py",
     "./_base_/trainers/base.py",
