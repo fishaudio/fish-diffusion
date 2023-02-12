@@ -39,6 +39,12 @@ Fish Diffusion requires the [OPENVPI 441khz NSF-HiFiGAN](https://github.com/open
 python tools/download_nsf_hifigan.py
 ```
 
+If you are using the script to download the model, you can use the `--agree-license` parameter to agree to the [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) license.
+
+```bash
+python tools/download_nsf_hifigan.py --agree-license
+```
+
 ### Manual download
 Download and unzip `nsf_hifigan_20221211.zip` from [441khz vocoder](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1)
 

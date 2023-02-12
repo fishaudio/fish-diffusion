@@ -2,43 +2,50 @@ import zipfile
 from io import BytesIO
 from pathlib import Path
 
-import sys
-
+import click
 import requests
 from loguru import logger
 from tqdm import tqdm
 
 DOWNLOAD_URL = "https://github.com/openvpi/vocoders/releases/download/nsf-hifigan-v1/nsf_hifigan_20221211.zip"
 
-try:
-    if(sys.argv.index("--use-ghproxy")):
-        logger.info("Using Ghproxy.com for speed up")
-        DOWNLOAD_URL = "https://ghproxy.com/" + DOWNLOAD_URL
-except:
-    pass
 
-AGREE_LICENSE = False
-
-try:
-    if(sys.argv.index("-y")):
-        logger.info(
-            "You already argee the license.See https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1 for more information."
-        )
-        AGREE_LICENSE = True
-except:
-    pass
-
-def main(target_dir: str = "checkpoints"):
+@click.command()
+@click.option(
+    "--target_dir",
+    "-t",
+    default="checkpoints",
+    help="Directory to save the model.",
+)
+@click.option(
+    "--use-ghproxy",
+    default=False,
+    help="Use ghproxy.com for speed up",
+    is_flag=True,
+)
+@click.option(
+    "--agree-license",
+    default=False,
+    help="You argee the CC BY-NC-SA 4.0 license.",
+    is_flag=True,
+)
+def main(
+    target_dir: str = "checkpoints",
+    use_ghproxy: bool = False,
+    agree_license: bool = False,
+):
     target_dir = Path(target_dir)
     target_dir.mkdir(parents=True, exist_ok=True)
 
     # Show license Information
-    if(!AGREE_LICENSE):
-        logger.info("NSF HifiGan (OpenVPI) is released under the CC BY-NC-SA 4.0 license.")
-        logger.info(
-            "See https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1 for more information."
-        )
+    logger.info("NSF HifiGan (OpenVPI) is released under the CC BY-NC-SA 4.0 license.")
+    logger.info(
+        "See https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1 for more information."
+    )
 
+    if agree_license:
+        logger.info("You already argee the license by passing --agree-license option.")
+    else:
         # Check if user agrees to the license
         agree = input("Do you agree to the license? [y/N] ")
         if agree.lower() != "y":
@@ -47,7 +54,13 @@ def main(target_dir: str = "checkpoints"):
 
     # Download the model
     logger.info("Downloading the model...")
-    r = requests.get(DOWNLOAD_URL, stream=True)
+
+    url = DOWNLOAD_URL
+    if use_ghproxy:
+        url = f"https://ghproxy.com/{DOWNLOAD_URL}"
+        logger.info("Using ghproxy.com for speed up downloading.")
+
+    r = requests.get(url, stream=True)
     total_size = int(r.headers.get("content-length", 0))
     block_size = 1024
     t = tqdm(total=total_size, unit="iB", unit_scale=True, desc="Downloading")
