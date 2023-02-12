@@ -1,7 +1,8 @@
 # Fish Diffusion
-[![CI Status](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml/badge.svg)](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml)
-[![Discord](https://img.shields.io/discord/1044927142900809739?color=%23738ADB&label=Discord&logo=discord&logoColor=white)](https://discord.gg/3CtFhTsvuG)
-[![BiliBili](https://img.shields.io/badge/BiliBili-%E5%86%B7%E6%9C%882333-00A1D6?logo=bilibili)](https://space.bilibili.com/23195420)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/fishaudio/fish-diffusion/ci.yml?style=flat-square)](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml)
+[![Discord](https://img.shields.io/discord/1044927142900809739?color=%23738ADB&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/3CtFhTsvuG)
+[![Docker Hub](https://img.shields.io/docker/cloud/build/lengyue233/fish-diffusion?style=flat-square)](https://hub.docker.com/r/lengyue233/fish-diffusion)
+[![BiliBili](https://img.shields.io/badge/BiliBili-%E5%86%B7%E6%9C%882333-00A1D6?logo=bilibili&style=flat-square)](https://space.bilibili.com/23195420)
 
 一个简单易懂的 TTS / SVS / SVC 框架.
 
