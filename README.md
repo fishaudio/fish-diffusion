@@ -42,6 +42,18 @@ Fish Diffusion 需要 [OPENVPI 441khz NSF-HiFiGAN](https://github.com/openvpi/vo
 python tools/download_nsf_hifigan.py
 ```
 
+如果你的训练环境处于国内 可以使用 `Ghproxy` 来加速下载
+
+```bash
+python tools/download_nsf_hifigan.py --use-ghproxy
+```
+
+如果你正在使用脚本自动化训练 可以使用传参的方式同意 `OPENVPI 441khz NSF-HiFiGAN` 许可证
+
+```bash
+python tools/download_nsf_hifigan.py -y
+```
+
 ### 手动下载
 下载 [441khz 声码器](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) 中的 `nsf_hifigan_20221211.zip`
 
