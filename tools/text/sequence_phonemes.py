@@ -1,7 +1,8 @@
+import unicodedata
 from pathlib import Path
+
 import yaml
 from ipatok import tokenise
-import unicodedata
 
 # from https://www.internationalphoneticassociation.org/sites/default/files/phonsymbol.pdf
 phonemes_dict = yaml.safe_load(Path(__file__).with_name("symbols.yaml").open())
@@ -10,12 +11,12 @@ phonemes_dict = yaml.safe_load(Path(__file__).with_name("symbols.yaml").open())
 # todo: add <bos>, <eos>, <pad>, <unk>, <bar> tokens
 def text_to_sequence(text):
     seq = []
-    tokens = tokenise(text, tones=True,strict=True)
+    tokens = tokenise(text, tones=True, strict=True)
     for token in tokens:
-        token = unicodedata.normalize('NFD', token)
+        token = unicodedata.normalize("NFD", token)
         for i in range(len(token)):
             char = token[i]
-            char = unicodedata.normalize('NFD', char)
+            char = unicodedata.normalize("NFD", char)
             if char in phonemes_dict:
                 seq.append(phonemes_dict[char])
             else:
