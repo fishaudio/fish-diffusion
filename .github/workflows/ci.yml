@@ -25,7 +25,6 @@ jobs:
           poetry run python -m isort . --check
 
   docs:
-    name: Generate document
     runs-on: ubuntu-latest
     # Only run this job if the lint job is successful and the current branch is main
     needs: lint
