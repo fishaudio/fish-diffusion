@@ -132,6 +132,11 @@ python tools/diff_svc_converter.py --config configs/svc_hubert_soft_diff_svc.py 
 如果你有任何问题, 请提交 issue 或 pull request.  
 你应该在提交 pull request 之前运行 `tools/lint.sh`
 
+实时预览文档
+```bash
+sphinx-autobuild docs docs/_build/html
+```
+
 
 ## 参考项目
 + [diff-svc original](https://github.com/prophesier/diff-svc)
