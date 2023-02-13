@@ -51,6 +51,9 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
+# Text tool
+tools/text/create_symbol_dict.py
+
 # Translations
 *.mo
 *.pot
@@ -130,6 +133,9 @@ dmypy.json
 
 data
 dataset
+Aria-ipa1.txt
+Aria-ipa.txt
+.vscode
 
 *.pt
 *.pth
