@@ -108,10 +108,17 @@ python train.py --config configs/svc_hubert_soft.py --pretrained [checkpoint]
 
 ## 推理
 ```bash
-python inference.py --config configs/svc_hubert_soft.py \
+# 命令行推理, 你可以使用 --help 查看更多参数
+python inference.py --config [config] \
     --checkpoint [checkpoint] \
     --input [input audio] \
     --output [output audio]
+
+
+# Gradio Web 推理, 其他参数会被转为 Gradio 默认参数
+python inference/gradio_inference.py --config [config] \
+    --checkpoint [checkpoint] \
+    --gradio
 ```
 
 ## 将 DiffSVC 模型转换为 Fish Diffusion 模型

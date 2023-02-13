@@ -1,3 +1,8 @@
+import math
+from typing import Iterable
+
+import librosa
+import numpy as np
 import torch
 from torchaudio.transforms import MelSpectrogram
 
@@ -69,3 +74,45 @@ def get_mel_from_audio(
     mel = dynamic_range_compression(mel)
 
     return mel[0]
+
+
+def slice_audio(
+    audio: np.ndarray,
+    rate: int,
+    max_duration: float = 30.0,
+    top_db: int = 60,
+    frame_length: int = 2048,
+    hop_length: int = 512,
+) -> Iterable[tuple[int, int]]:
+    """Slice audio by silence
+
+    Args:
+        audio: audio data, in shape (samples, channels)
+        rate: sample rate
+        max_duration: maximum duration of each slice
+        top_db: top_db of librosa.effects.split
+        frame_length: frame_length of librosa.effects.split
+        hop_length: hop_length of librosa.effects.split
+
+    Returns:
+        Iterable of start/end frame
+    """
+
+    intervals = librosa.effects.split(
+        audio.T, top_db=top_db, frame_length=frame_length, hop_length=hop_length
+    )
+
+    for start, end in intervals:
+        if end - start <= rate * max_duration:
+            # Too short, unlikely to be vocal
+            if end - start <= rate * 0.1:
+                continue
+
+            yield start, end
+            continue
+
+        n_chunks = math.ceil((end - start) / (max_duration * rate))
+        chunk_size = math.ceil((end - start) / n_chunks)
+
+        for i in range(start, end, chunk_size):
+            yield i, i + chunk_size

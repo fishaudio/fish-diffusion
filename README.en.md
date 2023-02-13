@@ -99,10 +99,17 @@ python train.py --config configs/svc_hubert_soft.py --pretrained [checkpoint]
 
 ## Inference
 ```bash
-python inference.py --config configs/svc_hubert_soft.py \
+# Inference using shell, you can use --help to view more parameters
+python inference.py --config [config] \
     --checkpoint [checkpoint] \
     --input [input audio] \
     --output [output audio]
+
+
+# Gradio Web Inference, other parameters will be used as gradio default parameters
+python inference/gradio_inference.py --config [config] \
+    --checkpoint [checkpoint] \
+    --gradio
 ```
 
 ## Convert a DiffSVC model to Fish Diffusion
