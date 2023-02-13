@@ -27,6 +27,9 @@ jobs:
   docs:
     name: Generate document
     runs-on: ubuntu-latest
+    # Only run this job if the lint job is successful and the current branch is main
+    needs: lint
+    if: ${{ github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python
