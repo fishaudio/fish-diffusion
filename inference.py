@@ -208,6 +208,12 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--gradio_share",
+        action="store_true",
+        help="Share gradio app",
+    )
+
+    parser.add_argument(
         "--input",
         type=str,
         required=False,
@@ -384,7 +390,7 @@ def launch_gradio(args):
                 output_audio,
             )
 
-    app.queue(concurrency_count=2).launch()
+    app.queue(concurrency_count=2).launch(share=args.gradio_share)
 
 
 if __name__ == "__main__":
