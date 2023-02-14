@@ -308,8 +308,9 @@ def run_inference(
         output_path=None,
         speaker_id=speaker,
         pitch_adjust=pitch_adjust,
-        sampler_interval=sampler_interval,
+        sampler_interval=round(sampler_interval),
         extract_vocals=extract_vocals,
+        merge_non_vocals=False,
         device=device,
         gradio_progress=progress,
     )
