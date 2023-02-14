@@ -967,14 +967,14 @@ testing = ["covdefaults (>=2.2.2)", "coverage (>=7.0.1)", "pytest (>=7.2)", "pyt
 
 [[package]]
 name = "fish-audio-preprocess"
-version = "0.1.6"
+version = "0.1.7"
 description = "Preprocess audio data"
 category = "main"
 optional = false
 python-versions = ">=3.9,<4.0"
 files = [
-    {file = "fish-audio-preprocess-0.1.6.tar.gz", hash = "sha256:5b8c5e7af446f7e082eb8f0964c020aab3274e19072e8fec4dd137cbc1137396"},
-    {file = "fish_audio_preprocess-0.1.6-py3-none-any.whl", hash = "sha256:87bff05d175cc411ed036f9733a58b9a53c357def18af6f3b3ef2b49913724fe"},
+    {file = "fish_audio_preprocess-0.1.7-py3-none-any.whl", hash = "sha256:26dac2878929bbb064d73b9f82452b09c59add1a55fa5b9a980855a1996915cb"},
+    {file = "fish_audio_preprocess-0.1.7.tar.gz", hash = "sha256:2bb50665f6cdc925e4c80d7f0bb14d6608859cd3106b8f690d3ee2b2f951f84b"},
 ]
 
 [package.dependencies]
@@ -988,6 +988,7 @@ numba = ">=0.56.4,<0.57.0"
 praat-parselmouth = ">=0.4.3,<0.5.0"
 pyloudnorm = ">=0.1.1,<0.2.0"
 PySoundFile = ">=0.9.0,<0.10.0"
+richuru = ">=0.1.1,<0.2.0"
 tqdm = ">=4.64.1,<5.0.0"
 transformers = ">=4.25.1,<5.0.0"
 
@@ -3001,7 +3002,7 @@ files = [
 name = "pygments"
 version = "2.14.0"
 description = "Pygments is a syntax highlighting package written in Python."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -3479,6 +3480,41 @@ idna = {version = "*", optional = true, markers = "extra == \"idna2008\""}
 
 [package.extras]
 idna2008 = ["idna"]
+
+[[package]]
+name = "rich"
+version = "13.3.1"
+description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
+category = "main"
+optional = false
+python-versions = ">=3.7.0"
+files = [
+    {file = "rich-13.3.1-py3-none-any.whl", hash = "sha256:8aa57747f3fc3e977684f0176a88e789be314a99f99b43b75d1e9cb5dc6db9e9"},
+    {file = "rich-13.3.1.tar.gz", hash = "sha256:125d96d20c92b946b983d0d392b84ff945461e5a06d3867e9f9e575f8697b67f"},
+]
+
+[package.dependencies]
+markdown-it-py = ">=2.1.0,<3.0.0"
+pygments = ">=2.14.0,<3.0.0"
+
+[package.extras]
+jupyter = ["ipywidgets (>=7.5.1,<9)"]
+
+[[package]]
+name = "richuru"
+version = "0.1.1"
+description = "a bridge between loguru & rich, rich's powerful render in loguru!"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "richuru-0.1.1-py3-none-any.whl", hash = "sha256:e73d43913a372d741ff61106001b5e6adfa24c6d0665dd390328a33e34cd210d"},
+    {file = "richuru-0.1.1.tar.gz", hash = "sha256:815816f3a0142b67c53bd424fcced0821aa1104b5386301cff47fc7bbb6d90ea"},
+]
+
+[package.dependencies]
+loguru = ">=0.6.0"
+rich = ">=12.4.4"
 
 [[package]]
 name = "rsa"
@@ -4818,4 +4854,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "ada483faf1a02a0a1ce70412cc8cf5954cf011f90bbf874f443a1cba13eab329"
+content-hash = "d447495710af04cca038da18b738b75c945a2d560d4d4a6cbb123aee19147f83"

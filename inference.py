@@ -327,7 +327,6 @@ def launch_gradio(args):
                     label="Input Audio",
                     type="filepath",
                     value=args.input,
-                    required=True,
                 )
                 output_audio = gr.Audio(label="Output Audio")
 
