@@ -59,7 +59,7 @@ class OpenCpopTranscriptionToPhonemesDuration(BaseFeatureExtractor):
             _temp[-1] = duration
 
             features[previous_idx:current_idx, : num_classes * 2 + 1] = _temp
-            
+
             # End of phoneme
             features[previous_idx, -1] = 1
 

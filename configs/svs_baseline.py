@@ -95,7 +95,7 @@ model = dict(
     ),
     diffusion=dict(
         max_beta=0.02,
-    )
+    ),
 )
 
 dataset = dict(
