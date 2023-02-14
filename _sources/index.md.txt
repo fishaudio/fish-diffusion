@@ -19,3 +19,11 @@ Full functional and high performance scrcpy client.
 
    pages/config
 ```
+
+### Common Questions
+```{eval-rst}
+.. toctree::
+   :maxdepth: 4
+
+   pages/faq
+```
