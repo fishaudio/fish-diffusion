@@ -1,6 +1,8 @@
 import argparse
+import json
 import os
 from functools import partial
+from typing import Union
 
 import gradio as gr
 import librosa
@@ -188,7 +190,7 @@ def parse_args():
     parser.add_argument(
         "--config",
         type=str,
-        default="configs/svc_hubert_soft.py",
+        required=True,
         help="Path to the config file",
     )
 
@@ -224,6 +226,13 @@ def parse_args():
         type=int,
         default=0,
         help="Speaker id",
+    )
+
+    parser.add_argument(
+        "--speaker_mapping",
+        type=str,
+        default=None,
+        help="Speaker mapping file (gradio mode only)",
     )
 
     parser.add_argument(
@@ -281,19 +290,23 @@ def run_inference(
     config_path: str,
     model_path: str,
     input_path: str,
-    speaker_id: int,
+    speaker: Union[int, str],
     pitch_adjust: int,
     sampler_interval: int,
     extract_vocals: bool,
     device: str,
     progress=gr.Progress(),
+    speaker_mapping: dict = None,
 ):
+    if speaker_mapping is not None and isinstance(speaker, str):
+        speaker = speaker_mapping[speaker]
+
     audio, sr = inference(
         Config.fromfile(config_path),
         model_path,
         input_path=input_path,
         output_path=None,
-        speaker_id=speaker_id,
+        speaker_id=speaker,
         pitch_adjust=pitch_adjust,
         sampler_interval=sampler_interval,
         extract_vocals=extract_vocals,
@@ -319,10 +332,21 @@ def launch_gradio(args):
                 output_audio = gr.Audio(label="Output Audio")
 
             with gr.Column():
-                speaker_id = gr.Number(
-                    label="Speaker ID (Used for Multi-Speaker Models)",
-                    value=args.speaker_id,
-                )
+                if args.speaker_mapping is not None:
+                    speaker_mapping = json.load(open(args.speaker_mapping))
+
+                    speaker = gr.Dropdown(
+                        label="Speaker Name (Used for Multi-Speaker Models)",
+                        choices=list(speaker_mapping.keys()),
+                        value=list(speaker_mapping.keys())[0],
+                    )
+                else:
+                    speaker_mapping = None
+                    speaker = gr.Number(
+                        label="Speaker ID (Used for Multi-Speaker Models)",
+                        value=args.speaker_id,
+                    )
+
                 pitch_adjust = gr.Number(
                     label="Pitch Adjust (Semitones)", value=args.pitch_adjust
                 )
@@ -343,10 +367,15 @@ def launch_gradio(args):
                 run_btn = gr.Button(label="Run")
 
             run_btn.click(
-                partial(run_inference, args.config, args.checkpoint),
+                partial(
+                    run_inference,
+                    args.config,
+                    args.checkpoint,
+                    speaker_mapping=speaker_mapping,
+                ),
                 [
                     input_audio,
-                    speaker_id,
+                    speaker,
                     pitch_adjust,
                     sampler_interval,
                     extract_vocals,
