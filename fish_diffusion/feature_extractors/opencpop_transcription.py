@@ -40,7 +40,7 @@ class OpenCpopTranscriptionToPhonemesDuration(BaseFeatureExtractor):
         alignment_factor = mel_len / cumsum_durations[-1]
         num_classes = len(self.phonemes)
 
-        features = torch.zeros((mel_len, num_classes + 2), dtype=torch.float32)
+        features = torch.zeros((mel_len, num_classes * 2 + 2), dtype=torch.float32)
 
         for i, (phone, duration, sum_duration) in enumerate(
             zip(phones, durations, cumsum_durations)
@@ -49,13 +49,18 @@ class OpenCpopTranscriptionToPhonemesDuration(BaseFeatureExtractor):
             previous_idx = (
                 int(cumsum_durations[i - 1] * alignment_factor) if i > 0 else 0
             )
-            _temp = torch.zeros(num_classes + 1, dtype=torch.float32)
-            _temp[self.phonemes.index(phone)] = 1
+            _temp = torch.zeros(num_classes * 2 + 1, dtype=torch.float32)
+
+            if i > 0:
+                # Previous phoneme
+                _temp[self.phonemes.index(phones[i - 1])] = 1
+
+            _temp[num_classes + self.phonemes.index(phone)] = 1
             _temp[-1] = duration
 
-            features[previous_idx:current_idx, : num_classes + 1] = _temp
-            features[previous_idx:current_idx, -1] = torch.linspace(
-                0, 1, current_idx - previous_idx
-            )
+            features[previous_idx:current_idx, : num_classes * 2 + 1] = _temp
+            
+            # End of phoneme
+            features[previous_idx, -1] = 1
 
         return features.T
