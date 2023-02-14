@@ -967,14 +967,14 @@ testing = ["covdefaults (>=2.2.2)", "coverage (>=7.0.1)", "pytest (>=7.2)", "pyt
 
 [[package]]
 name = "fish-audio-preprocess"
-version = "0.1.7"
+version = "0.1.8"
 description = "Preprocess audio data"
 category = "main"
 optional = false
 python-versions = ">=3.9,<4.0"
 files = [
-    {file = "fish_audio_preprocess-0.1.7-py3-none-any.whl", hash = "sha256:26dac2878929bbb064d73b9f82452b09c59add1a55fa5b9a980855a1996915cb"},
-    {file = "fish_audio_preprocess-0.1.7.tar.gz", hash = "sha256:2bb50665f6cdc925e4c80d7f0bb14d6608859cd3106b8f690d3ee2b2f951f84b"},
+    {file = "fish_audio_preprocess-0.1.8-py3-none-any.whl", hash = "sha256:184458e68fe40ad8793dfee344288c20c7513d00ea7bf1be5fba70401da6ced4"},
+    {file = "fish_audio_preprocess-0.1.8.tar.gz", hash = "sha256:79951ea36364ed166c789f1ec5eb57564bfd2c08e29fe291882ada959aa168c6"},
 ]
 
 [package.dependencies]
@@ -4854,4 +4854,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "d447495710af04cca038da18b738b75c945a2d560d4d4a6cbb123aee19147f83"
+content-hash = "830da1e4f3333704e888f01523e3bca3fb33176e7696199123000fad62a2512f"
