@@ -215,8 +215,154 @@
         <article role="main">
           <section id="quick-fishsvc-guide">
 <h1>Quick FishSVC Guide<a class="headerlink" href="#quick-fishsvc-guide" title="Permalink to this heading">#</a></h1>
-<section id="put-your-markdown-here">
-<h2>Put your markdown here<a class="headerlink" href="#put-your-markdown-here" title="Permalink to this heading">#</a></h2>
+<blockquote>
+<div><p>Updated: 01/02/2023
+Made by: Kangarroar</p>
+</div></blockquote>
+<p>First you need to install conda on your PC, I recommend installing Miniconda if you don’t want it to eat a lot of your disk space.</p>
+<p>The link for Miniconda is here: <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">https://docs.conda.io/en/latest/miniconda.html</a></p>
+<p>Make sure you choose Miniconda Python 3.10 otherwise you won’t be able to install Fish!
+After installing Miniconda, open “Anaconda”, in my case I have Windows so I press the key Windows and type Anaconda, smh.</p>
+<p>Then you will need to type</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>conda create --name Fish
+</pre></div>
+</div>
+<p>Once you have done that, a environment called Fish will be created, to access it you need to type</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>conda activate Fish
+</pre></div>
+</div>
+<p>Then you will be already on your Fish environment and you can proceed installation of FishSVC!</p>
+<hr class="docutils" />
+<section id="preparing-the-environment">
+<h2>Preparing the environment<a class="headerlink" href="#preparing-the-environment" title="Permalink to this heading">#</a></h2>
+<p>First you need to install PyTorch to be able to train, inference and etc with this command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
+</pre></div>
+</div>
+<p>After that you need to run</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span> pip install poetry
+</pre></div>
+</div>
+<p>Once you have finished the base to set up the environment, proceed to download FishSVC from the <a class="reference external" href="https://github.com/fishaudio/fish-diffusion">GitHub</a></p>
+<p>Click code and then “Download as zip”, then you decompress the folder wherever you want.</p>
+<p>On your conda environment, point to the folder where you have all the files for fish, just click on the file explorer bar and copy the full path, on conda run the command</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cd C:/Users//NAME/Documents/fish-difussion (example)
+</pre></div>
+</div>
+<p>And then run the command</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>poetry install
+</pre></div>
+</div>
+<p>Fish Diffusion requires the OPENVPI 441khz NSF-HiFiGAN vocoder to generate audio, there is an automatic download for it, just run the command</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span> python tools/download_nsf_hifigan.py
+</pre></div>
+</div>
+<p>It will start downloading the vocoder automatically and will put it on the checkpoints folder,, wait until it’s done or you can do a manual download for it. <a class="reference external" href="https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1">Hifigan Link</a></p>
+<p>FishSVC is installed!</p>
+</section>
+<hr class="docutils" />
+<section id="dataset-preparation">
+<h2>Dataset Preparation<a class="headerlink" href="#dataset-preparation" title="Permalink to this heading">#</a></h2>
+<p>You need to put the dataset into the dataset directory in the following file structure</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dataset
+├───train
+│<span class="w">   </span>├───xxx1-xxx1.wav
+│<span class="w">   </span>├───...
+│<span class="w">   </span>├───Lxx-0xx8.wav
+│<span class="w">   </span>└───speaker0<span class="w"> </span><span class="o">(</span>Subdirectory<span class="w"> </span>is<span class="w"> </span>also<span class="w"> </span>supported<span class="o">)</span>
+│<span class="w">       </span>└───xxx1-xxx1.wav
+└───valid
+<span class="w">    </span>├───xx2-0xxx2.wav
+<span class="w">    </span>├───...
+<span class="w">    </span>└───xxx7-xxx007.wav
+</pre></div>
+</div>
+<p>All the wav files need to be inside the train folder, not in subfolder or otherwise it will fail when preprocessing, unless you are doing a multi-speaker model.</p>
+<p><em>I STRONGLY RECOMMEND FOR LOCAL TRAINING, THAT THE WAVS AREN’T HIGHER THAN 10 SECONDS LONG IF YOU HAVE 4GB OF VRAM</em></p>
+<p>To start the preprocessing you need to run the following command</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>python tools/preprocessing/extract_features.py --config configs/svc_hubert_soft.py --path dataset --clean
+</pre></div>
+</div>
+<p>It should take about 2 to 5 minutes to finish preproccesing, once that is done run the following command</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>python tools/preprocessing/generate_stats.py --input-dir dataset/train --output-file dataset/stats.json
+</pre></div>
+</div>
+<p>Once that is done you have your data prepared to start training!</p>
+</section>
+<hr class="docutils" />
+<section id="training-time">
+<h2>Training time!<a class="headerlink" href="#training-time" title="Permalink to this heading">#</a></h2>
+<p>You need to change your batchsize accordingly to your GPU resources, which can be found in <code class="docutils literal notranslate"><span class="pre">configs/_base_/datasets/audio_folder.py</span></code></p>
+<p><img alt="" src="https://lh4.googleusercontent.com/0q_FDH7QqyHOW1dicuEgVrU2MFPkTP8xU1jL7-NcdwgmmMzYHGo8P-E76p_Ecvh55v6J2jZXN271F0bDW7NnmfvhlIO17MIhjFzGIxJtabOtN6q9kzUPB1Caeamz3_XNGAmNY2K0znkI4A63VH64zMo" /></p>
+<p>The value you can change is batch size, and num_workers</p>
+<p>In my case I have a CPU with 6 cores and a GTX 1650 with 4GB VRAM, I set my number of workers to my number of cores, and my batch size is set to 12, it may vary for you if you have a better GPU, but a GTX 1650 is the baseline to be able to train.</p>
+<p>If you get CUDA out of memory try lowering the batch size.
+You may want to change every how many steps you want to save the ckpt! By default it saves the checkpoints every 10.000 steps, the config file for it is in:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>configs/_base_/trainers/base.py
+</pre></div>
+</div>
+<p><img alt="" src="https://lh3.googleusercontent.com/cxFONBMCwnwmMASjRCkacF6OzQBFH28Ctzrx7FfMrSgE8WjjTBd11g7kTnisUZYJk692wdO_yXK2w9IktDX86RSU4QXm6GiMpq5_xJjeooRsVmg29GvAEni0lT2FW5kML9cL2-uuzJ9ptwiUkGBxN9s" /></p>
+<p>The line you want to change is the line 20, “every_n_train_steps=10000”, change the number to just “1000”.
+To start training, you need to run the following command:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>python train.py --config configs/svc_hubert_soft.py
+</pre></div>
+</div>
+<p>It will ask for a wandb account to look at your graphs and audios, it works similar to tensorboard, just follow the steps the terminal will show to you if you want to use W&amp;B or not</p>
+<p>Training should start after setting that up!</p>
+</section>
+<hr class="docutils" />
+<section id="inference">
+<h2>Inference<a class="headerlink" href="#inference" title="Permalink to this heading">#</a></h2>
+<p>Inferencing with FishSVC is fully terminal code right now, in my case I have a folder called audios where I drop the wav to inference, the command to run inference is:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>inference.py<span class="w"> </span>--config<span class="w"> </span>configs/svc_hubert_soft.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--checkpoint<span class="w"> </span><span class="o">[</span>checkpoint<span class="o">]</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--input<span class="w"> </span><span class="o">[</span>input<span class="w"> </span>audio<span class="o">]</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--output<span class="w"> </span><span class="o">[</span>output<span class="w"> </span>audio<span class="o">]</span>
+</pre></div>
+</div>
+<p>If you want to change the key, after everything add: –pitch_adjust 0 (Change 0 to your liking, like DiffSVC, 6 means 6 notes higher, -6 means 6 notes lower.</p>
+<p>Your checkpoints will be in the folder logs. In output audio you need to put the name you want your rendered file to be, including .wav at the end</p>
+<p>In my case, the command I run is:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>python inference.py –config configs/svc_hubert_soft.py – checkpoint logs/8liv3s/epoches….=0.2.ckpt –input audios/test.wav output – audios/render/test.wav
+</pre></div>
+</div>
+<p>It should start rendering and it’s pretty fast actually! So in less than 2 minutes your audio should be rendered.</p>
+<p>Done! ^^
+(I’m actually developing a GUI to run inference without having to put commands, here’s a sneak peak of it)</p>
+<p><img alt="" src="https://lh4.googleusercontent.com/McIUfOcaaF6kffVUurQqmkJT_0lXvDSZEDbyFjLTPdnWXW-NKViOSpq7E8c5KihumzayZq7JakCsi7m3E7uVBBkOlu3AoLuVpipVUYbhi8GwxPvkoVrixSLbwDdc38HRiOVvA91jDJLvtyAVRVuUoZ4" /></p>
+</section>
+<hr class="docutils" />
+<section id="diff-svc-conversion-to-fish-svc">
+<h2>DIFF SVC CONVERSION TO FISH SVC<a class="headerlink" href="#diff-svc-conversion-to-fish-svc" title="Permalink to this heading">#</a></h2>
+<p>This is pretty straightforward, conversion takes 2 minutes to run and it allows inference inmediatly!
+You first need to copy your DiffSVC checkpoint of the model you want to convert, in my case I created a specific folder called “conversion”</p>
+<p>To run the conversion you need to use the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>tools/diff_svc_converter.py<span class="w"> </span>--config<span class="w"> </span>configs/svc_hubert_soft_diff_svc.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--input-path<span class="w"> </span><span class="o">[</span>DiffSVC<span class="w"> </span>ckpt<span class="o">]</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--output-path<span class="w"> </span><span class="o">[</span>Fish<span class="w"> </span>Diffusion<span class="w"> </span>ckpt<span class="o">]</span>
+</pre></div>
+</div>
+<p>In my case, the command I will run it’s:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>python tools/diff_svc_converter.py –config configs/svc_hubert_soft_diff_svc.py –input-path conversion/model_train_400000.ckpt –output-path checkpoints/NAME.ckpt
+</pre></div>
+</div>
+<p>It will start running the conversion, if you run into a PyTorch error of size mismatch, you may need to change residual channels on your svc_hubert_soft_diff_svc.py</p>
+</section>
+<hr class="docutils" />
+<section id="inferencing-with-a-diffsvc-converted-model">
+<h2>Inferencing with a DiffSVC converted model<a class="headerlink" href="#inferencing-with-a-diffsvc-converted-model" title="Permalink to this heading">#</a></h2>
+<p>It’s the same as a normal FishSVC model, just that instead you will need to use: svc_hybert_soft_diff_svc.py config, instead of the normal one.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>inference.py<span class="w"> </span>--config<span class="w"> </span>configs/svc_hubert_soft_diff_svc.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--checkpoint<span class="w"> </span><span class="o">[</span>checkpoint<span class="o">]</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--input<span class="w"> </span><span class="o">[</span>input<span class="w"> </span>audio<span class="o">]</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--output<span class="w"> </span><span class="o">[</span>output<span class="w"> </span>audio<span class="o">]</span>
+</pre></div>
+</div>
+<p>In my case the command I will run it’s:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>python inference.py –config configs/svc_hubert_soft_diff_svc.py – checkpoint checkpoint/NAME.ckpt –input audios/test.wav output – audios/render/test.wav
+</pre></div>
+</div>
+<p>And done! You are inferencing with FishSVC from a DiffSVC ckpt!</p>
 </section>
 </section>
 
@@ -279,7 +425,12 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Quick FishSVC Guide</a><ul>
-<li><a class="reference internal" href="#put-your-markdown-here">Put your markdown here</a></li>
+<li><a class="reference internal" href="#preparing-the-environment">Preparing the environment</a></li>
+<li><a class="reference internal" href="#dataset-preparation">Dataset Preparation</a></li>
+<li><a class="reference internal" href="#training-time">Training time!</a></li>
+<li><a class="reference internal" href="#inference">Inference</a></li>
+<li><a class="reference internal" href="#diff-svc-conversion-to-fish-svc">DIFF SVC CONVERSION TO FISH SVC</a></li>
+<li><a class="reference internal" href="#inferencing-with-a-diffsvc-converted-model">Inferencing with a DiffSVC converted model</a></li>
 </ul>
 </li>
 </ul>
