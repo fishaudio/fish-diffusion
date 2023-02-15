@@ -199,15 +199,17 @@ class WaveNetDenoiser(nn.Module):
         )
         nn.init.zeros_(self.output_projection.conv.weight)
 
-    def forward(self, mel, diffusion_step, conditioner):
+    def forward(self, x, diffusion_step, conditioner):
         """
 
-        :param mel: [B, 1, M, T]
+        :param x: [B, M, T]
         :param diffusion_step: [B,]
         :param conditioner: [B, M, T]
         :return:
         """
-        x = mel[:, 0]
+
+        assert x.dim() == 3, f"mel must be 3 dim tensor, but got {x.dim()}"
+
         x = self.input_projection(x)  # x [B, residual_channel, T]
         x = F.relu(x)
 
@@ -222,6 +224,6 @@ class WaveNetDenoiser(nn.Module):
         x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
         x = self.skip_projection(x)
         x = F.relu(x)
-        x = self.output_projection(x)  # [B, 80, T]
+        x = self.output_projection(x)  # [B, 128, T]
 
-        return x[:, None, :, :]
+        return x

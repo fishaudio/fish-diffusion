@@ -296,7 +296,7 @@ class GaussianDiffusion(nn.Module):
 
         # 计算损失
         t = torch.randint(0, self.num_timesteps, (b,), device=device).long()
-        x = self.norm_spec(mel).transpose(1, 2)[:, None, :, :]  # [B, 1, M, T]
+        x = self.norm_spec(mel).transpose(1, 2)  # [B, M, T]
 
         noised_mels, epsilon, loss = self.p_losses(x, t, features, mask=mel_mask)
 
@@ -312,7 +312,7 @@ class GaussianDiffusion(nn.Module):
         features = features.transpose(1, 2)
 
         t = self.num_timesteps
-        shape = (features.shape[0], 1, self.mel_bins, features.shape[2])
+        shape = (features.shape[0], self.mel_bins, features.shape[2])
         x = torch.randn(shape, device=device)
 
         chunks = list(reversed(range(0, t, self.sampler_interval)))
@@ -335,7 +335,7 @@ class GaussianDiffusion(nn.Module):
                     noise_list=noise_list,
                 )
 
-        x = x[:, 0].transpose(1, 2)
+        x = x.transpose(1, 2)
 
         return self.denorm_spec(x)
 
