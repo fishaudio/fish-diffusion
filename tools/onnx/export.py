@@ -1,28 +1,84 @@
+from pathlib import Path
+
+import numpy as np
+import onnxruntime as ort
 import torch
 from loguru import logger
 from mmengine import Config
 
+from fish_diffusion.archs.diffsinger import DiffSinger
+from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS
 from train import FishDiffusion
 
 
-def main():
-    device = "cpu"
+class FeatureEmbeddingWrapper(torch.nn.Module):
+    def __init__(self, model: DiffSinger):
+        super().__init__()
 
-    config = Config.fromfile("configs/exp_lengyue_mix.py")
-    model = FishDiffusion(config)
-    state_dict = torch.load(
-        "logs/DiffSVC/8r0ci7id/checkpoints/epoch=153-step=260000-valid_loss=0.17.ckpt",
-        map_location=device,
-    )["state_dict"]
-    model.load_state_dict(state_dict, strict=False)
-    model.eval()
-    model.to(device)
+        self.model = model
 
-    logger.info("Model loaded.")
+    def forward(self, speakers, text_features, pitches):
+        # Speakers: [1], text_features: [n_frames, 256], pitches: [n_frames]
 
-    # Ignore vocoder
-    model = model.model
+        pitches = pitches.unsqueeze(0)
+        text_features = text_features.unsqueeze(0)
 
+        features = self.model.forward_features(
+            speakers=speakers,
+            contents=text_features,
+            src_lens=None,
+            mel_lens=None,
+            max_src_len=text_features.shape[1],
+            pitches=pitches,
+        )
+
+        return features["features"]
+
+
+def export_feature_embedding(model, device):
+    model = FeatureEmbeddingWrapper(model).to(device)
+
+    n_frames = 10
+    speakers = torch.tensor([0], dtype=torch.long, device=device)
+    text_features = torch.randn((n_frames, 256), device=device)
+    pitches = torch.rand((n_frames,), device=device)
+
+    torch.onnx.export(
+        model,
+        (speakers, text_features, pitches),
+        "./exported/feature_embedding.onnx",
+        opset_version=16,
+        input_names=["speakers", "text_features", "pitches"],
+        output_names=["features"],
+        dynamic_axes={
+            "text_features": {0: "n_frames"},
+            "pitches": {0: "n_frames"},
+            "features": {0: "n_frames"},
+        },
+        verbose=False,
+    )
+
+    logger.info("ONNX Feature Extractor exported.")
+
+    # Verify the exported model
+    ort_session = ort.InferenceSession("./exported/feature_embedding.onnx")
+    ort_inputs = {
+        "speakers": speakers.cpu().numpy(),
+        "text_features": text_features.cpu().numpy(),
+        "pitches": pitches.cpu().numpy(),
+    }
+
+    ort_outs = ort_session.run(None, ort_inputs)
+    torch_outs = model(speakers, text_features, pitches)
+
+    assert torch.allclose(
+        torch_outs, torch.from_numpy(ort_outs[0]), atol=1e-4
+    ), "ONNX model output does not match PyTorch model output."
+
+    logger.info("ONNX Feature Extractor verified.")
+
+
+def export_diffusion(config, model, device):
     # Trace the denosier
     n_frames = 10
     x = torch.randn((1, config.mel_channels, n_frames), device=device)
@@ -94,7 +150,7 @@ def main():
     torch.onnx.export(
         model.diffusion,
         (condition, sampler_interval, False),
-        "diffusion.onnx",
+        "exported/diffusion.onnx",
         opset_version=16,
         input_names=["condition", "sampler_interval", "progress"],
         output_names=["mel"],
@@ -102,12 +158,111 @@ def main():
             "condition": {1: "n_frames"},
             "mel": {1: "n_frames"},
         },
-        verbose=True,
+        verbose=False,
     )
 
     logger.info("Diffusion exported.")
 
-    # print(model.diffusion.graph)
+    # Verify the exported model
+    ort_session = ort.InferenceSession("exported/diffusion.onnx")
+    ort_inputs = {
+        "condition": condition.cpu().numpy(),
+        "sampler_interval": sampler_interval.cpu().numpy(),
+        "progress": np.array([False]),
+    }
+
+    ort_outs = ort_session.run(None, ort_inputs)[0]
+
+    # We can't set seed for the onnxruntime, the output of the diffusion is not deterministic
+    _temp = _temp.detach().cpu().numpy()
+    assert (
+        ort_outs.shape == _temp.shape
+    ), "ONNX model output shape does not match PyTorch model output shape."
+
+    error = np.mean(np.abs(ort_outs - _temp))
+    logger.info(f"ONNX Diffusion shape verified, average absolute error: {error:.4f}.")
+
+
+class FeatureExtractorWrapper(torch.nn.Module):
+    def __init__(self, feature_extractor):
+        super().__init__()
+        self.feature_extractor = feature_extractor
+
+    def forward(self, x):
+        x = self.feature_extractor._forward(x)
+
+        return x.transpose(1, 2)
+
+
+def export_feature_extractor(config, device):
+    feature_extractor = FEATURE_EXTRACTORS.build(
+        config.preprocessing.text_features_extractor
+    )
+    feature_extractor = FeatureExtractorWrapper(feature_extractor)
+    feature_extractor.eval()
+    feature_extractor.to(device)
+
+    # Fake audio
+    x = torch.randn((1, 44100), device=device)
+
+    torch.onnx.export(
+        feature_extractor,
+        (x,),
+        "exported/feature_extractor.onnx",
+        opset_version=16,
+        input_names=["waveform"],
+        output_names=["features"],
+        dynamic_axes={
+            "waveform": {1: "n_samples"},
+            "features": {2: "n_frames"},
+        },
+        verbose=False,
+    )
+
+    logger.info("Feature extractor exported.")
+
+    # Verify the exported model
+    ort_session = ort.InferenceSession("exported/feature_extractor.onnx")
+    ort_inputs = {
+        "waveform": x.cpu().numpy(),
+    }
+
+    ort_outs = ort_session.run(None, ort_inputs)[0]
+
+    assert torch.allclose(
+        feature_extractor(x), torch.from_numpy(ort_outs), atol=1e-4
+    ), "ONNX model output does not match PyTorch model output."
+
+    logger.info("ONNX Feature extractor verified.")
+
+
+def main():
+    Path("exported").mkdir(exist_ok=True)
+
+    device = "cpu"
+    config = Config.fromfile("configs/exp_cn_hubert_soft_finetune.py")
+    model = FishDiffusion(config)
+    state_dict = torch.load(
+        "logs/DiffSVC/oonzyobz/checkpoints/epoch=1249-step=5000-valid_loss=0.31.ckpt",
+        map_location=device,
+    )["state_dict"]
+    model.load_state_dict(state_dict, strict=False)
+    model.eval()
+    model.to(device)
+
+    # Ignore vocoder
+    model = model.model
+
+    logger.info("Model loaded.")
+
+    # Export feature extractor
+    export_feature_extractor(config, device)
+
+    # Export feature embedding
+    export_feature_embedding(model, device)
+
+    # Export diffusion
+    export_diffusion(config, model, device)
 
 
 if __name__ == "__main__":

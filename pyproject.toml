@@ -28,8 +28,9 @@ TextGrid = "^1.5"
 pyworld = "^0.3.2"
 pykakasi = "^2.2.1"
 gradio = "^3.18.0"
+onnxruntime = "^1.14.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 isort = "^5.11.4"
 black = "^22.12.0"
 

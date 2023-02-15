@@ -166,7 +166,11 @@ if __name__ == "__main__":
         state_dict = torch.load(args.pretrained, map_location="cpu")["state_dict"]
         result = model.load_state_dict(state_dict, strict=False)
 
-        assert result.missing_keys == ["model.speaker_encoder.embedding.weight"]
+        # Can't assert here because we changed the diffusion sampler
+        # assert result.missing_keys == ["model.speaker_encoder.embedding.weight"]
+        logger.info(
+            f"Missing keys: {result.missing_keys}, unexpected keys: {result.unexpected_keys}, it's probably fine if you are using pretrained model."
+        )
 
         if args.only_train_speaker_embeddings:
             for name, param in model.named_parameters():
