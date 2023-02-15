@@ -90,7 +90,9 @@ class DiffSinger(nn.Module):
             pitches=pitches,
         )
 
-        output_dict = self.diffusion(features["features"], mels, features["mel_masks"])
+        output_dict = self.diffusion.train_step(
+            features["features"], mels, features["mel_masks"]
+        )
 
         # For validation
         output_dict["features"] = features["features"]

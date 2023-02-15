@@ -61,7 +61,7 @@ class FishDiffusion(pl.LightningModule):
         if mode != "valid":
             return output["loss"]
 
-        x = self.model.diffusion.inference(output["features"])
+        x = self.model.diffusion(output["features"])
 
         for idx, (gt_mel, gt_pitch, predict_mel, predict_mel_len) in enumerate(
             zip(batch["mels"], pitches, x, batch["mel_lens"])

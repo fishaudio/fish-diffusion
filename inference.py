@@ -158,9 +158,7 @@ def inference(
             pitches=pitch[None].to(device),
         )
 
-        result = model.model.diffusion.inference(
-            features["features"], progress=sampler_progress
-        )
+        result = model.model.diffusion(features["features"], progress=sampler_progress)
         wav = model.vocoder.spec2wav(result[0].T, f0=pitch).cpu().numpy()
         max_wav_len = generated_audio.shape[-1] - start
         generated_audio[start : start + wav.shape[-1]] = wav[:max_wav_len]
