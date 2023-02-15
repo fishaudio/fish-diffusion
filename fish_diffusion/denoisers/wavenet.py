@@ -45,41 +45,6 @@ class LinearNorm(nn.Module):
         return x
 
 
-class ConvBlock(nn.Module):
-    """Convolutional Block"""
-
-    def __init__(
-        self, in_channels, out_channels, kernel_size, dropout, activation=nn.ReLU()
-    ):
-        super(ConvBlock, self).__init__()
-
-        self.conv_layer = nn.Sequential(
-            ConvNorm(
-                in_channels,
-                out_channels,
-                kernel_size=kernel_size,
-                stride=1,
-                padding=int((kernel_size - 1) / 2),
-                dilation=1,
-                w_init_gain="tanh",
-            ),
-            nn.BatchNorm1d(out_channels),
-            activation,
-        )
-        self.dropout = dropout
-        self.layer_norm = nn.LayerNorm(out_channels)
-
-    def forward(self, enc_input, mask=None):
-        enc_output = enc_input.contiguous().transpose(1, 2)
-        enc_output = F.dropout(self.conv_layer(enc_output), self.dropout, self.training)
-
-        enc_output = self.layer_norm(enc_output.contiguous().transpose(1, 2))
-        if mask is not None:
-            enc_output = enc_output.masked_fill(mask.unsqueeze(-1), 0)
-
-        return enc_output
-
-
 class ConvNorm(nn.Module):
     """1D Convolution"""
 
