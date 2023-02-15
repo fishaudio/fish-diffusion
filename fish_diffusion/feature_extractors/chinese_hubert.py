@@ -49,6 +49,10 @@ class ChineseHubertSoft(BaseFeatureExtractor):
         ).input_values
         input_values = input_values.to(self.model.device)
 
+        return self._forward(input_values)
+
+    @torch.no_grad()
+    def _forward(self, input_values):
         features = self.model(input_values)
         features = self.proj(features.last_hidden_state)
 

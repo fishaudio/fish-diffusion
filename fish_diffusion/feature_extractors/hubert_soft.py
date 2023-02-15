@@ -13,8 +13,11 @@ class HubertSoft(BaseFeatureExtractor):
     @torch.no_grad()
     def forward(self, path_or_audio, sampling_rate=None):
         audio = self.preprocess(path_or_audio, sampling_rate)
+        return self._forward(audio[None])
 
-        audio = audio[None, None].to(self.device)
+    @torch.no_grad()
+    def _forward(self, audio):
+        audio = audio[None].to(self.device)
         units = self.model.units(audio)
 
         return units.transpose(1, 2)
