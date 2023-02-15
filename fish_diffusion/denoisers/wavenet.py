@@ -158,6 +158,34 @@ class ResidualBlock(nn.Module):
         return (x + residual) / math.sqrt(2.0), skip
 
 
+class SpectrogramUpsampler(nn.Module):
+    def __init__(self, hop_size):
+        super().__init__()
+
+        if hop_size == 256:
+            self.conv1 = nn.ConvTranspose2d(
+                1, 1, [3, 32], stride=[1, 16], padding=[1, 8]
+            )
+        elif hop_size == 512:
+            self.conv1 = nn.ConvTranspose2d(
+                1, 1, [3, 64], stride=[1, 32], padding=[1, 16]
+            )
+        else:
+            raise ValueError(f"Unsupported hop_size: {hop_size}")
+
+        self.conv2 = nn.ConvTranspose2d(1, 1, [3, 32], stride=[1, 16], padding=[1, 8])
+
+    def forward(self, x):
+        x = torch.unsqueeze(x, 1)
+        x = self.conv1(x)
+        x = F.leaky_relu(x, 0.4)
+        x = self.conv2(x)
+        x = F.leaky_relu(x, 0.4)
+        x = torch.squeeze(x, 1)
+
+        return x
+
+
 @DENOISERS.register_module()
 class WaveNetDenoiser(nn.Module):
     """Conditional Diffusion Denoiser"""
