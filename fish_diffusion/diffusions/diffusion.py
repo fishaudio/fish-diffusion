@@ -130,8 +130,8 @@ class GaussianDiffusion(nn.Module):
         epsilon = self.denoise_fn(noised_mel, t, cond)
 
         if mask is not None:
-            # mask: (B, N) -> (B, 1, 1, N)
-            mask = mask[:, None, None, :]
+            # mask: (B, N) -> (B, 1, N)
+            mask = mask[:, None, :]
 
             # Apply mask
             noised_mel = noised_mel.masked_fill(mask, 0.0)
