@@ -232,6 +232,14 @@
 <li><p>If it sounds blurry, please make sure you preprocessed the dataset using your current config.</p></li>
 </ul>
 </section>
+<section id="why-i-see-keyerror-pytorch-lightning-version">
+<h2>Why I see KeyError ‘pytorch-lightning_version’?<a class="headerlink" href="#why-i-see-keyerror-pytorch-lightning-version" title="Permalink to this heading">#</a></h2>
+<p>This indicates that you are using a converted model from DiffSVC, which is not PyTorch Lightning. Please use <code class="docutils literal notranslate"><span class="pre">--pretrained</span></code> instead of <code class="docutils literal notranslate"><span class="pre">--resume</span></code> to load the model.</p>
+</section>
+<section id="why-i-see-some-error-about-missing-keys-when-resuming-training">
+<h2>Why I see some error about missing keys when resuming training?<a class="headerlink" href="#why-i-see-some-error-about-missing-keys-when-resuming-training" title="Permalink to this heading">#</a></h2>
+<p>To support the ONNX exporting, we have to change the model structure. To solve this problem, you can use <code class="docutils literal notranslate"><span class="pre">--pretrained</span></code> instead of <code class="docutils literal notranslate"><span class="pre">--resume</span></code> to load the model.</p>
+</section>
 </section>
 
         </article>
@@ -287,6 +295,8 @@
 <li><a class="reference internal" href="#">FAQ</a><ul>
 <li><a class="reference internal" href="#why-training-is-so-slow-on-my-device">Why training is so slow on my device?</a></li>
 <li><a class="reference internal" href="#why-the-generated-audio-is-blurry-or-weird">Why the generated audio is blurry or weird?</a></li>
+<li><a class="reference internal" href="#why-i-see-keyerror-pytorch-lightning-version">Why I see KeyError ‘pytorch-lightning_version’?</a></li>
+<li><a class="reference internal" href="#why-i-see-some-error-about-missing-keys-when-resuming-training">Why I see some error about missing keys when resuming training?</a></li>
 </ul>
 </li>
 </ul>
