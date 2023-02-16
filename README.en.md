@@ -12,7 +12,7 @@
 
 An easy to understand TTS / SVS / SVC training framework.
 
-> Check our [Wiki](https://github.com/fishaudio/fish-diffusion/wiki/Quick-Guide-ENG#quick-fishsvc-guide) to get started!
+> Check our [Wiki](https://fishaudio.github.io/fish-diffusion/) to get started!
 
 [中文文档](README.md)
 

@@ -13,6 +13,8 @@
 
 一个简单易懂的 TTS / SVS / SVC 框架.
 
+> 从阅读 [Wiki](https://fishaudio.github.io/fish-diffusion/) 开始!
+
 [English Document](README.en.md)
 
 ## 简介
