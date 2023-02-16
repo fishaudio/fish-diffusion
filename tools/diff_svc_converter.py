@@ -55,14 +55,29 @@ def convert(config_path, input_path, output_path):
             .replace(".linear.", ".")
             .replace(".conv_layer.", ".dilated_conv.")
         )
+
+        if "_noise_predictor" in fixed:
+            continue
+
         diffusion_state_dict[i] = diff_svc_state_dict.pop(fixed)
+
+    # Drop some unused keys
+    for i in list(diff_svc_state_dict.keys()):
+        x = i.split(".")
+        if x[0] == "model" and len(x) == 2:
+            diff_svc_state_dict.pop(i)
 
     # If any keys not beginning with "model.fs2" are left, they are not mapped
     if any(not k.startswith("model.fs2") for k in diff_svc_state_dict.keys()):
         logger.error(f"Keys not mapped: {diff_svc_state_dict.keys()}")
         return
 
-    model.model.diffusion.load_state_dict(diffusion_state_dict, strict=True)
+    result = model.model.diffusion.load_state_dict(diffusion_state_dict, strict=False)
+    assert (
+        all("_noise_predictor" in k for k in result.missing_keys)
+        and not result.unexpected_keys
+    )
+
     logger.info("Diffusion and Denoiser are converted.")
 
     # Restoring Pitch Encoder

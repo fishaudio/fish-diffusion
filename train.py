@@ -163,13 +163,16 @@ if __name__ == "__main__":
 
     # We only load the state_dict of the model, not the optimizer.
     if args.pretrained:
-        state_dict = torch.load(args.pretrained, map_location="cpu")["state_dict"]
+        state_dict = torch.load(args.pretrained, map_location="cpu")
+        if "state_dict" in state_dict:
+            state_dict = state_dict["state_dict"]
+
         result = model.load_state_dict(state_dict, strict=False)
 
         missing_keys = set(result.missing_keys)
         unexpected_keys = set(result.unexpected_keys)
 
-        # Make sure incorrect keys arte just noise predictor keys.
+        # Make sure incorrect keys are just noise predictor keys.
         unexpected_keys = unexpected_keys - set(
             i.replace(".naive_noise_predictor.", ".") for i in missing_keys
         )
