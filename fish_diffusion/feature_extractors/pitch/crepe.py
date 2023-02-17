@@ -1,11 +1,8 @@
 from typing import Literal
 
-import numpy as np
 import resampy
 import torch
 import torchcrepe
-
-from fish_diffusion.utils.tensor import repeat_expand
 
 from .builder import PITCH_EXTRACTORS, BasePitchExtractor
 
@@ -21,10 +18,9 @@ class CrepePitchExtractor(BasePitchExtractor):
         keep_zeros: bool = False,
         model: Literal["full", "tiny"] = "full",
     ):
-        super().__init__(hop_length, f0_min, f0_max)
+        super().__init__(hop_length, f0_min, f0_max, keep_zeros)
 
         self.threshold = threshold
-        self.keep_zeros = keep_zeros
         self.model = model
 
     def __call__(self, x, sampling_rate=44100, pad_to=None):
@@ -67,21 +63,6 @@ class CrepePitchExtractor(BasePitchExtractor):
         f0 = torchcrepe.threshold.At(self.threshold)(f0, pd)
         f0 = torchcrepe.filter.mean(f0, 3)
 
-        f0 = torch.where(torch.isnan(f0), torch.full_like(f0, 0), f0)
+        f0 = torch.where(torch.isnan(f0), torch.full_like(f0, 0), f0)[0]
 
-        if self.keep_zeros:
-            return repeat_expand(f0[0], pad_to)
-
-        # 去掉0频率, 并线性插值
-        nzindex = torch.nonzero(f0[0]).squeeze()
-        f0 = torch.index_select(f0[0], dim=0, index=nzindex).cpu().numpy()
-        time_org = 0.005 * nzindex.cpu().numpy()
-        time_frame = np.arange(pad_to) * self.hop_length / sampling_rate
-
-        if f0.shape[0] == 0:
-            return torch.zeros(time_frame.shape[0]).float().to(x.device)
-
-        # 大概可以用 torch 重写?
-        f0 = np.interp(time_frame, time_org, f0, left=f0[0], right=f0[-1])
-
-        return torch.from_numpy(f0).to(x.device)
+        return self.post_process(x, sampling_rate, f0, pad_to)

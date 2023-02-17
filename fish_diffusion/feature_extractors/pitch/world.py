@@ -1,8 +1,5 @@
 import numpy as np
 import pyworld
-import torch
-
-from fish_diffusion.utils.tensor import repeat_expand
 
 from .builder import PITCH_EXTRACTORS, BasePitchExtractor
 
@@ -34,14 +31,7 @@ class HarvestPitchExtractor(BasePitchExtractor):
 
         f0 = pyworld.stonemask(double_x, f0, t, sampling_rate)
 
-        f0 = torch.from_numpy(f0).float().to(x.device)
-
-        if pad_to is None:
-            return f0
-
-        assert abs(pad_to - len(f0)) < self.hop_length
-
-        return repeat_expand(f0, pad_to)
+        return self.post_process(x, sampling_rate, f0, pad_to)
 
 
 @PITCH_EXTRACTORS.register_module()
@@ -71,11 +61,4 @@ class DioPitchExtractor(BasePitchExtractor):
 
         f0 = pyworld.stonemask(double_x, f0, t, sampling_rate)
 
-        f0 = torch.from_numpy(f0).float().to(x.device)
-
-        if pad_to is None:
-            return f0
-
-        assert abs(pad_to - len(f0)) < self.hop_length
-
-        return repeat_expand(f0, pad_to)
+        return self.post_process(x, sampling_rate, f0, pad_to)

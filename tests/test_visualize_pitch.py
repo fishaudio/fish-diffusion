@@ -25,7 +25,7 @@ f_to_mel = lambda x: (hz_to_mel(x) - min_mel) / (max_mel - min_mel) * n_mels
 mel_freqs = mel_frequencies(n_mels=n_mels, fmin=f_min, fmax=f_max)
 
 audio, sr = librosa.load(
-    "11-AudioTrack-11.wav",
+    "raw/一半一半.wav",
     sr=44100,
     mono=True,
 )
@@ -47,10 +47,9 @@ fig, axs = plt.subplots(len(extractors), 1, figsize=(10, len(extractors) * 3))
 fig.suptitle("Pitch on mel spectrogram")
 
 for idx, (name, extractor) in enumerate(extractors.items()):
-    extra_kwargs = {}
-
-    if name == "Crepe":
-        extra_kwargs["keep_zeros"] = True
+    extra_kwargs = {
+        "keep_zeros": False,
+    }
 
     pitch_extractor = extractor(f0_min=40.0, f0_max=1600, **extra_kwargs)
     f0 = pitch_extractor(audio, sr, pad_to=mel.shape[-1]).cpu().numpy()
