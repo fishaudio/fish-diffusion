@@ -4,11 +4,21 @@
 
 # Fish Diffusion
 
+<div>
+<a href="https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml">
+<img alt="Build Status" src="https://img.shields.io/github/actions/workflow/status/fishaudio/fish-diffusion/ci.yml?style=flat-square&logo=GitHub">
+</a>
+<a href="https://hub.docker.com/r/lengyue233/fish-diffusion">
+<img alt="Docker Hub" src="https://img.shields.io/docker/cloud/build/lengyue233/fish-diffusion?style=flat-square&logo=Docker&logoColor=white">
+</a>
+<a href="https://discord.gg/wbYSRBrW2E">
+<img alt="Discord" src="https://img.shields.io/discord/1044927142900809739?color=%23738ADB&label=Discord&logo=discord&logoColor=white&style=flat-square">
+</a>
 </div>
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/fishaudio/fish-diffusion/ci.yml?style=flat-square)](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml)
-[![Discord](https://img.shields.io/discord/1044927142900809739?color=%23738ADB&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/wbYSRBrW2E)
-[![Docker Hub](https://img.shields.io/docker/cloud/build/lengyue233/fish-diffusion?style=flat-square)](https://hub.docker.com/r/lengyue233/fish-diffusion)
+</div>
+
+------
 
 An easy to understand TTS / SVS / SVC training framework.
 

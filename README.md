@@ -4,12 +4,31 @@
 
 # Fish Diffusion
 
+<div>
+<a href="https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml">
+<img alt="Build Status" src="https://img.shields.io/github/actions/workflow/status/fishaudio/fish-diffusion/ci.yml?style=flat-square&logo=GitHub">
+</a>
+<a href="https://hub.docker.com/r/lengyue233/fish-diffusion">
+<img alt="Docker Hub" src="https://img.shields.io/docker/cloud/build/lengyue233/fish-diffusion?style=flat-square&logo=Docker&logoColor=white">
+</a>
+<a href="https://colab.research.google.com/drive/1LdexkSuKDsKA-8OQs2slEY314kYvucV-?usp=sharing">
+<img alt="Colab" src="https://img.shields.io/badge/Colab-Notebook-F9AB00?logo=Google%20Colab&style=flat-square&logoColor=white">
+</a>
 </div>
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/fishaudio/fish-diffusion/ci.yml?style=flat-square)](https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml)
-[![Discord](https://img.shields.io/discord/1044927142900809739?color=%23738ADB&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/wbYSRBrW2E)
-[![Docker Hub](https://img.shields.io/docker/cloud/build/lengyue233/fish-diffusion?style=flat-square)](https://hub.docker.com/r/lengyue233/fish-diffusion)
-[![BiliBili](https://img.shields.io/badge/BiliBili-%E5%86%B7%E6%9C%882333-00A1D6?logo=bilibili&style=flat-square)](https://space.bilibili.com/23195420)
+<div>
+<a href="https://discord.gg/wbYSRBrW2E">
+<img alt="Discord" src="https://img.shields.io/discord/1044927142900809739?color=%23738ADB&label=Discord&logo=discord&logoColor=white&style=flat-square">
+</a>
+<a href="https://space.bilibili.com/23195420">
+<img alt="BiliBili" src="https://img.shields.io/badge/BiliBili-%E5%86%B7%E6%9C%882333-00A1D6?logo=bilibili&style=flat-square&logoColor=white">
+</a>
+<img alt="QQ" src="https://img.shields.io/badge/QQ-588056461-EB1923?logo=Tencent%20QQ&style=flat-square">
+</div>
+
+</div>
+
+------
 
 一个简单易懂的 TTS / SVS / SVC 框架.
 
