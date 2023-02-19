@@ -125,23 +125,6 @@ def inference(
         f0_seq = torch.from_numpy(f0_seq).type(torch.float32)
         f0_seq = repeat_expand(f0_seq, n_mels, mode="linear")
 
-        # from matplotlib import pyplot as plt
-        # # f0_seq = repeat_expand(f0_seq, n_mels)
-        # print(f0_seq)
-        # plt.plot(f0_seq, label="f0_seq")
-
-        # audio, sr = librosa.load("raw/一半一半.wav", sr=config.sampling_rate, mono=True)
-        # f0_seq_lb = pitch_extractor(torch.from_numpy(audio[None]), sr, n_mels).type(
-        #     torch.float32
-        # )
-
-        # plt.plot(f0_seq_lb, label="librosa")
-        # plt.legend()
-
-        # # f0_seq[f0_seq_lb == 0] = 0
-        # print(f0_seq)
-        # # f0_seq = f0_seq_lb
-
         f0_seq = f0_seq.to(device)
 
         # aligned is in 20ms
@@ -171,34 +154,6 @@ def inference(
 
             # End of phoneme
             features[previous_idx, -1] = 1
-
-        # aligned_phones = torch.zeros(int(total_duration * 50), dtype=torch.long)
-        # for i, phone in enumerate(phones):
-        #     start = int(durations[i] / f0_timestep / 4)
-        #     end = int(durations[i + 1] / f0_timestep / 4)
-        #     aligned_phones[start:end] = phone
-
-        # Extract text features
-        # phoneme_features = phoneme_features_extractor.forward(
-        #     aligned_phones.to(device)
-        # )[0]
-
-        for idx, i in enumerate(features):
-            if i[num_classes] == 1 or i[num_classes + 1] == 1:
-                f0_seq[idx] = 0
-
-        # plt.plot(f0_seq.cpu(), label="f0_seq_fixed")
-
-        # plt.savefig("f0.png")
-
-        # print(f0_seq, [float(i) for i in chunk["f0_seq"].split(" ")])
-        # print(features)
-        # f0_seq = torch.from_numpy(np.load("dataset/diff-singer/valid/2036001320.wav.f0.npy")).to(device).type(torch.float32)
-        # features = torch.from_numpy(np.load("dataset/diff-singer/valid/2036001320.wav.text_features.npy")).to(device).T.type(torch.float32)
-
-        # print(f0_seq)
-
-        # print(features.shape, f0_seq.shape)
 
         phoneme_features = features.to(device)
         # Predict

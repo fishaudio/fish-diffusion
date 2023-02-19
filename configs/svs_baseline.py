@@ -82,6 +82,7 @@ preprocessing = dict(
     ),
     pitch_extractor=dict(
         type="ParselMouthPitchExtractor",
+        keep_zeros=False,
     ),
 )
 
