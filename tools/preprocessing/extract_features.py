@@ -35,11 +35,12 @@ def init(worker_id: Value, lock: Lock, config):
         else "cpu"
     )
 
-    text_features_extractor = FEATURE_EXTRACTORS.build(
-        config.preprocessing.text_features_extractor
-    )
-    text_features_extractor.to(device)
-    text_features_extractor.eval()
+    if config.preprocessing.text_features_extractor is not None:
+        text_features_extractor = FEATURE_EXTRACTORS.build(
+            config.preprocessing.text_features_extractor
+        )
+        text_features_extractor.to(device)
+        text_features_extractor.eval()
 
     if config.preprocessing.pitch_extractor == "crepe":
         torchcrepe.load.model(device, "full")
@@ -69,7 +70,11 @@ def process(config, audio_path: Path, override: bool = False):
     # Extract text features
     text_features_path = audio_path.parent / f"{audio_path.name}.text_features.npy"
 
-    if text_features_path.exists() is False or override:
+    if (
+        text_features_extractor is not None
+        and text_features_path.exists() is False
+        or override
+    ):
         if config.model.type == "DiffSinger":
             text_features = text_features_extractor(audio_path, mel.shape[-1])
         else:
