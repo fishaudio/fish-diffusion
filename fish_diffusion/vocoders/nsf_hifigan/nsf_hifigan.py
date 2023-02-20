@@ -37,7 +37,18 @@ class NsfHifiGAN(pl.LightningModule):
         self.use_natural_log = use_natural_log
 
         cp_dict = torch.load(checkpoint_path)
-        self.model.load_state_dict(cp_dict["generator"])
+
+        if "state_dict" not in cp_dict:
+            self.model.load_state_dict(cp_dict["generator"])
+        else:
+            self.model.load_state_dict(
+                {
+                    k.replace("generator.", ""): v
+                    for k, v in cp_dict["state_dict"].items()
+                    if k.startswith("generator.")
+                }
+            )
+
         self.model.eval()
         self.model.remove_weight_norm()
 
