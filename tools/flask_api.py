@@ -1,7 +1,9 @@
+"""
+This file is used to support the vst plugin.
+"""
+
 import io
 import logging
-import os
-import sys
 
 import librosa
 import soundfile
@@ -9,11 +11,7 @@ from flask import Flask, request, send_file
 from flask_cors import CORS
 from mmengine import Config
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-sys.path.append(os.path.dirname(__file__))
 from inference import inference
-
-os.chdir(os.path.dirname(os.path.dirname(__file__)))
 
 app = Flask(__name__)
 
