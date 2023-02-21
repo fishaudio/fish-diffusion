@@ -5,11 +5,10 @@ from pathlib import Path
 
 import librosa
 import numpy as np
-import torch
 from fish_audio_preprocess.utils.file import list_files
 from torch.utils.data import Dataset
 
-from fish_diffusion.datasets.builder import DATASETS
+from .builder import DATASETS
 
 
 @DATASETS.register_module()
@@ -73,13 +72,3 @@ class VOCODERDataset(Dataset):
         }
 
         return sample
-
-
-if __name__ == "__main__":
-    dataset = VOCODERDataset("/mnt/nvme0/diff-wave-data")
-    print(len(dataset))
-
-    from tqdm import tqdm
-
-    for i in tqdm(range(90000, len(dataset))):
-        dataset[i]
