@@ -22,10 +22,10 @@ vocoder = None
 device = None
 
 
-def init(worker_id: Value, lock: Lock, config):
+def init(worker_id: Value, config):
     global text_features_extractor, vocoder, device
 
-    with lock:
+    with worker_id.get_lock():
         current_id = worker_id.value
         worker_id.value += 1
 
@@ -144,10 +144,9 @@ if __name__ == "__main__":
     logger.info(f"Found {len(files)} files, processing...")
 
     worker_id = Value("i", 0)
-    lock = Lock()
 
     if args.num_workers <= 1:
-        init(worker_id, lock, config)
+        init(worker_id, config)
 
         for audio_path in tqdm(files):
             safe_process(config, audio_path, args.override)
@@ -155,7 +154,7 @@ if __name__ == "__main__":
         with ProcessPoolExecutor(
             max_workers=args.num_workers,
             initializer=init,
-            initargs=(worker_id, lock, config),
+            initargs=(worker_id, config),
         ) as executor:
             params = [(config, audio_path, args.override) for audio_path in files]
 
