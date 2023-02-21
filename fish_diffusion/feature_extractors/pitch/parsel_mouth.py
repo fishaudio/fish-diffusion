@@ -40,8 +40,7 @@ class ParselMouthPitchExtractor(BasePitchExtractor):
             f0 = np.pad(
                 f0,
                 (total_pad // 2, total_pad - total_pad // 2),
-                "constant",
-                constant_values=0,
+                "constant"
             )
 
         return self.post_process(x, sampling_rate, f0, pad_to)
