@@ -5,6 +5,8 @@ from pytorch_lightning.strategies import DDPStrategy
 
 from fish_diffusion.utils.pitch import pitch_to_scale
 
+sampling_rate = 44100
+
 trainer = dict(
     accelerator="gpu",
     devices=-1,

@@ -25,7 +25,7 @@ f_to_mel = lambda x: (hz_to_mel(x) - min_mel) / (max_mel - min_mel) * n_mels
 mel_freqs = mel_frequencies(n_mels=n_mels, fmin=f_min, fmax=f_max)
 
 audio, sr = librosa.load(
-    "raw/一半一半.wav",
+    "dataset/train/aria/炫境干音_0000/0022.wav",
     sr=44100,
     mono=True,
 )
