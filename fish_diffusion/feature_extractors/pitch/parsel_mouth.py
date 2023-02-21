@@ -1,3 +1,4 @@
+import numpy as np
 import parselmouth
 
 from .builder import PITCH_EXTRACTORS, BasePitchExtractor
@@ -32,5 +33,15 @@ class ParselMouthPitchExtractor(BasePitchExtractor):
             )
             .selected_array["frequency"]
         )
+
+        # Pad zeros to the end
+        if pad_to is not None:
+            total_pad = pad_to - f0.shape[0]
+            f0 = np.pad(
+                f0,
+                (total_pad // 2, total_pad - total_pad // 2),
+                "constant",
+                constant_values=0,
+            )
 
         return self.post_process(x, sampling_rate, f0, pad_to)
