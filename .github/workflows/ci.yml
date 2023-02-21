@@ -22,7 +22,7 @@ jobs:
       - name: Lint with black and isort
         run: |
           poetry run python -m black . --check
-          poetry run python -m isort . --check
+          poetry run python -m isort . --check --profile black
 
   docs:
     runs-on: ubuntu-latest

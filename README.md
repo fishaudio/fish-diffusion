@@ -124,7 +124,7 @@ python train.py --config configs/svc_hubert_soft.py --resume [checkpoint]
 
 # 微调预训练模型
 # 注意: 你应该调整配置文件中的学习率调度器为 warmup_cosine_finetune
-python train.py --config configs/svc_hubert_soft.py --pretrained [checkpoint]
+python train.py --config configs/svc_cn_hubert_soft_finetune.py --pretrained [checkpoint]
 ```
 
 ## 推理
@@ -137,7 +137,7 @@ python inference.py --config [config] \
 
 
 # Gradio Web 推理, 其他参数会被转为 Gradio 默认参数
-python inference/gradio_inference.py --config [config] \
+python inference.py --config [config] \
     --checkpoint [checkpoint] \
     --gradio
 ```

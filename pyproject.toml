@@ -29,6 +29,8 @@ pyworld = "^0.3.2"
 pykakasi = "^2.2.1"
 gradio = "^3.18.0"
 onnxruntime = "^1.14.0"
+flask = "^2.2.3"
+flask-cors = "^3.0.10"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.11.4"

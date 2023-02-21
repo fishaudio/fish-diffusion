@@ -13,10 +13,8 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader, random_split
 from torchaudio.transforms import MelSpectrogram
 
-from dataset import VOCODERDataset
-from fish_diffusion.datasets import DATASETS
-from fish_diffusion.datasets.repeat import RepeatDataset
-from fish_diffusion.utils.audio import dynamic_range_compression, get_mel_from_audio
+from fish_diffusion.datasets import RepeatDataset, VOCODERDataset
+from fish_diffusion.utils.audio import dynamic_range_compression
 from fish_diffusion.utils.viz import plot_mel
 from fish_diffusion.vocoders.nsf_hifigan.models import (
     AttrDict,
