@@ -104,7 +104,7 @@ python train.py --config configs/svc_hubert_soft.py --resume [checkpoint]
 
 # Fine-tune the pre-trained model
 # Note: You should adjust the learning rate scheduler in the config file to warmup_cosine_finetune
-python train.py --config configs/svc_hubert_soft.py --pretrained [checkpoint]
+python train.py --config configs/svc_cn_hubert_soft_finetune.py --pretrained [checkpoint]
 ```
 
 ## Inference
@@ -117,7 +117,7 @@ python inference.py --config [config] \
 
 
 # Gradio Web Inference, other parameters will be used as gradio default parameters
-python inference/gradio_inference.py --config [config] \
+python inference.py --config [config] \
     --checkpoint [checkpoint] \
     --gradio
 ```
