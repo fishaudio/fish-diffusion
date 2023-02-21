@@ -200,10 +200,13 @@ class WaveNetDenoiser(nn.Module):
         :param conditioner: [B, M, T]
         :return:
         """
-        Onnx = False
+
+        # To keep compatibility with DiffSVC, [B, 1, M, T]
+        use_4_dim = False
         if x.dim() == 4:
-            x = x.squeeze(0)
-            Onnx = True
+            x = x[:, 0]
+            use_4_dim = True
+
         assert x.dim() == 3, f"mel must be 3 dim tensor, but got {x.dim()}"
 
         x = self.input_projection(x)  # x [B, residual_channel, T]
@@ -222,4 +225,4 @@ class WaveNetDenoiser(nn.Module):
         x = F.relu(x)
         x = self.output_projection(x)  # [B, 128, T]
 
-        return x.unsqueeze(0) if Onnx else x
+        return x[:, None] if use_4_dim else x

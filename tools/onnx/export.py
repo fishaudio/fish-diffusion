@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import click
 import numpy as np
 import onnxruntime as ort
 import torch
@@ -236,14 +237,20 @@ def export_feature_extractor(config, device):
     logger.info("ONNX Feature extractor verified.")
 
 
-def main():
+@click.command()
+@click.option("--config", default="configs/exp_cn_hubert_soft_finetune.py")
+@click.option(
+    "--checkpoint",
+    default="logs/DiffSVC/oonzyobz/checkpoints/epoch=1249-step=5000-valid_loss=0.31.ckpt",
+)
+def main(config: str, checkpoint: str):
     Path("exported").mkdir(exist_ok=True)
 
     device = "cpu"
-    config = Config.fromfile("configs/exp_cn_hubert_soft_finetune.py")
+    config = Config.fromfile(config)
     model = FishDiffusion(config)
     state_dict = torch.load(
-        "logs/DiffSVC/oonzyobz/checkpoints/epoch=1249-step=5000-valid_loss=0.31.ckpt",
+        checkpoint,
         map_location=device,
     )["state_dict"]
     model.load_state_dict(state_dict, strict=False)

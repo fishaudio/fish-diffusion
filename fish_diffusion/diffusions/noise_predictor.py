@@ -5,12 +5,8 @@ import torch
 from torch import nn
 
 
-def extract(a, t):
-    return a[t].reshape((1, 1, 1))
-
-
-def extract_MoeSS(a, t):
-    return a[t].reshape((1, 1, 1, 1))
+def extract(a, t, n_dims=3):
+    return a[t].reshape((1,) * n_dims)
 
 
 to_torch = partial(torch.tensor, dtype=torch.float32)
@@ -72,14 +68,14 @@ class NaiveNoisePredictor(nn.Module):
 
     def predict_start_from_noise(self, x_t, t, noise):
         return (
-            extract(self.sqrt_recip_alphas_cumprod, t) * x_t
-            - extract(self.sqrt_recipm1_alphas_cumprod, t) * noise
+            extract(self.sqrt_recip_alphas_cumprod, t, x_t.dim()) * x_t
+            - extract(self.sqrt_recipm1_alphas_cumprod, t, x_t.dim()) * noise
         )
 
     def q_posterior(self, x_start, x_t, t):
         posterior_mean = (
-            extract(self.posterior_mean_coef1, t) * x_start
-            + extract(self.posterior_mean_coef2, t) * x_t
+            extract(self.posterior_mean_coef1, t, x_start.dim()) * x_start
+            + extract(self.posterior_mean_coef2, t, x_t.dim()) * x_t
         )
         posterior_variance = extract(self.posterior_variance, t)
         posterior_log_variance_clipped = extract(self.posterior_log_variance_clipped, t)
@@ -116,8 +112,8 @@ class PLMSNoisePredictor(nn.Module):
         self.register_buffer("alphas_cumprod", to_torch(alphas_cumprod))
 
     def forward(self, x, noise_t, t, t_prev):
-        a_t = extract(self.alphas_cumprod, t) if x.dim() == 3 else extract_MoeSS(self.alphas_cumprod, t)
-        a_prev = extract(self.alphas_cumprod, t_prev) if x.dim() == 3 else extract_MoeSS(self.alphas_cumprod, t_prev)
+        a_t = extract(self.alphas_cumprod, t, x.dim())
+        a_prev = extract(self.alphas_cumprod, t_prev, x.dim())
         a_t_sq, a_prev_sq = a_t.sqrt(), a_prev.sqrt()
 
         x_delta = (a_prev - a_t) * (
