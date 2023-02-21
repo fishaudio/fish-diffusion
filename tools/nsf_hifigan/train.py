@@ -44,16 +44,20 @@ class HSFHifiGAN(pl.LightningModule):
         self.msd = MultiScaleDiscriminator()
 
         # Load pretrained model
-        state_dict = torch.load(config.model.generator_checkpoint, map_location="cpu")[
-            "generator"
-        ]
-        self.generator.load_state_dict(state_dict)
+        if config.model.generator_checkpoint:
+            state_dict = torch.load(
+                config.model.generator_checkpoint, map_location="cpu"
+            )["generator"]
 
-        state_dict = torch.load(
-            config.model.discriminator_checkpoint, map_location="cpu"
-        )
-        self.mpd.load_state_dict(state_dict["mpd"])
-        self.msd.load_state_dict(state_dict["msd"])
+            self.generator.load_state_dict(state_dict)
+
+        if config.model.discriminator_checkpoint:
+            state_dict = torch.load(
+                config.model.discriminator_checkpoint, map_location="cpu"
+            )
+
+            self.mpd.load_state_dict(state_dict["mpd"])
+            self.msd.load_state_dict(state_dict["msd"])
 
         self.mel_transform = self.get_mel_transform()
 
@@ -67,11 +71,12 @@ class HSFHifiGAN(pl.LightningModule):
             betas=(0.8, 0.99),
         )
 
-        state_dict = torch.load(
-            self.config.model.discriminator_checkpoint, map_location="cpu"
-        )
-        optim_g.load_state_dict(state_dict["optim_g"])
-        optim_d.load_state_dict(state_dict["optim_d"])
+        if self.config.model.discriminator_checkpoint:
+            state_dict = torch.load(
+                self.config.model.discriminator_checkpoint, map_location="cpu"
+            )
+            optim_g.load_state_dict(state_dict["optim_g"])
+            optim_d.load_state_dict(state_dict["optim_d"])
 
         return [optim_g, optim_d], []
 
