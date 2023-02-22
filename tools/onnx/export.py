@@ -80,7 +80,7 @@ def export_feature_embedding(model, device):
 
 
 def export_diffusion(config, model, device):
-    # Trace the denosier
+    # Trace the denoiser
     n_frames = 10
     x = torch.randn((1, config.mel_channels, n_frames), device=device)
     step = torch.randint(
@@ -92,7 +92,7 @@ def export_diffusion(config, model, device):
         model.diffusion.denoise_fn, (x, step, cond), check_trace=True
     )
 
-    logger.info("Denosier traced.")
+    logger.info("denoiser traced.")
 
     # Trace naive noise predictor, since there is a randn in it, we need to verify the trace manually
     torch.manual_seed(0)

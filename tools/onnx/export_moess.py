@@ -128,7 +128,7 @@ class AfterDiffusion(torch.nn.Module):
 
 
 def export_moess_diffusion(config, model, device):
-    # Trace the denosier
+    # Trace the denoiser
     n_frames = 10
     x = torch.randn((1, 1, config.mel_channels, n_frames), device=device)
     step = torch.randint(
@@ -140,7 +140,7 @@ def export_moess_diffusion(config, model, device):
         model.diffusion.denoise_fn, (x, step, cond), check_trace=True
     )
 
-    logger.info("Denosier traced.")
+    logger.info("denoiser traced.")
 
     torch.onnx.export(
         model.diffusion.denoise_fn,
@@ -159,7 +159,7 @@ def export_moess_diffusion(config, model, device):
         opset_version=16,
     )
 
-    logger.info("Denosier exported.")
+    logger.info("denoiser exported.")
 
     # Verify the exported model
     n_frames = 100
@@ -184,7 +184,7 @@ def export_moess_diffusion(config, model, device):
         atol=1e-4,
     ), "ONNX model output does not match PyTorch model output."
 
-    logger.info("ONNX Denosier verified.")
+    logger.info("ONNX denoiser verified.")
 
     # Export plms noise predictor
     t = torch.randint(10, 20, (1,), device=device, dtype=torch.long)
