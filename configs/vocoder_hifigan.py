@@ -12,16 +12,16 @@ trainer = dict(
     devices=-1,
     gradient_clip_val=0.5,
     # log_every_n_steps=10,
-    # val_check_interval=5000,
-    # check_val_every_n_epoch=None,
+    val_check_interval=2000,
+    check_val_every_n_epoch=None,
     max_steps=-1,
     # Warning: If you are training the model with fs2 (and see nan), you should either use bf16 or fp32
     precision=16,
     callbacks=[
         ModelCheckpoint(
             filename="{epoch}-{step}-{valid_loss:.2f}",
-            # every_n_train_steps=10000,
-            every_n_epochs=1,
+            every_n_train_steps=2000,
+            # every_n_epochs=1,
             save_top_k=-1,
         ),
         LearningRateMonitor(logging_interval="step"),
@@ -63,7 +63,7 @@ dataloader = dict(
 preprocessing = dict(
     text_features_extractor=None,
     pitch_extractor=dict(
-        type="ParselMouthPitchExtractor",
+        type="CrepePitchExtractor",
         keep_zeros=False,
         f0_min=40.0,
         f0_max=1600.0,

@@ -111,6 +111,7 @@ class HSFHifiGAN(pl.LightningModule):
                 on_epoch=True,
                 prog_bar=False,
                 logger=True,
+                sync_dist=True,
             )
 
             return loss_gen_all
@@ -135,6 +136,7 @@ class HSFHifiGAN(pl.LightningModule):
                 on_epoch=True,
                 prog_bar=False,
                 logger=True,
+                sync_dist=True,
             )
 
             return loss_disc_all
