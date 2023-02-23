@@ -46,6 +46,8 @@ def init(worker_id: Value, config):
         torchcrepe.load.model(device, "full")
 
     vocoder = VOCODERS.build(config.model.vocoder)
+    vocoder.to(device)
+    vocoder.eval()
 
 
 def process(config, audio_path: Path, override: bool = False):
