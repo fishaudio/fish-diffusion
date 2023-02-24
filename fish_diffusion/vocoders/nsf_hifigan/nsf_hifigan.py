@@ -1,5 +1,7 @@
 import json
 import os
+from pathlib import Path
+from typing import Optional
 
 import librosa
 import pytorch_lightning as pl
@@ -17,12 +19,15 @@ class NsfHifiGAN(pl.LightningModule):
     def __init__(
         self,
         checkpoint_path: str = "checkpoints/nsf_hifigan/model",
+        config_file: Optional[str] = None,
         use_natural_log: bool = True,
         **kwargs,
     ):
         super().__init__()
 
-        config_file = os.path.join(os.path.split(checkpoint_path)[0], "config.json")
+        if config_file is None:
+            config_file = Path(checkpoint_path).parent / "config.json"
+
         with open(config_file) as f:
             data = f.read()
 
