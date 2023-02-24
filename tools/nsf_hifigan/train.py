@@ -15,6 +15,7 @@ from torch.utils.data import DataLoader, random_split
 from torchaudio.transforms import MelSpectrogram
 
 from fish_diffusion.datasets import RepeatDataset, VOCODERDataset
+from fish_diffusion.datasets.utils import build_loader_from_config
 from fish_diffusion.utils.audio import dynamic_range_compression
 from fish_diffusion.utils.viz import plot_mel
 from fish_diffusion.vocoders.nsf_hifigan.models import (
@@ -190,6 +191,7 @@ class HSFHifiGAN(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             logger=True,
+            sync_dist=True,
         )
 
         if isinstance(self.logger, WandbLogger):
@@ -260,26 +262,6 @@ if __name__ == "__main__":
         **cfg.trainer,
     )
 
-    dataset = VOCODERDataset("/mnt/nvme0/diff-wave-data")
-    train_dataset, valid_dataset = random_split(
-        dataset, [int(len(dataset) * 0.99), len(dataset) - int(len(dataset) * 0.99)]
-    )
-
-    train_loader = DataLoader(
-        train_dataset,
-        # collate_fn=dataset.collate_fn,
-        **cfg.dataloader.train,
-    )
-
-    valid_dataset = RepeatDataset(
-        valid_dataset,
-        repeat=trainer.num_devices,  # collate_fn=dataset.collate_fn
-    )
-
-    valid_loader = DataLoader(
-        valid_dataset,
-        # collate_fn=valid_dataset.collate_fn,
-        **cfg.dataloader.valid,
-    )
+    train_loader, valid_loader = build_loader_from_config(cfg, trainer.num_devices)
 
     trainer.fit(model, train_loader, valid_loader, ckpt_path=args.resume)
