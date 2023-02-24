@@ -100,6 +100,7 @@ class HSFHifiGAN(pl.LightningModule):
             prog_bar=False,
             logger=True,
             sync_dist=True,
+            batch_size=batch["mels"].shape[0],
         )
 
         # Generator
@@ -127,6 +128,7 @@ class HSFHifiGAN(pl.LightningModule):
             prog_bar=False,
             logger=True,
             sync_dist=True,
+            batch_size=batch["mels"].shape[0],
         )
 
         # Manual LR Scheduler
@@ -183,7 +185,14 @@ class HSFHifiGAN(pl.LightningModule):
         y_g_hat_mel = self.get_mels(y_g_hat)[:, :, : mels.shape[2]]
 
         # L1 Mel-Spectrogram Loss
-        loss_mel = F.l1_loss(mels, y_g_hat_mel)
+        mel_lens = batch["mel_lens"]
+        # create mask
+        mask = (
+            torch.arange(mels.shape[2], device=mels.device)[None, :] < mel_lens[:, None]
+        )
+        mask = mask[:, None].float()
+
+        loss_mel = F.l1_loss(mels * mask, y_g_hat_mel * mask)
         self.log(
             "valid_loss",
             loss_mel,
@@ -192,20 +201,23 @@ class HSFHifiGAN(pl.LightningModule):
             prog_bar=True,
             logger=True,
             sync_dist=True,
+            batch_size=batch["mels"].shape[0],
         )
 
         if isinstance(self.logger, WandbLogger):
-            for mel, gen_mel, audio, gen_audio in zip(
+            for mel, gen_mel, audio, gen_audio, mel_len, audio_len in zip(
                 mels.cpu().numpy(),
                 y_g_hat_mel.cpu().numpy(),
                 audios.cpu().type(torch.float32).numpy(),
                 y_g_hat.type(torch.float32).cpu().numpy(),
+                batch["mel_lens"].cpu().numpy(),
+                batch["audio_lens"].cpu().numpy(),
             ):
                 # exit()
                 image_mels = plot_mel(
                     [
-                        gen_mel,
-                        mel,
+                        gen_mel[:, :mel_len],
+                        mel[:, :mel_len],
                     ],
                     ["Sampled Spectrogram", "Ground-Truth Spectrogram"],
                 )
@@ -215,12 +227,12 @@ class HSFHifiGAN(pl.LightningModule):
                         f"reconstruction_mel": wandb.Image(image_mels, caption="mels"),
                         f"wavs": [
                             wandb.Audio(
-                                audio[0],
+                                audio[0, :audio_len],
                                 sample_rate=self.h.sampling_rate,
                                 caption=f"gt",
                             ),
                             wandb.Audio(
-                                gen_audio[0],
+                                gen_audio[0, :audio_len],
                                 sample_rate=self.h.sampling_rate,
                                 caption=f"prediction",
                             ),

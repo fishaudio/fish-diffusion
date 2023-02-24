@@ -8,11 +8,9 @@ from loguru import logger
 from mmengine import Config
 from mmengine.optim import OPTIMIZERS
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
-from torch.utils.data import DataLoader
 
 from fish_diffusion.archs.diffsinger import DiffSinger
-from fish_diffusion.datasets import DATASETS
-from fish_diffusion.datasets.repeat import RepeatDataset
+from fish_diffusion.datasets.utils import build_loader_from_config
 from fish_diffusion.utils.scheduler import LR_SCHEUDLERS
 from fish_diffusion.utils.viz import viz_synth_sample
 from fish_diffusion.vocoders import VOCODERS
@@ -207,22 +205,5 @@ if __name__ == "__main__":
         **cfg.trainer,
     )
 
-    train_dataset = DATASETS.build(cfg.dataset.train)
-    train_loader = DataLoader(
-        train_dataset,
-        collate_fn=train_dataset.collate_fn,
-        **cfg.dataloader.train,
-    )
-
-    valid_dataset = DATASETS.build(cfg.dataset.valid)
-    valid_dataset = RepeatDataset(
-        valid_dataset, repeat=trainer.num_devices, collate_fn=valid_dataset.collate_fn
-    )
-
-    valid_loader = DataLoader(
-        valid_dataset,
-        collate_fn=valid_dataset.collate_fn,
-        **cfg.dataloader.valid,
-    )
-
+    train_loader, valid_loader = build_loader_from_config(cfg, trainer.num_devices)
     trainer.fit(model, train_loader, valid_loader, ckpt_path=args.resume)
