@@ -58,6 +58,9 @@ class NsfHifiGAN(pl.LightningModule):
         )
 
         # Validate kwargs if any
+        if "mel_channels" in kwargs:
+            kwargs["num_mels"] = kwargs.pop("mel_channels")
+
         for k, v in kwargs.items():
             if getattr(self.h, k, None) != v:
                 raise ValueError(f"Incorrect value for {k}: {v}")
