@@ -10,6 +10,7 @@ from loguru import logger
 from mmengine import Config
 from pytorch_lightning.loggers import WandbLogger
 from torch.nn import functional as F
+from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader, random_split
 from torchaudio.transforms import MelSpectrogram
 
@@ -43,103 +44,96 @@ class HSFHifiGAN(pl.LightningModule):
         self.mpd = MultiPeriodDiscriminator(self.h["discriminator_periods"])
         self.msd = MultiScaleDiscriminator()
 
-        # Load pretrained model
-        if config.model.generator_checkpoint:
-            state_dict = torch.load(
-                config.model.generator_checkpoint, map_location="cpu"
-            )["generator"]
-
-            self.generator.load_state_dict(state_dict)
-
-        if config.model.discriminator_checkpoint:
-            state_dict = torch.load(
-                config.model.discriminator_checkpoint, map_location="cpu"
-            )
-
-            self.mpd.load_state_dict(state_dict["mpd"])
-            self.msd.load_state_dict(state_dict["msd"])
-
         self.mel_transform = self.get_mel_transform()
+
+        self.automatic_optimization = False
 
     def configure_optimizers(self):
         optim_g = torch.optim.AdamW(
-            self.generator.parameters(), lr=1e-4, betas=(0.8, 0.99)
+            self.generator.parameters(),
+            lr=self.h.learning_rate,
+            betas=(self.h.adam_b1, self.h.adam_b2),
         )
         optim_d = torch.optim.AdamW(
             itertools.chain(self.msd.parameters(), self.mpd.parameters()),
-            lr=1e-4,
-            betas=(0.8, 0.99),
+            lr=self.h.learning_rate,
+            betas=(self.h.adam_b1, self.h.adam_b2),
         )
 
-        if self.config.model.discriminator_checkpoint:
-            state_dict = torch.load(
-                self.config.model.discriminator_checkpoint, map_location="cpu"
-            )
-            optim_g.load_state_dict(state_dict["optim_g"])
-            optim_d.load_state_dict(state_dict["optim_d"])
+        scheduler_g = ExponentialLR(optim_g, self.h.lr_decay)
+        scheduler_d = ExponentialLR(optim_d, self.h.lr_decay)
 
-        return [optim_g, optim_d], []
+        return [optim_g, optim_d], [scheduler_g, scheduler_d]
 
-    def training_step(self, batch, batch_idx, optimizer_idx):
-        mels, pitches, audios = (
+    def training_step(self, batch, batch_idx):
+        optim_g, optim_d = self.optimizers()
+
+        mels, pitches, y = (
             batch["mels"].float(),
             batch["pitches"].float(),
             batch["audios"].float(),
         )
 
-        if optimizer_idx == 0:
-            y_g_hat = self.generator(mels, pitches)
-            y_g_hat_mel = self.get_mels(y_g_hat)[:, :, : mels.shape[2]]
+        y_g_hat = self.generator(mels, pitches)
+        y_g_hat_mel = self.get_mels(y_g_hat)[:, :, : mels.shape[2]]
+        optim_d.zero_grad()
 
-            # L1 Mel-Spectrogram Loss
-            loss_mel = F.l1_loss(mels, y_g_hat_mel)
+        # MPD
+        y_df_hat_r, y_df_hat_g, _, _ = self.mpd(y, y_g_hat.detach())
+        loss_disc_f, _, _ = discriminator_loss(y_df_hat_r, y_df_hat_g)
 
-            _, y_df_hat_g, fmap_f_r, fmap_f_g = self.mpd(audios, y_g_hat)
-            _, y_ds_hat_g, fmap_s_r, fmap_s_g = self.msd(audios, y_g_hat)
-            loss_fm_f = feature_loss(fmap_f_r, fmap_f_g)
-            loss_fm_s = feature_loss(fmap_s_r, fmap_s_g)
-            loss_gen_f, _ = generator_loss(y_df_hat_g)
-            loss_gen_s, _ = generator_loss(y_ds_hat_g)
-            loss_gen_all = (
-                loss_gen_s + loss_gen_f + loss_fm_s + loss_fm_f + loss_mel * 45
-            )
+        # MSD
+        y_ds_hat_r, y_ds_hat_g, _, _ = self.msd(y, y_g_hat.detach())
+        loss_disc_s, _, _ = discriminator_loss(y_ds_hat_r, y_ds_hat_g)
 
-            self.log(
-                f"train_loss_gen",
-                loss_gen_all,
-                on_step=True,
-                on_epoch=True,
-                prog_bar=False,
-                logger=True,
-                sync_dist=True,
-            )
+        loss_disc_all = loss_disc_s + loss_disc_f
 
-            return loss_gen_all
+        self.manual_backward(loss_disc_all)
+        optim_d.step()
 
-        elif optimizer_idx == 1:
-            y_g_hat = self.generator(mels, pitches)
+        self.log(
+            f"train_loss_disc",
+            loss_disc_all,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=False,
+            logger=True,
+            sync_dist=True,
+        )
 
-            # MPD
-            y_df_hat_r, y_df_hat_g, _, _ = self.mpd(audios, y_g_hat.detach())
-            loss_disc_f, _, _ = discriminator_loss(y_df_hat_r, y_df_hat_g)
+        # Generator
+        optim_g.zero_grad()
 
-            # MSD
-            y_ds_hat_r, y_ds_hat_g, _, _ = self.msd(audios, y_g_hat.detach())
-            loss_disc_s, _, _ = discriminator_loss(y_ds_hat_r, y_ds_hat_g)
+        # L1 Mel-Spectrogram Loss
+        loss_mel = F.l1_loss(mels, y_g_hat_mel)
 
-            loss_disc_all = loss_disc_s + loss_disc_f
+        y_df_hat_r, y_df_hat_g, fmap_f_r, fmap_f_g = self.mpd(y, y_g_hat)
+        y_ds_hat_r, y_ds_hat_g, fmap_s_r, fmap_s_g = self.msd(y, y_g_hat)
+        loss_fm_f = feature_loss(fmap_f_r, fmap_f_g)
+        loss_fm_s = feature_loss(fmap_s_r, fmap_s_g)
+        loss_gen_f, _ = generator_loss(y_df_hat_g)
+        loss_gen_s, _ = generator_loss(y_ds_hat_g)
+        loss_gen_all = loss_gen_s + loss_gen_f + loss_fm_s + loss_fm_f + loss_mel * 45
 
-            self.log(
-                f"train_loss_disc",
-                loss_disc_all,
-                on_step=True,
-                on_epoch=True,
-                prog_bar=False,
-                logger=True,
-                sync_dist=True,
-            )
+        self.manual_backward(loss_gen_all)
+        optim_g.step()
 
-            return loss_disc_all
+        self.log(
+            f"train_loss_gen",
+            loss_gen_all,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=False,
+            logger=True,
+            sync_dist=True,
+        )
+
+        # Manual LR Scheduler
+        scheduler_g, scheduler_d = self.lr_schedulers()
+
+        if self.trainer.is_last_batch:
+            scheduler_g.step()
+            scheduler_d.step()
 
     def get_mel_transform(
         self,
@@ -220,12 +214,12 @@ class HSFHifiGAN(pl.LightningModule):
                         f"wavs": [
                             wandb.Audio(
                                 audio[0],
-                                sample_rate=44100,
+                                sample_rate=self.h.sampling_rate,
                                 caption=f"gt",
                             ),
                             wandb.Audio(
                                 gen_audio[0],
-                                sample_rate=44100,
+                                sample_rate=self.h.sampling_rate,
                                 caption=f"prediction",
                             ),
                         ],
