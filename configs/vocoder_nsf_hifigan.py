@@ -67,6 +67,6 @@ preprocessing = dict(
         type="ParselMouthPitchExtractor",
         keep_zeros=False,
         f0_min=40.0,
-        f0_max=1600.0,
+        f0_max=2000.0,
     ),
 )

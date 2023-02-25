@@ -71,8 +71,9 @@ class NsfHifiGAN(pl.LightningModule):
                 raise ValueError(f"Incorrect value for {k}: {v}")
 
     @torch.no_grad()
-    def spec2wav(self, mel, f0):
+    def spec2wav(self, mel, f0, key_shift=0):
         c = mel[None]
+        f0 *= 2 ** (key_shift / 12)
 
         if self.use_natural_log is False:
             c = 2.30259 * c
