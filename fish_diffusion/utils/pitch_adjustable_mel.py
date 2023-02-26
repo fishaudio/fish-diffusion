@@ -36,9 +36,9 @@ class PitchAdjustableMelSpectrogram:
         win_size_new = int(np.round(self.win_size * factor))
 
         if torch.min(y) < -1.0:
-            logger.warning("min value is ", torch.min(y))
+            logger.warning(f"min value is {torch.min(y)}")
         if torch.max(y) > 1.0:
-            logger.warning("max value is ", torch.max(y))
+            logger.warning(f"max value is {torch.max(y)}")
 
         mel_basis_key = f"{self.f_max}_{y.device}"
         if mel_basis_key not in self.mel_basis:
