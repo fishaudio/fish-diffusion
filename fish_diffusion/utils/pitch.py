@@ -44,3 +44,7 @@ def pitch_to_coarse(f0, f0_mel_min=_f0_mel_min, f0_mel_max=_f0_mel_max, f0_bin=_
     )
 
     return f0_coarse
+
+
+def pitch_to_log(f0):
+    return f0.log2()
