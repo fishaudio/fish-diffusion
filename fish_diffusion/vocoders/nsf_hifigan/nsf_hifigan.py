@@ -87,7 +87,7 @@ class NsfHifiGAN(pl.LightningModule):
     def device(self):
         return next(self.model.parameters()).device
 
-    def wav2spec(self, wav_torch, sr=None, key_shift=0):
+    def wav2spec(self, wav_torch, sr=None, key_shift=0, speed=1.0):
         if sr is None:
             sr = self.h.sampling_rate
 
@@ -97,7 +97,7 @@ class NsfHifiGAN(pl.LightningModule):
             )
             wav_torch = torch.from_numpy(_wav_torch).to(wav_torch.device)
 
-        mel_torch = self.mel_transform(wav_torch, key_shift)[0]
+        mel_torch = self.mel_transform(wav_torch, key_shift=key_shift, speed=speed)[0]
         mel_torch = dynamic_range_compression(mel_torch)
 
         if self.use_natural_log is False:

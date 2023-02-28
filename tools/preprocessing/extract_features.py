@@ -1,8 +1,11 @@
 import argparse
 import multiprocessing as mp
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from multiprocessing import Lock, Value
+import os
+import random
+from concurrent.futures import ProcessPoolExecutor
+from copy import deepcopy
 from pathlib import Path
+from typing import Optional
 
 import librosa
 import numpy as np
@@ -14,27 +17,37 @@ from mmengine import Config
 from tqdm import tqdm
 
 from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS, PITCH_EXTRACTORS
+from fish_diffusion.feature_extractors.base import BaseFeatureExtractor
+from fish_diffusion.feature_extractors.pitch.builder import BasePitchExtractor
 from fish_diffusion.utils.tensor import repeat_expand
 from fish_diffusion.vocoders import VOCODERS
+from fish_diffusion.vocoders.nsf_hifigan.nsf_hifigan import NsfHifiGAN
 
-text_features_extractor = None
-vocoder = None
-device = None
+model_caches = None
 
 
-def init(worker_id: Value, config):
-    global text_features_extractor, vocoder, device
+def init(
+    config,
+) -> tuple[
+    Optional[BaseFeatureExtractor],
+    Optional[BasePitchExtractor],
+    Optional[NsfHifiGAN],
+    torch.device,
+]:
+    global model_caches
+    device = torch.device("cpu")
 
-    with worker_id.get_lock():
-        current_id = worker_id.value
-        worker_id.value += 1
+    rank = mp.current_process()._identity
+    rank = rank[0] if len(rank) > 0 else 0
 
-    device = torch.device(
-        f"cuda:{current_id % torch.cuda.device_count()}"
-        if torch.cuda.is_available()
-        else "cpu"
-    )
+    if torch.cuda.is_available():
+        gpu_id = rank % torch.cuda.device_count()
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
+        device = torch.device(f"cuda:{gpu_id}")
 
+    logger.info(f"Rank {rank} uses device {device}")
+
+    text_features_extractor = None
     if config.preprocessing.text_features_extractor is not None:
         text_features_extractor = FEATURE_EXTRACTORS.build(
             config.preprocessing.text_features_extractor
@@ -42,66 +55,116 @@ def init(worker_id: Value, config):
         text_features_extractor.to(device)
         text_features_extractor.eval()
 
-    if config.preprocessing.pitch_extractor == "crepe":
-        torchcrepe.load.model(device, "full")
+    pitch_extractor = None
+    if config.preprocessing.pitch_extractor is not None:
+        if config.preprocessing.pitch_extractor.type == "CrepePitchExtractor":
+            torchcrepe.load.model(device, "full")
 
-    vocoder = VOCODERS.build(config.model.vocoder)
-    vocoder.to(device)
-    vocoder.eval()
+        pitch_extractor = PITCH_EXTRACTORS.build(config.preprocessing.pitch_extractor)
+
+    vocoder = None
+    if config.model.vocoder is not None:
+        vocoder = VOCODERS.build(config.model.vocoder)
+        vocoder.to(device)
+        vocoder.eval()
+
+    # return text_features_extractor, pitch_extractor, vocoder, device
+    model_caches = (text_features_extractor, pitch_extractor, vocoder, device)
 
 
-def process(config, audio_path: Path, override: bool = False):
-    # Important for multiprocessing
-    global text_features_extractor, vocoder, device
+def process(
+    config,
+    audio_path: Path,
+    idx: int = 0,
+    key_shift: float = 0,
+    time_stretch: float = 1.0,
+):
+    if model_caches is None:
+        init(config)
+    text_features_extractor, pitch_extractor, vocoder, device = model_caches
+
+    save_path = audio_path.with_suffix(f".{idx}.data.npy")
+    if save_path.exists():
+        return
+
+    sample = {
+        "path": str(audio_path),
+    }
 
     audio, sr = librosa.load(str(audio_path), sr=config.sampling_rate, mono=True)
-    # audio: (1, T)
+    audio = librosa.effects.time_stretch(audio, rate=time_stretch)
+    sample["audio"] = audio
+    sample["sampling_rate"] = sr
+    sample["time_stretch"] = time_stretch
 
     # Move audio to appropriate device
     audio = torch.from_numpy(audio).unsqueeze(0).to(device)
 
     # Obtain mel spectrogram
-    mel_path = audio_path.parent / f"{audio_path.name}.mel.npy"
-
-    if mel_path.exists() is False or override:
-        mel = vocoder.wav2spec(audio, sr)
-        np.save(mel_path, mel.cpu().numpy())
-    else:
-        mel = np.load(mel_path)
+    mel = vocoder.wav2spec(audio, sr, key_shift=key_shift)
+    mel_length = mel.shape[-1]
+    sample["mel"] = mel.cpu().numpy()
 
     # Extract text features
-    text_features_path = audio_path.parent / f"{audio_path.name}.text_features.npy"
-
-    if (
-        text_features_extractor is not None
-        and text_features_path.exists() is False
-        or override
-    ):
+    if text_features_extractor is not None:
         if config.model.type == "DiffSinger":
-            text_features = text_features_extractor(audio_path, mel.shape[-1])
+            text_features = text_features_extractor(audio_path, mel_length)
         else:
             text_features = text_features_extractor(audio, sr)[0]
-            text_features = repeat_expand(text_features, mel.shape[-1])
+            text_features = repeat_expand(text_features, mel_length)
 
-        np.save(text_features_path, text_features.cpu().numpy())
+        sample["text_features"] = text_features.cpu().numpy()
 
-    # Extract f0
-    f0_path = audio_path.parent / f"{audio_path.name}.f0.npy"
+    # Extract pitches
+    if pitch_extractor is not None:
+        pitches = pitch_extractor(audio, sr, pad_to=mel_length)
+        pitches *= 2 ** (key_shift / 12)
 
-    if f0_path.exists() is False or override:
-        pitch_extractor = PITCH_EXTRACTORS.build(config.preprocessing.pitch_extractor)
+        sample["pitches"] = pitches.cpu().numpy()
+        sample["key_shift"] = key_shift  # Pitch is also gender params
 
-        assert (
-            pitch_extractor is not None
-        ), f"Unknown pitch extractor: {config.preprocessing.pitch_extractor}"
+    # Save
+    np.save(save_path, sample)
 
-        f0 = pitch_extractor(audio, sr, pad_to=mel.shape[-1])
-        np.save(f0_path, f0.cpu().numpy())
+    # If not augmentation, continue
+    if (
+        "augmentations" not in config.preprocessing
+        or len(config.preprocessing.augmentations) == 0
+    ):
+        return
 
 
-def safe_process(config, audio_path: Path, override: bool = False):
+def safe_process(config, audio_path: Path):
     try:
-        process(config, audio_path, override)
+        # Baseline
+        process(config, audio_path)
+
+        # Augmentation
+        augmentations = deepcopy(config.preprocessing.augmentations)
+        aug_count = 0
+        for augmentation in augmentations:
+            probability = augmentation.probability
+
+            while probability > 0:
+                if random.random() > probability:
+                    break
+
+                aug_count += 1
+                probability -= 1
+
+            if augmentation.type == "FixedPitchShifting":
+                key_shift = random.choice(augmentation.key_shifts)
+                process(config, audio_path, idx=aug_count, key_shift=key_shift)
+            elif augmentation.type == "RandomPitchShifting":
+                assert len(augmentation.key_shifts) == 2
+                key_shift = random.uniform(*augmentation.key_shifts)
+                process(config, audio_path, idx=aug_count, key_shift=key_shift)
+            elif augmentation.type == "RandomTimeStretching":
+                assert len(augmentation.factors) == 2
+                factor = random.uniform(*augmentation.factors)
+                process(config, audio_path, idx=aug_count, time_stretch=factor)
+
+        return aug_count + 1
     except Exception as e:
         logger.error(f"Error processing {audio_path}")
         logger.exception(e)
@@ -112,7 +175,6 @@ def parse_args():
 
     parser.add_argument("--config", type=str, required=True)
     parser.add_argument("--path", type=str, required=True)
-    parser.add_argument("--override", action="store_true")
     parser.add_argument("--clean", action="store_true")
     parser.add_argument("--num-workers", type=int, default=1)
 
@@ -141,26 +203,27 @@ if __name__ == "__main__":
         logger.info("Done!")
 
     config = Config.fromfile(args.config)
-    files = list_files(args.path, {".wav"}, recursive=True, sort=True)
-
+    files = list_files(args.path, {".wav"}, recursive=True, sort=False)
     logger.info(f"Found {len(files)} files, processing...")
 
-    worker_id = Value("i", 0)
+    # Shuffle files will balance the workload of workers
+    random.shuffle(files)
+    total_samples = 0
 
     if args.num_workers <= 1:
-        init(worker_id, config)
-
         for audio_path in tqdm(files):
-            safe_process(config, audio_path, args.override)
+            total_samples += safe_process(config, audio_path)
     else:
         with ProcessPoolExecutor(
             max_workers=args.num_workers,
-            initializer=init,
-            initargs=(worker_id, config),
         ) as executor:
-            params = [(config, audio_path, args.override) for audio_path in files]
+            params = [(config, audio_path) for audio_path in files]
 
             for i in tqdm(executor.map(safe_process, *zip(*params)), total=len(params)):
-                assert i is None, i
+                assert i is None or isinstance(i, int), f"Invalid return value: {i}"
 
-    logger.info("Done!")
+                total_samples += i
+
+    logger.info(
+        f"Done! Original samples: {len(files)} -> Augmented samples: {total_samples} (x{total_samples / len(files):.2f}x)"
+    )

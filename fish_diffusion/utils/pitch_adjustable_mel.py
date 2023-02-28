@@ -30,10 +30,11 @@ class PitchAdjustableMelSpectrogram:
         self.mel_basis = {}
         self.hann_window = {}
 
-    def __call__(self, y, key_shift=0):
+    def __call__(self, y, key_shift=0, speed=1.0):
         factor = 2 ** (key_shift / 12)
         n_fft_new = int(np.round(self.n_fft * factor))
         win_size_new = int(np.round(self.win_size * factor))
+        hop_length = int(np.round(self.hop_length * speed))
 
         if torch.min(y) < -1.0:
             logger.warning(f"min value is {torch.min(y)}")
@@ -60,8 +61,8 @@ class PitchAdjustableMelSpectrogram:
         y = torch.nn.functional.pad(
             y.unsqueeze(1),
             (
-                int((win_size_new - self.hop_length) / 2),
-                int((win_size_new - self.hop_length) / 2),
+                int((win_size_new - hop_length) / 2),
+                int((win_size_new - hop_length) / 2),
             ),
             mode="reflect",
         )
@@ -70,7 +71,7 @@ class PitchAdjustableMelSpectrogram:
         spec = torch.stft(
             y,
             n_fft_new,
-            hop_length=self.hop_length,
+            hop_length=hop_length,
             win_length=win_size_new,
             window=self.hann_window[hann_window_key],
             center=self.center,
