@@ -208,7 +208,7 @@ if __name__ == "__main__":
 
     # Shuffle files will balance the workload of workers
     random.shuffle(files)
-    total_samples = 0
+    total_samples, failed = 0, 0
 
     if args.num_workers <= 1:
         for audio_path in tqdm(files):
@@ -220,10 +220,12 @@ if __name__ == "__main__":
             params = [(config, audio_path) for audio_path in files]
 
             for i in tqdm(executor.map(safe_process, *zip(*params)), total=len(params)):
-                assert i is None or isinstance(i, int), f"Invalid return value: {i}"
-
-                total_samples += i
-
-    logger.info(
-        f"Done! Original samples: {len(files)} -> Augmented samples: {total_samples} (x{total_samples / len(files):.2f}x)"
-    )
+                if isinstance(i, int):
+                    total_samples += i
+                else:
+                    failed += 1
+    
+    logger.info(f"Finished!")
+    logger.info(f"Original samples: {len(files)}")
+    logger.info(f"Augmented samples: {total_samples} (x{total_samples / len(files):.2f})")
+    logger.info(f"Failed: {failed}")
