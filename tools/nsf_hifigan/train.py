@@ -11,10 +11,8 @@ from mmengine import Config
 from pytorch_lightning.loggers import WandbLogger
 from torch.nn import functional as F
 from torch.optim.lr_scheduler import ExponentialLR
-from torch.utils.data import DataLoader, random_split
 from torchaudio.transforms import MelSpectrogram
 
-from fish_diffusion.datasets import RepeatDataset, VOCODERDataset
 from fish_diffusion.datasets.utils import build_loader_from_config
 from fish_diffusion.utils.audio import dynamic_range_compression
 from fish_diffusion.utils.viz import plot_mel
@@ -46,6 +44,19 @@ class HSFHifiGAN(pl.LightningModule):
         self.msd = MultiScaleDiscriminator()
 
         self.mel_transform = self.get_mel_transform()
+        self.multi_scale_mels = [
+            self.get_mel_transform(),
+            self.get_mel_transform(
+                n_fft=2048,
+                hop_length=270,
+                win_length=1080,
+            ),
+            self.get_mel_transform(
+                n_fft=4096,
+                hop_length=540,
+                win_length=2160,
+            ),
+        ]
 
         self.automatic_optimization = False
 
@@ -76,7 +87,6 @@ class HSFHifiGAN(pl.LightningModule):
         )
 
         y_g_hat = self.generator(mels, pitches)
-        y_g_hat_mel = self.get_mels(y_g_hat)[:, :, : mels.shape[2]]
         optim_d.zero_grad()
 
         # MPD
@@ -97,7 +107,7 @@ class HSFHifiGAN(pl.LightningModule):
             loss_disc_all,
             on_step=True,
             on_epoch=True,
-            prog_bar=False,
+            prog_bar=True,
             logger=True,
             sync_dist=True,
             batch_size=batch["mels"].shape[0],
@@ -106,16 +116,48 @@ class HSFHifiGAN(pl.LightningModule):
         # Generator
         optim_g.zero_grad()
 
-        # L1 Mel-Spectrogram Loss
-        loss_mel = F.l1_loss(mels, y_g_hat_mel)
+        # We referenced STFT and Mel-Spectrogram loss from SingGAN
+        # L1 STFT Loss
+        stft_config = [
+            (512, 50, 240),
+            (1024, 120, 600),
+            (2048, 240, 1200),
+        ]
 
+        loss_stft = 0
+        for n_fft, hop_length, win_length in stft_config:
+            y_stft = torch.stft(
+                y.squeeze(1), n_fft, hop_length, win_length, return_complex=True
+            )
+            y_g_hat_stft = torch.stft(
+                y_g_hat.squeeze(1), n_fft, hop_length, win_length, return_complex=True
+            )
+            y_stft = torch.view_as_real(y_stft)
+            y_g_hat_stft = torch.view_as_real(y_g_hat_stft)
+
+            loss_stft += F.l1_loss(y_stft, y_g_hat_stft)
+
+        loss_stft /= len(stft_config)
+
+        # L1 Mel-Spectrogram Loss
+        loss_mel = 0
+        for mel_transform in self.multi_scale_mels:
+            y_mel = self.get_mels(y, mel_transform)
+            y_g_hat_mel = self.get_mels(y_g_hat, mel_transform)
+            loss_mel += F.l1_loss(y_mel, y_g_hat_mel)
+
+        loss_mel /= len(self.multi_scale_mels)
+
+        loss_aux = 0.5 * loss_stft + loss_mel
+
+        # Discriminator Loss
         y_df_hat_r, y_df_hat_g, fmap_f_r, fmap_f_g = self.mpd(y, y_g_hat)
         y_ds_hat_r, y_ds_hat_g, fmap_s_r, fmap_s_g = self.msd(y, y_g_hat)
         loss_fm_f = feature_loss(fmap_f_r, fmap_f_g)
         loss_fm_s = feature_loss(fmap_s_r, fmap_s_g)
         loss_gen_f, _ = generator_loss(y_df_hat_g)
         loss_gen_s, _ = generator_loss(y_ds_hat_g)
-        loss_gen_all = loss_gen_s + loss_gen_f + loss_fm_s + loss_fm_f + loss_mel * 45
+        loss_gen_all = loss_gen_s + loss_gen_f + loss_fm_s + loss_fm_f + loss_aux * 45
 
         self.manual_backward(loss_gen_all)
         optim_g.step()
@@ -125,7 +167,7 @@ class HSFHifiGAN(pl.LightningModule):
             loss_gen_all,
             on_step=True,
             on_epoch=True,
-            prog_bar=False,
+            prog_bar=True,
             logger=True,
             sync_dist=True,
             batch_size=batch["mels"].shape[0],
@@ -170,8 +212,13 @@ class HSFHifiGAN(pl.LightningModule):
 
         return transform
 
-    def get_mels(self, audios):
-        x = self.mel_transform(audios.squeeze(1))
+    def get_mels(self, audios, transform=None):
+        if transform is None:
+            transform = self.mel_transform
+
+        transform = transform.to(audios.device)
+        x = transform(audios.squeeze(1))
+
         return dynamic_range_compression(x)
 
     def validation_step(self, batch, batch_idx):
