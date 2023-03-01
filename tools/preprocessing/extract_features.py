@@ -108,12 +108,12 @@ def process(
     # Extract text features
     if text_features_extractor is not None:
         if config.model.type == "DiffSinger":
-            text_features = text_features_extractor(audio_path, mel_length)
+            contents = text_features_extractor(audio_path, mel_length)
         else:
-            text_features = text_features_extractor(audio, sr)[0]
-            text_features = repeat_expand(text_features, mel_length)
+            contents = text_features_extractor(audio, sr)[0]
+            contents = repeat_expand(contents, mel_length)
 
-        sample["text_features"] = text_features.cpu().numpy()
+        sample["contents"] = contents.cpu().numpy()
 
     # Extract pitches
     if pitch_extractor is not None:
@@ -125,13 +125,6 @@ def process(
 
     # Save
     np.save(save_path, sample)
-
-    # If not augmentation, continue
-    if (
-        "augmentations" not in config.preprocessing
-        or len(config.preprocessing.augmentations) == 0
-    ):
-        return
 
 
 def safe_process(config, audio_path: Path):
@@ -224,8 +217,10 @@ if __name__ == "__main__":
                     total_samples += i
                 else:
                     failed += 1
-    
+
     logger.info(f"Finished!")
     logger.info(f"Original samples: {len(files)}")
-    logger.info(f"Augmented samples: {total_samples} (x{total_samples / len(files):.2f})")
+    logger.info(
+        f"Augmented samples: {total_samples} (x{total_samples / len(files):.2f})"
+    )
     logger.info(f"Failed: {failed}")
