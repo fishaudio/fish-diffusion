@@ -16,6 +16,9 @@ class DiffSinger(nn.Module):
         self.speaker_encoder = ENCODERS.build(model_config.speaker_encoder)
         self.pitch_encoder = ENCODERS.build(model_config.pitch_encoder)
 
+        if "pitch_shift_encoder" in model_config:
+            self.pitch_shift_encoder = ENCODERS.build(model_config.pitch_shift_encoder)
+
     @staticmethod
     def get_mask_from_lengths(lengths, max_len=None):
         batch_size = lengths.shape[0]
@@ -41,6 +44,7 @@ class DiffSinger(nn.Module):
         mel_lens=None,
         max_mel_len=None,
         pitches=None,
+        pitch_shift=None,
     ):
         src_masks = (
             self.get_mask_from_lengths(src_lens, max_src_len)
@@ -56,6 +60,9 @@ class DiffSinger(nn.Module):
 
         features += speaker_embed
         features += self.pitch_encoder(pitches)
+
+        if pitch_shift is not None:
+            features += self.pitch_shift_encoder(pitch_shift)
 
         mel_masks = (
             self.get_mask_from_lengths(mel_lens, max_mel_len)
@@ -75,10 +82,11 @@ class DiffSinger(nn.Module):
         contents,
         src_lens,
         max_src_len,
-        mels=None,
+        mel=None,
         mel_lens=None,
         max_mel_len=None,
         pitches=None,
+        pitch_shift=None,
     ):
         features = self.forward_features(
             speakers=speakers,
@@ -88,10 +96,11 @@ class DiffSinger(nn.Module):
             mel_lens=mel_lens,
             max_mel_len=max_mel_len,
             pitches=pitches,
+            pitch_shift=pitch_shift,
         )
 
         output_dict = self.diffusion.train_step(
-            features["features"], mels, features["mel_masks"]
+            features["features"], mel, features["mel_masks"]
         )
 
         # For validation

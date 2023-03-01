@@ -156,6 +156,8 @@ def inference(
             mel_lens=src_lens,
             max_mel_len=max(src_lens),
             pitches=pitch[None].to(device),
+            # Pitch shift should always be 0 for inference to avoid distortion
+            pitch_shift=0 if config.model.get("pitch_shift_encoder") else None,
         )
 
         result = model.model.diffusion(features["features"], progress=sampler_progress)

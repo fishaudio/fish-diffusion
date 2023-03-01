@@ -48,10 +48,11 @@ class FishDiffusion(pl.LightningModule):
             contents=batch["contents"],
             src_lens=batch["content_lens"],
             max_src_len=batch["max_content_len"],
-            mels=batch["mels"],
+            mel=batch["mel"],
             mel_lens=batch["mel_lens"],
             max_mel_len=batch["max_mel_len"],
             pitches=batch["pitches"],
+            pitch_shift=batch.get("key_shift", None),
         )
 
         self.log(f"{mode}_loss", output["loss"], batch_size=batch_size, sync_dist=True)
