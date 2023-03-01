@@ -1,22 +1,34 @@
+import click
 import torch
+from loguru import logger
 
-input_file = (
-    "logs/NSF-HiFiGAN/lpm0f6b1/checkpoints/epoch=129-step=165360-valid_loss=0.21.ckpt"
+
+@click.command()
+@click.argument("input_file", type=click.Path(exists=True))
+@click.argument(
+    "output_file", type=click.Path(), required=False, default="nsf_hifigan.pt"
 )
-output_file = "nsf_hifigan.pt"
+def main(input_file, output_file):
+    logger.info(f"Exporting {input_file}")
 
-checkpoint = torch.load(input_file, map_location="cpu")
-model = checkpoint["state_dict"]
+    checkpoint = torch.load(input_file, map_location="cpu")
+    model = checkpoint["state_dict"]
 
-generator_params = {
-    k.replace("generator.", ""): v
-    for k, v in model.items()
-    if k.startswith("generator.")
-}
+    generator_params = {
+        k.replace("generator.", ""): v
+        for k, v in model.items()
+        if k.startswith("generator.")
+    }
 
-torch.save(
-    {
-        "generator": generator_params,
-    },
-    output_file,
-)
+    torch.save(
+        {
+            "generator": generator_params,
+        },
+        output_file,
+    )
+
+    logger.info(f"Saved to {output_file}")
+
+
+if __name__ == "__main__":
+    main()
