@@ -1,10 +1,10 @@
-import json
 from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
 import torch
 from fish_audio_preprocess.utils.file import list_files
+from loguru import logger
 from torch.utils.data import Dataset
 
 from .builder import DATASETS
@@ -20,6 +20,10 @@ class AudioFolderDataset(Dataset):
         assert (
             len(self.wav_paths) > 0
         ), f"No wav files found in {path}, please check your path."
+
+        logger.warning(
+            "AudioFolderDataset is deprecated, please use NaiveDataset instead."
+        )
 
     def __len__(self):
         return len(self.wav_paths)
@@ -136,3 +140,10 @@ class AudioFolderDataset(Dataset):
             )
 
         return datasets
+
+
+if __name__ == "__main__":
+    dataset = AudioFolderDataset(path="dataset/svc-mixin-dataset")
+    print(
+        dataset[0]["mel"].shape, dataset[0]["content"].shape, dataset[0]["pitch"].shape
+    )
