@@ -11,7 +11,7 @@
 <a href="https://hub.docker.com/r/lengyue233/fish-diffusion">
 <img alt="Docker Hub" src="https://img.shields.io/docker/cloud/build/lengyue233/fish-diffusion?style=flat-square&logo=Docker&logoColor=white">
 </a>
-<a href="https://colab.research.google.com/drive/1LdexkSuKDsKA-8OQs2slEY314kYvucV-?usp=sharing">
+<a href="https://colab.research.google.com/drive/1GPNq1FWH5LE2f79M4QV2UbdWWazfgrpt">
 <img alt="Colab" src="https://img.shields.io/badge/Colab-Notebook-F9AB00?logo=Google%20Colab&style=flat-square&logoColor=white">
 </a>
 </div>
