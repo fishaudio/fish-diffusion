@@ -34,7 +34,7 @@ class NaiveDataset(Dataset):
 
     @classmethod
     def collate_fn(cls, data):
-        return transform_pipeline(data, cls.collating_pipeline)
+        return transform_pipeline(cls.collating_pipeline, data)
 
 
 @DATASETS.register_module()
@@ -42,13 +42,14 @@ class NaiveSVCDataset(NaiveDataset):
     processing_pipeline = [
         dict(
             type="PickKeys",
-            keys=["path", "time_stretch", "mel", "contents", "pitches", "key_shift"],
+            keys=["path", "time_stretch", "mel", "contents", "pitches", "key_shift", "speaker"],
         ),
-        dict(type="Transpose", keys=[("mel", 0, 1), ("contents", 0, 1)]),
+        dict(type="Transpose", keys=[("mel", 1, 0), ("contents", 1, 0)]),
     ]
 
     collating_pipeline = [
-        dict(type="PadStack", keys=[("mel", -1), ("contents", -1), ("pitches", -1)]),
+        dict(type="ListToDict"),
+        dict(type="PadStack", keys=[("mel", -2), ("contents", -2), ("pitches", -1)]),
         dict(
             type="ToTensor",
             keys=[
@@ -57,6 +58,7 @@ class NaiveSVCDataset(NaiveDataset):
                 ("speaker", torch.int64),
             ],
         ),
+        dict(type="UnSqueeze", keys=[("pitches", -1), ("time_stretch", -1), ("key_shift", -1)]), # (N, T) -> (N, T, 1)
     ]
 
 
@@ -64,14 +66,15 @@ class NaiveSVCDataset(NaiveDataset):
 class NaiveVOCODERDataset(NaiveDataset):
     processing_pipeline = [
         dict(type="PickKeys", keys=["path", "audio", "mel", "pitches", "key_shift"]),
-        dict(type="Transpose", keys=[("mel", 0, 1)]),
+        dict(type="Transpose", keys=[("mel", 1, 0)]),
     ]
 
     collating_pipeline = [
-        dict(type="PadStack", keys=[("audio", -1), ("mel", -1), ("pitches", -1)]),
+        dict(type="ListToDict"),
+        dict(type="PadStack", keys=[("audio", -1), ("mel", -2), ("pitches", -1)]),
         dict(
             type="ToTensor",
-            keys=[("key_shift", torch.float32), ("speaker", torch.int64)],
+            keys=[("key_shift", torch.float32)],
         ),
     ]
 

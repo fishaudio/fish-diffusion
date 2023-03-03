@@ -105,6 +105,9 @@ def transform_pipeline(pipeline, data):
                 else:
                     new_data[k] = data[k]
             data = new_data
+        elif step["type"] == "ListToDict":
+            all_keys = set(j for i in data for j in i.keys()) if "keys" not in step else step["keys"]
+            data = {k: [i[k] for i in data] for k in all_keys}
         elif step["type"] == "PadStack":
             for k, v in step["keys"]:
                 stacked, lens, max_len = pad_and_stack(data[k], v)
@@ -120,5 +123,10 @@ def transform_pipeline(pipeline, data):
         elif step["type"] == "Transpose":
             for k, *args in step["keys"]:
                 data[k] = data[k].transpose(*args)
+        elif step["type"] == "UnSqueeze":
+            for k, *args in step["keys"]:
+                data[k] = data[k].unsqueeze(*args)
+        else:
+            raise NotImplementedError(f"Unknown transform type: {step['type']}")
 
     return data

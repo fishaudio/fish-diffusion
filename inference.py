@@ -146,15 +146,15 @@ def inference(
         text_features = repeat_expand(text_features, mel.shape[-1]).T
 
         # Predict
-        src_lens = torch.tensor([mel.shape[-1]]).to(device)
+        contents_lens = torch.tensor([mel.shape[-1]]).to(device)
 
         features = model.model.forward_features(
             speakers=torch.tensor([speaker_id]).long().to(device),
             contents=text_features[None].to(device),
-            src_lens=src_lens,
-            max_src_len=max(src_lens),
-            mel_lens=src_lens,
-            max_mel_len=max(src_lens),
+            contents_lens=contents_lens,
+            contents_max_len=max(contents_lens),
+            mel_lens=contents_lens,
+            mel_max_len=max(contents_lens),
             pitches=pitch[None].to(device),
             # Pitch shift should always be 0 for inference to avoid distortion
             pitch_shift=0 if config.model.get("pitch_shift_encoder") else None,

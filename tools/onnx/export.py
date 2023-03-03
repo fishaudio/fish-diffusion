@@ -27,9 +27,9 @@ class FeatureEmbeddingWrapper(torch.nn.Module):
         features = self.model.forward_features(
             speakers=speakers,
             contents=text_features,
-            src_lens=None,
+            contents_lens=None,
+            contents_max_len=text_features.shape[1],
             mel_lens=None,
-            max_src_len=text_features.shape[1],
             pitches=pitches,
         )
 

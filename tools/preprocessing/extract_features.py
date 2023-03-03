@@ -132,6 +132,9 @@ def safe_process(config, audio_path: Path):
         # Baseline
         process(config, audio_path)
 
+        if "augmentations" not in config.preprocessing:
+            return 1
+
         # Augmentation
         augmentations = deepcopy(config.preprocessing.augmentations)
         aug_count = 0
@@ -205,7 +208,11 @@ if __name__ == "__main__":
 
     if args.num_workers <= 1:
         for audio_path in tqdm(files):
-            total_samples += safe_process(config, audio_path)
+            i = safe_process(config, audio_path)
+            if isinstance(i, int):
+                total_samples += i
+            else:
+                failed += 1
     else:
         with ProcessPoolExecutor(
             max_workers=args.num_workers,

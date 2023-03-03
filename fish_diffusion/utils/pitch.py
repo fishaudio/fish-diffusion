@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 _f0_bin = 256
 _f0_max = 1100.0
@@ -47,4 +48,8 @@ def pitch_to_coarse(f0, f0_mel_min=_f0_mel_min, f0_mel_max=_f0_mel_max, f0_bin=_
 
 
 def pitch_to_log(f0):
-    return f0.log2()
+    return torch.where(
+        f0 > 0,
+        f0.log2(),
+        torch.zeros_like(f0),
+    )

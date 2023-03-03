@@ -260,7 +260,6 @@ class HSFHifiGAN(pl.LightningModule):
                 batch["mel_lens"].cpu().numpy(),
                 batch["audio_lens"].cpu().numpy(),
             ):
-                # exit()
                 image_mels = plot_mel(
                     [
                         gen_mel[:, :mel_len],
@@ -306,15 +305,16 @@ if __name__ == "__main__":
 
     model = HSFHifiGAN(cfg)
 
-    logger = WandbLogger(
-        project=cfg.model.type,
-        save_dir="logs",
-        log_model=True,
-        name=args.name,
-        entity=args.entity,
-        resume="must" if args.resume_id else False,
-        id=args.resume_id,
-    )
+    logger = None
+    # WandbLogger(
+    #     project=cfg.model.type,
+    #     save_dir="logs",
+    #     log_model=True,
+    #     name=args.name,
+    #     entity=args.entity,
+    #     resume="must" if args.resume_id else False,
+    #     id=args.resume_id,
+    # )
 
     trainer = pl.Trainer(
         logger=logger,
