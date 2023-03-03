@@ -8,7 +8,7 @@ _base_ = [
     "./_base_/archs/diff_svc_v2.py",
     "./_base_/trainers/base.py",
     "./_base_/schedulers/step.py",
-    "./_base_/datasets/audio_folder.py",
+    "./_base_/datasets/naive_svc.py",
 ]
 
 hidden_size = 256
@@ -51,6 +51,7 @@ preprocessing = dict(
         type="CrepePitchExtractor",
         f0_min=40.0,
         f0_max=1100.0,
+        keep_zeros=False,
     ),
     text_features_extractor=dict(
         type="HubertSoft",

@@ -4,7 +4,7 @@ _base_ = [
     "./_base_/archs/diff_svc_v2.py",
     "./_base_/trainers/base.py",
     "./_base_/schedulers/warmup_cosine.py",
-    "./_base_/datasets/audio_folder.py",
+    "./_base_/datasets/naive_svc.py",
 ]
 
 phonemes = [

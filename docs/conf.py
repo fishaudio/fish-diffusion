@@ -41,7 +41,7 @@ html_css_files = [
 ]
 
 html_theme_options = {
-    "announcement": "Wiki is under construction, feel free to contribute!",
+    "announcement": "Wiki is under construction, we welcome any contribution!",
     "source_repository": "https://github.com/fishaudio/fish-diffusion/",
     "source_branch": "main",
     "source_directory": "docs/",

@@ -42,7 +42,7 @@ text_features_extractor=dict(
 > Note: You need to rerun the preprocessing command after you change the preprocessing config.
 
 ## Dataset
-Be default, `./_base_/datasets/audio_folder.py` will try to load data from `dataset/train` and `dataset/valid`. However, if you want to train a multi speakers model, you should refer to `svc_hubert_soft_multi_speakers.py`. For example:
+Be default, `./_base_/datasets/naive_svc.py` will try to load data from `dataset/train` and `dataset/valid`. However, if you want to train a multi speakers model, you should refer to `svc_hubert_soft_multi_speakers.py`. For example:
 
 ```python
 dataset = dict(
@@ -51,21 +51,21 @@ dataset = dict(
         type="ConcatDataset",  # You want to contact multiple datasets
         datasets=[
             dict(
-                type="AudioFolderDataset",
+                type="NaiveSVCDataset",
                 path="dataset/speaker_0",  # First speaker's data folder
                 speaker_id=0,  # Dataset for the first speaker
             ),
             dict(
-                type="AudioFolderDataset",
+                type="NaiveSVCDataset",
                 path="dataset/speaker_1",
                 speaker_id=1,
             ),
         ],
         # Are there any other ways to do this?
-        collate_fn=AudioFolderDataset.collate_fn,
+        collate_fn=NaiveSVCDataset.collate_fn,
     ),
     valid=dict(
-        type="AudioFolderDataset",  # Only use one speaker to validate
+        type="NaiveSVCDataset",  # Only use one speaker to validate
         path="dataset/valid",
         speaker_id=0,
     ),
@@ -97,16 +97,16 @@ dataset
 ```
 
 ```python
-from fish_diffusion.datasets.audio_folder import AudioFolderDataset
+from fish_diffusion.datasets.utils import get_speaker_map_from_subfolder, get_datasets_from_subfolder
 
 speaker_mapping = {}
 
-speaker_mapping = AudioFolderDataset.get_speaker_map_from_subfolder("dataset/train", speaker_mapping) # Update speaker_mapping using subfolders in `dataset/train`.
+speaker_mapping = get_speaker_map_from_subfolder("dataset/train", speaker_mapping) # Update speaker_mapping using subfolders in `dataset/train`.
 
 # This will update speaker_mapping to {'speaker0': 0, 'speaker': 1}
 
-train_datasets = AudioFolderDataset.get_datasets_from_subfolder("dataset/train", speaker_mapping)  # Build datasets manually.
-valid_datasets = AudioFolderDataset.get_datasets_from_subfolder("dataset/valid", speaker_mapping)  # Build datasets manually.
+train_datasets = get_datasets_from_subfolder("NaiveSVCDataset", "dataset/train", speaker_mapping)  # Build datasets manually.
+valid_datasets = get_datasets_from_subfolder("NaiveSVCDataset", "dataset/valid", speaker_mapping)  # Build datasets manually.
 
 dataset = dict(
     train=dict(
@@ -114,14 +114,14 @@ dataset = dict(
         type="ConcatDataset",  # You want to contact multiple datasets
         datasets=train_datasets,
         # Are there any other ways to do this?
-        collate_fn=AudioFolderDataset.collate_fn,
+        collate_fn=NaiveSVCDataset.collate_fn,
     ),
     valid=dict(
         _delete_=True,  # Delete the default train dataset
         type="ConcatDataset",  # You want to contact multiple datasets
         datasets=valid_datasets,
         # Are there any other ways to do this?
-        collate_fn=AudioFolderDataset.collate_fn,
+        collate_fn=NaiveSVCDataset.collate_fn,
     ),
 )
 
@@ -131,6 +131,36 @@ model = dict(
     ),
 )
 ```
+## Data Augmentation
+To enable data augmentation, you can reference to the following config:
+
+```python
+preprocessing = dict(
+    ...
+    augmentations=[
+        dict(
+            type="FixedPitchShifting",
+            key_shifts=[-5., 5.],
+            probability=0.75,
+        ),
+        dict(
+            type="RandomPitchShifting",
+            key_shifts=[-5., 5.],
+            probability=1.5,
+        ),
+        dict(
+            type="RandomTimeStretching",
+            factors=[0.8, 1.2],
+            probability=0.75,
+        ),
+    ]
+)
+```
+
+After editing the config, you need to rerun the preprocessing command.
+
+> Note: You should not use `RandomPitchShifting` and `RandomTimeStretching` at the same time.   
+> RandomTimeStretching is not tested yet (as of 2023-03-03).
 
 ## Appendix: Pitch Extractors
 Currently, this repo supports ParselMouth, Crepe, Harvest, and Dio. However, we recommend only using **Crepe** and **ParselMouth**. 

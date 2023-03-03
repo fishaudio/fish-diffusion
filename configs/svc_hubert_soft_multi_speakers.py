@@ -1,4 +1,4 @@
-from fish_diffusion.datasets.audio_folder import AudioFolderDataset
+from fish_diffusion.datasets.naive import NaiveSVCDataset
 
 _base_ = [
     "./svc_hubert_soft.py",
@@ -10,21 +10,21 @@ dataset = dict(
         type="ConcatDataset",
         datasets=[
             dict(
-                type="AudioFolderDataset",
+                type="NaiveSVCDataset",
                 path="dataset/speaker_0",
                 speaker_id=0,
             ),
             dict(
-                type="AudioFolderDataset",
+                type="NaiveSVCDataset",
                 path="dataset/speaker_1",
                 speaker_id=1,
             ),
         ],
         # Are there any other ways to do this?
-        collate_fn=AudioFolderDataset.collate_fn,
+        collate_fn=NaiveSVCDataset.collate_fn,
     ),
     valid=dict(
-        type="AudioFolderDataset",
+        type="NaiveSVCDataset",
         path="dataset/valid",
         speaker_id=0,
     ),
