@@ -1,5 +1,6 @@
 from .builder import FEATURE_EXTRACTORS
 from .chinese_hubert import ChineseHubertSoft
+from .content_vec import ContentVec
 from .hubert_soft import HubertSoft
 from .opencpop_transcription import OpenCpopTranscriptionToPhonemesDuration
 from .pitch import PITCH_EXTRACTORS
@@ -12,4 +13,5 @@ __all__ = [
     "HubertSoft",
     "OpenCpopTranscriptionToPhonemesDuration",
     "AlignedWhisper",
+    "ContentVec",
 ]
