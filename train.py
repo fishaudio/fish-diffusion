@@ -38,19 +38,19 @@ class FishDiffusion(pl.LightningModule):
         return [optimizer], dict(scheduler=scheduler, interval="step")
 
     def _step(self, batch, batch_idx, mode):
-        assert batch["pitches"].shape[1] == batch["mels"].shape[1]
+        assert batch["pitches"].shape[1] == batch["mel"].shape[1]
 
         pitches = batch["pitches"].clone()
-        batch_size = batch["speakers"].shape[0]
+        batch_size = batch["speaker"].shape[0]
 
         output = self.model(
-            speakers=batch["speakers"],
+            speakers=batch["speaker"],
             contents=batch["contents"],
-            src_lens=batch["content_lens"],
-            max_src_len=batch["max_content_len"],
+            contents_lens=batch["contents_lens"],
+            contents_max_len=batch["contents_max_len"],
             mel=batch["mel"],
             mel_lens=batch["mel_lens"],
-            max_mel_len=batch["max_mel_len"],
+            mel_max_len=batch["mel_max_len"],
             pitches=batch["pitches"],
             pitch_shift=batch.get("key_shift", None),
         )
@@ -63,11 +63,11 @@ class FishDiffusion(pl.LightningModule):
         x = self.model.diffusion(output["features"])
 
         for idx, (gt_mel, gt_pitch, predict_mel, predict_mel_len) in enumerate(
-            zip(batch["mels"], pitches, x, batch["mel_lens"])
+            zip(batch["mel"], pitches, x, batch["mel_lens"])
         ):
             image_mels, wav_reconstruction, wav_prediction = viz_synth_sample(
                 gt_mel=gt_mel,
-                gt_pitch=gt_pitch,
+                gt_pitch=gt_pitch[:, 0],
                 predict_mel=predict_mel,
                 predict_mel_len=predict_mel_len,
                 vocoder=self.vocoder,

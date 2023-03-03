@@ -39,33 +39,33 @@ class DiffSinger(nn.Module):
         self,
         speakers,
         contents,
-        src_lens,
-        max_src_len,
+        contents_lens,
+        contents_max_len,
         mel_lens=None,
-        max_mel_len=None,
+        mel_max_len=None,
         pitches=None,
         pitch_shift=None,
     ):
         src_masks = (
-            self.get_mask_from_lengths(src_lens, max_src_len)
-            if src_lens is not None
+            self.get_mask_from_lengths(contents_lens, contents_max_len)
+            if contents_lens is not None
             else None
         )
 
         features = self.text_encoder(contents, src_masks)
 
         speaker_embed = (
-            self.speaker_encoder(speakers).unsqueeze(1).expand(-1, max_src_len, -1)
+            self.speaker_encoder(speakers).unsqueeze(1).expand(-1, contents_max_len, -1)
         )
 
         features += speaker_embed
         features += self.pitch_encoder(pitches)
 
         if pitch_shift is not None:
-            features += self.pitch_shift_encoder(pitch_shift)
+            features += self.pitch_shift_encoder(pitch_shift)[:, None]
 
         mel_masks = (
-            self.get_mask_from_lengths(mel_lens, max_mel_len)
+            self.get_mask_from_lengths(mel_lens, mel_max_len)
             if mel_lens is not None
             else None
         )
@@ -80,21 +80,21 @@ class DiffSinger(nn.Module):
         self,
         speakers,
         contents,
-        src_lens,
-        max_src_len,
+        contents_lens,
+        contents_max_len,
         mel=None,
         mel_lens=None,
-        max_mel_len=None,
+        mel_max_len=None,
         pitches=None,
         pitch_shift=None,
     ):
         features = self.forward_features(
             speakers=speakers,
             contents=contents,
-            src_lens=src_lens,
-            max_src_len=max_src_len,
+            contents_lens=contents_lens,
+            contents_max_len=contents_max_len,
             mel_lens=mel_lens,
-            max_mel_len=max_mel_len,
+            mel_max_len=mel_max_len,
             pitches=pitches,
             pitch_shift=pitch_shift,
         )
