@@ -22,7 +22,7 @@ class AudioFolderDataset(Dataset):
         ), f"No wav files found in {path}, please check your path."
 
         logger.warning(
-            "AudioFolderDataset is deprecated, please use NaiveDataset instead."
+            "AudioFolderDataset is deprecated, please use NaiveSVCDataset instead."
         )
 
     def __len__(self):

@@ -106,7 +106,11 @@ def transform_pipeline(pipeline, data):
                     new_data[k] = data[k]
             data = new_data
         elif step["type"] == "ListToDict":
-            all_keys = set(j for i in data for j in i.keys()) if "keys" not in step else step["keys"]
+            all_keys = (
+                set(j for i in data for j in i.keys())
+                if "keys" not in step
+                else step["keys"]
+            )
             data = {k: [i[k] for i in data] for k in all_keys}
         elif step["type"] == "PadStack":
             for k, v in step["keys"]:
@@ -125,7 +129,10 @@ def transform_pipeline(pipeline, data):
                 data[k] = data[k].transpose(*args)
         elif step["type"] == "UnSqueeze":
             for k, *args in step["keys"]:
-                data[k] = data[k].unsqueeze(*args)
+                if isinstance(data[k], np.ndarray):
+                    data[k] = np.expand_dims(data[k], *args)
+                else:
+                    data[k] = data[k].unsqueeze(*args)
         else:
             raise NotImplementedError(f"Unknown transform type: {step['type']}")
 
