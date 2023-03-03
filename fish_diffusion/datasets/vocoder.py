@@ -7,6 +7,7 @@ import librosa
 import numpy as np
 import torch
 from fish_audio_preprocess.utils.file import list_files
+from loguru import logger
 from torch.utils.data import Dataset
 
 from .builder import DATASETS
@@ -27,6 +28,10 @@ class VOCODERDataset(Dataset):
         assert (
             len(self.wav_paths) > 0
         ), f"No wav files found in {path}, please check your path."
+
+        logger.warning(
+            "AudioFolderDataset is deprecated, please use NaiveVOCODERDataset instead."
+        )
 
     def __len__(self):
         return len(self.wav_paths)

@@ -42,7 +42,15 @@ class NaiveSVCDataset(NaiveDataset):
     processing_pipeline = [
         dict(
             type="PickKeys",
-            keys=["path", "time_stretch", "mel", "contents", "pitches", "key_shift", "speaker"],
+            keys=[
+                "path",
+                "time_stretch",
+                "mel",
+                "contents",
+                "pitches",
+                "key_shift",
+                "speaker",
+            ],
         ),
         dict(type="Transpose", keys=[("mel", 1, 0), ("contents", 1, 0)]),
     ]
@@ -58,24 +66,23 @@ class NaiveSVCDataset(NaiveDataset):
                 ("speaker", torch.int64),
             ],
         ),
-        dict(type="UnSqueeze", keys=[("pitches", -1), ("time_stretch", -1), ("key_shift", -1)]), # (N, T) -> (N, T, 1)
+        dict(
+            type="UnSqueeze",
+            keys=[("pitches", -1), ("time_stretch", -1), ("key_shift", -1)],
+        ),  # (N, T) -> (N, T, 1)
     ]
 
 
 @DATASETS.register_module()
 class NaiveVOCODERDataset(NaiveDataset):
     processing_pipeline = [
-        dict(type="PickKeys", keys=["path", "audio", "mel", "pitches", "key_shift"]),
-        dict(type="Transpose", keys=[("mel", 1, 0)]),
+        dict(type="PickKeys", keys=["path", "audio", "mel", "pitches"]),
+        dict(type="UnSqueeze", keys=[("audio", 0)]),  # (T) -> (1, T)
     ]
 
     collating_pipeline = [
         dict(type="ListToDict"),
-        dict(type="PadStack", keys=[("audio", -1), ("mel", -2), ("pitches", -1)]),
-        dict(
-            type="ToTensor",
-            keys=[("key_shift", torch.float32)],
-        ),
+        dict(type="PadStack", keys=[("audio", -1), ("mel", -1), ("pitches", -1)]),
     ]
 
     def __init__(
