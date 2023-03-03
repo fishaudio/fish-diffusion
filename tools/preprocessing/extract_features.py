@@ -127,12 +127,12 @@ def process(
     np.save(save_path, sample)
 
 
-def safe_process(config, audio_path: Path):
+def safe_process(args, config, audio_path: Path):
     try:
         # Baseline
         process(config, audio_path)
 
-        if "augmentations" not in config.preprocessing:
+        if args.no_augmentation or "augmentations" not in config.preprocessing:
             return 1
 
         # Augmentation
@@ -173,12 +173,13 @@ def parse_args():
     parser.add_argument("--path", type=str, required=True)
     parser.add_argument("--clean", action="store_true")
     parser.add_argument("--num-workers", type=int, default=1)
+    parser.add_argument("--no-augmentation", action="store_true")
 
     return parser.parse_args()
 
 
 if __name__ == "__main__":
-    mp.set_start_method("spawn")
+    mp.set_start_method("spawn", force=True)
 
     args = parse_args()
 
@@ -208,7 +209,7 @@ if __name__ == "__main__":
 
     if args.num_workers <= 1:
         for audio_path in tqdm(files):
-            i = safe_process(config, audio_path)
+            i = safe_process(args, config, audio_path)
             if isinstance(i, int):
                 total_samples += i
             else:
@@ -217,7 +218,7 @@ if __name__ == "__main__":
         with ProcessPoolExecutor(
             max_workers=args.num_workers,
         ) as executor:
-            params = [(config, audio_path) for audio_path in files]
+            params = [(args, config, audio_path) for audio_path in files]
 
             for i in tqdm(executor.map(safe_process, *zip(*params)), total=len(params)):
                 if isinstance(i, int):

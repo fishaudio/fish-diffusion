@@ -7,7 +7,27 @@ import requests
 from loguru import logger
 from tqdm import tqdm
 
-DOWNLOAD_URL = "https://github.com/openvpi/vocoders/releases/download/nsf-hifigan-v1/nsf_hifigan_20221211.zip"
+DOWNLOAD_URLS = {
+    "OpenVPI": "https://github.com/openvpi/vocoders/releases/download/nsf-hifigan-v1/nsf_hifigan_20221211.zip",
+    "FishAudioBeta": "https://github.com/fishaudio/fish-diffusion/releases/download/v1.12/nsf_hifigan-beta-v2-epoch-434.zip",
+    "ContentVec": "https://github.com/fishaudio/fish-diffusion/releases/download/v1.12/content-vec-best-legacy-500.pt",
+}
+
+
+def download_model(file, model: str, use_ghproxy: bool = False):
+    url = DOWNLOAD_URLS[model]
+    if use_ghproxy:
+        url = f"https://ghproxy.com/{url}"
+        logger.info("Using ghproxy.com for speed up downloading.")
+
+    r = requests.get(url, stream=True)
+    total_size = int(r.headers.get("content-length", 0))
+    block_size = 1024
+    t = tqdm(total=total_size, unit="iB", unit_scale=True, desc="Downloading")
+
+    for data in r.iter_content(block_size):
+        t.update(len(data))
+        file.write(data)
 
 
 @click.command()
@@ -29,10 +49,24 @@ DOWNLOAD_URL = "https://github.com/openvpi/vocoders/releases/download/nsf-hifiga
     help="You argee the CC BY-NC-SA 4.0 license.",
     is_flag=True,
 )
+@click.option(
+    "--vocoder",
+    default="OpenVPI",
+    help="Model to download",
+    type=click.Choice(["OpenVPI", "FishAudioBeta"]),
+)
+@click.option(
+    "--content-vec",
+    default=False,
+    help="Download content vec model",
+    is_flag=True,
+)
 def main(
     target_dir: str = "checkpoints",
     use_ghproxy: bool = False,
     agree_license: bool = False,
+    vocoder: str = "OpenVPI",
+    content_vec: bool = False,
 ):
     target_dir = Path(target_dir)
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -53,31 +87,21 @@ def main(
             return
 
     # Download the model
-    logger.info("Downloading the model...")
-
-    url = DOWNLOAD_URL
-    if use_ghproxy:
-        url = f"https://ghproxy.com/{DOWNLOAD_URL}"
-        logger.info("Using ghproxy.com for speed up downloading.")
-
-    r = requests.get(url, stream=True)
-    total_size = int(r.headers.get("content-length", 0))
-    block_size = 1024
-    t = tqdm(total=total_size, unit="iB", unit_scale=True, desc="Downloading")
-
+    logger.info("Downloading the Vocoder...")
     f = BytesIO()
-    for data in r.iter_content(block_size):
-        t.update(len(data))
-        f.write(data)
-
-    t.close()
+    download_model(f, vocoder, use_ghproxy)
+    f.seek(0)
 
     # Unzip the model
-    logger.info("Unzipping the model...")
-    f.seek(0)
+    logger.info("Unzipping the Vocoder...")
 
     with zipfile.ZipFile(f, "r") as zip_ref:
         zip_ref.extractall(target_dir)
+
+    if content_vec:
+        logger.info("Downloading the Content Vector...")
+        with open(target_dir / "content-vec-best-legacy-500.pt", "wb") as f:
+            download_model(f, "ContentVec", use_ghproxy)
 
     logger.info("Done.")
 
