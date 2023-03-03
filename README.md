@@ -34,7 +34,7 @@
 
 > 从阅读 [Wiki](https://fishaudio.github.io/fish-diffusion/) 开始! 
  
-> 由于 main 分支在积极开发, 我们建议新用户选择一个稳定版本, 例如 [v1.12](https://github.com/fishaudio/fish-diffusion/tree/v1.12)
+> 由于 main 分支在积极开发, 我们建议新用户选择一个稳定版本, 例如 [v1.12](https://github.com/fishaudio/fish-diffusion/tree/v1.12)  
 [English Document](README.en.md)
 
 ## 简介
