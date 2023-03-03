@@ -164,7 +164,7 @@ sphinx-autobuild docs docs/_build/html
 + [diff-svc original](https://github.com/prophesier/diff-svc)
 + [diff-svc optimized](https://github.com/innnky/diff-svc/)
 + [DiffSinger](https://github.com/openvpi/DiffSinger/)
-+ [SpeechSplit](https://github.com/auspicious3000/SpeechSplit)
++ [so-vits-svc](https://github.com/innnky/so-vits-svc)
 
 ## 感谢所有贡献者作出的努力
 
