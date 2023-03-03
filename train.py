@@ -15,6 +15,8 @@ from fish_diffusion.utils.scheduler import LR_SCHEUDLERS
 from fish_diffusion.utils.viz import viz_synth_sample
 from fish_diffusion.vocoders import VOCODERS
 
+torch.set_float32_matmul_precision("medium")
+
 
 class FishDiffusion(pl.LightningModule):
     def __init__(self, config):
