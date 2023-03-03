@@ -8,7 +8,7 @@ import torch
 import wandb
 from loguru import logger
 from mmengine import Config
-from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.nn import functional as F
 from torch.optim.lr_scheduler import ExponentialLR
 from torchaudio.transforms import MelSpectrogram
@@ -25,6 +25,8 @@ from fish_diffusion.vocoders.nsf_hifigan.models import (
     feature_loss,
     generator_loss,
 )
+
+torch.set_float32_matmul_precision("medium")
 
 
 class HSFHifiGAN(pl.LightningModule):
@@ -81,9 +83,9 @@ class HSFHifiGAN(pl.LightningModule):
         optim_g, optim_d = self.optimizers()
 
         mels, pitches, y = (
-            batch["mels"].float(),
+            batch["mel"].float(),
             batch["pitches"].float(),
-            batch["audios"].float(),
+            batch["audio"].float(),
         )
 
         y_g_hat = self.generator(mels, pitches)
@@ -110,7 +112,7 @@ class HSFHifiGAN(pl.LightningModule):
             prog_bar=True,
             logger=True,
             sync_dist=True,
-            batch_size=batch["mels"].shape[0],
+            batch_size=batch["mel"].shape[0],
         )
 
         # Generator
@@ -170,7 +172,7 @@ class HSFHifiGAN(pl.LightningModule):
             prog_bar=True,
             logger=True,
             sync_dist=True,
-            batch_size=batch["mels"].shape[0],
+            batch_size=batch["mel"].shape[0],
         )
 
         # Manual LR Scheduler
@@ -223,9 +225,9 @@ class HSFHifiGAN(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         mels, pitches, audios = (
-            batch["mels"].float(),
+            batch["mel"].float(),
             batch["pitches"].float(),
-            batch["audios"].float(),
+            batch["audio"].float(),
         )
 
         y_g_hat = self.generator(mels, pitches)
@@ -248,26 +250,28 @@ class HSFHifiGAN(pl.LightningModule):
             prog_bar=True,
             logger=True,
             sync_dist=True,
-            batch_size=batch["mels"].shape[0],
+            batch_size=batch["mel"].shape[0],
         )
 
-        if isinstance(self.logger, WandbLogger):
-            for mel, gen_mel, audio, gen_audio, mel_len, audio_len in zip(
+        for idx, (mel, gen_mel, audio, gen_audio, mel_len, audio_len) in enumerate(
+            zip(
                 mels.cpu().numpy(),
                 y_g_hat_mel.cpu().numpy(),
                 audios.cpu().type(torch.float32).numpy(),
                 y_g_hat.type(torch.float32).cpu().numpy(),
                 batch["mel_lens"].cpu().numpy(),
                 batch["audio_lens"].cpu().numpy(),
-            ):
-                image_mels = plot_mel(
-                    [
-                        gen_mel[:, :mel_len],
-                        mel[:, :mel_len],
-                    ],
-                    ["Sampled Spectrogram", "Ground-Truth Spectrogram"],
-                )
+            )
+        ):
+            image_mels = plot_mel(
+                [
+                    gen_mel[:, :mel_len],
+                    mel[:, :mel_len],
+                ],
+                ["Sampled Spectrogram", "Ground-Truth Spectrogram"],
+            )
 
+            if isinstance(self.logger, WandbLogger):
                 self.logger.experiment.log(
                     {
                         f"reconstruction_mel": wandb.Image(image_mels, caption="mels"),
@@ -286,7 +290,26 @@ class HSFHifiGAN(pl.LightningModule):
                     },
                 )
 
-                plt.close(image_mels)
+            if isinstance(self.logger, TensorBoardLogger):
+                self.logger.experiment.add_figure(
+                    f"sample-{idx}/mels",
+                    image_mels,
+                    global_step=self.global_step,
+                )
+                self.logger.experiment.add_audio(
+                    f"sample-{idx}/wavs/gt",
+                    audio[0, :audio_len],
+                    self.global_step,
+                    sample_rate=self.h.sampling_rate,
+                )
+                self.logger.experiment.add_audio(
+                    f"sample-{idx}/wavs/prediction",
+                    gen_audio[0, :audio_len],
+                    self.global_step,
+                    sample_rate=self.h.sampling_rate,
+                )
+
+            plt.close(image_mels)
 
 
 if __name__ == "__main__":
@@ -295,6 +318,12 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
     parser.add_argument("--resume", type=str, default=None)
+    parser.add_argument(
+        "--tensorboard",
+        action="store_true",
+        default=False,
+        help="Use tensorboard logger, default is wandb.",
+    )
     parser.add_argument("--resume-id", type=str, default=None, help="Wandb run id.")
     parser.add_argument("--entity", type=str, default=None, help="Wandb entity.")
     parser.add_argument("--name", type=str, default=None, help="Wandb run name.")
@@ -305,16 +334,19 @@ if __name__ == "__main__":
 
     model = HSFHifiGAN(cfg)
 
-    logger = None
-    # WandbLogger(
-    #     project=cfg.model.type,
-    #     save_dir="logs",
-    #     log_model=True,
-    #     name=args.name,
-    #     entity=args.entity,
-    #     resume="must" if args.resume_id else False,
-    #     id=args.resume_id,
-    # )
+    logger = (
+        TensorBoardLogger("logs", name=cfg.model.type)
+        if args.tensorboard
+        else WandbLogger(
+            project=cfg.model.type,
+            save_dir="logs",
+            log_model=True,
+            name=args.name,
+            entity=args.entity,
+            resume="must" if args.resume_id else False,
+            id=args.resume_id,
+        )
+    )
 
     trainer = pl.Trainer(
         logger=logger,
