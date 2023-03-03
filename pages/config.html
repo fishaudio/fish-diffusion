@@ -116,7 +116,7 @@
 
 <div class="announcement">
   <aside class="announcement-content">
-     Wiki is under construction, feel free to contribute! 
+     Wiki is under construction, we welcome any contribution! 
   </aside>
 </div>
 
@@ -255,28 +255,28 @@ To begin with, you should create a config file <code class="docutils literal not
 </section>
 <section id="dataset">
 <h2>Dataset<a class="headerlink" href="#dataset" title="Permalink to this heading">#</a></h2>
-<p>Be default, <code class="docutils literal notranslate"><span class="pre">./_base_/datasets/audio_folder.py</span></code> will try to load data from <code class="docutils literal notranslate"><span class="pre">dataset/train</span></code> and <code class="docutils literal notranslate"><span class="pre">dataset/valid</span></code>. However, if you want to train a multi speakers model, you should refer to <code class="docutils literal notranslate"><span class="pre">svc_hubert_soft_multi_speakers.py</span></code>. For example:</p>
+<p>Be default, <code class="docutils literal notranslate"><span class="pre">./_base_/datasets/naive_svc.py</span></code> will try to load data from <code class="docutils literal notranslate"><span class="pre">dataset/train</span></code> and <code class="docutils literal notranslate"><span class="pre">dataset/valid</span></code>. However, if you want to train a multi speakers model, you should refer to <code class="docutils literal notranslate"><span class="pre">svc_hubert_soft_multi_speakers.py</span></code>. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
     <span class="n">train</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
         <span class="n">_delete_</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Delete the default train dataset</span>
         <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;ConcatDataset&quot;</span><span class="p">,</span>  <span class="c1"># You want to contact multiple datasets</span>
         <span class="n">datasets</span><span class="o">=</span><span class="p">[</span>
             <span class="nb">dict</span><span class="p">(</span>
-                <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;AudioFolderDataset&quot;</span><span class="p">,</span>
+                <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;NaiveSVCDataset&quot;</span><span class="p">,</span>
                 <span class="n">path</span><span class="o">=</span><span class="s2">&quot;dataset/speaker_0&quot;</span><span class="p">,</span>  <span class="c1"># First speaker&#39;s data folder</span>
                 <span class="n">speaker_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>  <span class="c1"># Dataset for the first speaker</span>
             <span class="p">),</span>
             <span class="nb">dict</span><span class="p">(</span>
-                <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;AudioFolderDataset&quot;</span><span class="p">,</span>
+                <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;NaiveSVCDataset&quot;</span><span class="p">,</span>
                 <span class="n">path</span><span class="o">=</span><span class="s2">&quot;dataset/speaker_1&quot;</span><span class="p">,</span>
                 <span class="n">speaker_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">),</span>
         <span class="p">],</span>
         <span class="c1"># Are there any other ways to do this?</span>
-        <span class="n">collate_fn</span><span class="o">=</span><span class="n">AudioFolderDataset</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">,</span>
+        <span class="n">collate_fn</span><span class="o">=</span><span class="n">NaiveSVCDataset</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">,</span>
     <span class="p">),</span>
     <span class="n">valid</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
-        <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;AudioFolderDataset&quot;</span><span class="p">,</span>  <span class="c1"># Only use one speaker to validate</span>
+        <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;NaiveSVCDataset&quot;</span><span class="p">,</span>  <span class="c1"># Only use one speaker to validate</span>
         <span class="n">path</span><span class="o">=</span><span class="s2">&quot;dataset/valid&quot;</span><span class="p">,</span>
         <span class="n">speaker_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
     <span class="p">),</span>
@@ -306,16 +306,16 @@ Don’t worry. You can use the following folder structure and scripts:</p>
         └───xxx1-xxx1.wav
 </pre></div>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fish_diffusion.datasets.audio_folder</span> <span class="kn">import</span> <span class="n">AudioFolderDataset</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fish_diffusion.datasets.utils</span> <span class="kn">import</span> <span class="n">get_speaker_map_from_subfolder</span><span class="p">,</span> <span class="n">get_datasets_from_subfolder</span>
 
 <span class="n">speaker_mapping</span> <span class="o">=</span> <span class="p">{}</span>
 
-<span class="n">speaker_mapping</span> <span class="o">=</span> <span class="n">AudioFolderDataset</span><span class="o">.</span><span class="n">get_speaker_map_from_subfolder</span><span class="p">(</span><span class="s2">&quot;dataset/train&quot;</span><span class="p">,</span> <span class="n">speaker_mapping</span><span class="p">)</span> <span class="c1"># Update speaker_mapping using subfolders in `dataset/train`.</span>
+<span class="n">speaker_mapping</span> <span class="o">=</span> <span class="n">get_speaker_map_from_subfolder</span><span class="p">(</span><span class="s2">&quot;dataset/train&quot;</span><span class="p">,</span> <span class="n">speaker_mapping</span><span class="p">)</span> <span class="c1"># Update speaker_mapping using subfolders in `dataset/train`.</span>
 
 <span class="c1"># This will update speaker_mapping to {&#39;speaker0&#39;: 0, &#39;speaker&#39;: 1}</span>
 
-<span class="n">train_datasets</span> <span class="o">=</span> <span class="n">AudioFolderDataset</span><span class="o">.</span><span class="n">get_datasets_from_subfolder</span><span class="p">(</span><span class="s2">&quot;dataset/train&quot;</span><span class="p">,</span> <span class="n">speaker_mapping</span><span class="p">)</span>  <span class="c1"># Build datasets manually.</span>
-<span class="n">valid_datasets</span> <span class="o">=</span> <span class="n">AudioFolderDataset</span><span class="o">.</span><span class="n">get_datasets_from_subfolder</span><span class="p">(</span><span class="s2">&quot;dataset/valid&quot;</span><span class="p">,</span> <span class="n">speaker_mapping</span><span class="p">)</span>  <span class="c1"># Build datasets manually.</span>
+<span class="n">train_datasets</span> <span class="o">=</span> <span class="n">get_datasets_from_subfolder</span><span class="p">(</span><span class="s2">&quot;NaiveSVCDataset&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset/train&quot;</span><span class="p">,</span> <span class="n">speaker_mapping</span><span class="p">)</span>  <span class="c1"># Build datasets manually.</span>
+<span class="n">valid_datasets</span> <span class="o">=</span> <span class="n">get_datasets_from_subfolder</span><span class="p">(</span><span class="s2">&quot;NaiveSVCDataset&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset/valid&quot;</span><span class="p">,</span> <span class="n">speaker_mapping</span><span class="p">)</span>  <span class="c1"># Build datasets manually.</span>
 
 <span class="n">dataset</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
     <span class="n">train</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
@@ -323,14 +323,14 @@ Don’t worry. You can use the following folder structure and scripts:</p>
         <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;ConcatDataset&quot;</span><span class="p">,</span>  <span class="c1"># You want to contact multiple datasets</span>
         <span class="n">datasets</span><span class="o">=</span><span class="n">train_datasets</span><span class="p">,</span>
         <span class="c1"># Are there any other ways to do this?</span>
-        <span class="n">collate_fn</span><span class="o">=</span><span class="n">AudioFolderDataset</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">,</span>
+        <span class="n">collate_fn</span><span class="o">=</span><span class="n">NaiveSVCDataset</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">,</span>
     <span class="p">),</span>
     <span class="n">valid</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
         <span class="n">_delete_</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Delete the default train dataset</span>
         <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;ConcatDataset&quot;</span><span class="p">,</span>  <span class="c1"># You want to contact multiple datasets</span>
         <span class="n">datasets</span><span class="o">=</span><span class="n">valid_datasets</span><span class="p">,</span>
         <span class="c1"># Are there any other ways to do this?</span>
-        <span class="n">collate_fn</span><span class="o">=</span><span class="n">AudioFolderDataset</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">,</span>
+        <span class="n">collate_fn</span><span class="o">=</span><span class="n">NaiveSVCDataset</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">,</span>
     <span class="p">),</span>
 <span class="p">)</span>
 
@@ -341,6 +341,37 @@ Don’t worry. You can use the following folder structure and scripts:</p>
 <span class="p">)</span>
 </pre></div>
 </div>
+</section>
+<section id="data-augmentation">
+<h2>Data Augmentation<a class="headerlink" href="#data-augmentation" title="Permalink to this heading">#</a></h2>
+<p>To enable data augmentation, you can reference to the following config:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">preprocessing</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="o">...</span>
+    <span class="n">augmentations</span><span class="o">=</span><span class="p">[</span>
+        <span class="nb">dict</span><span class="p">(</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;FixedPitchShifting&quot;</span><span class="p">,</span>
+            <span class="n">key_shifts</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">5.</span><span class="p">,</span> <span class="mf">5.</span><span class="p">],</span>
+            <span class="n">probability</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="nb">dict</span><span class="p">(</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;RandomPitchShifting&quot;</span><span class="p">,</span>
+            <span class="n">key_shifts</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">5.</span><span class="p">,</span> <span class="mf">5.</span><span class="p">],</span>
+            <span class="n">probability</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="nb">dict</span><span class="p">(</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;RandomTimeStretching&quot;</span><span class="p">,</span>
+            <span class="n">factors</span><span class="o">=</span><span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">],</span>
+            <span class="n">probability</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>After editing the config, you need to rerun the preprocessing command.</p>
+<blockquote>
+<div><p>Note: You should not use <code class="docutils literal notranslate"><span class="pre">RandomPitchShifting</span></code> and <code class="docutils literal notranslate"><span class="pre">RandomTimeStretching</span></code> at the same time.<br />
+RandomTimeStretching is not tested yet (as of 2023-03-03).</p>
+</div></blockquote>
 </section>
 <section id="appendix-pitch-extractors">
 <h2>Appendix: Pitch Extractors<a class="headerlink" href="#appendix-pitch-extractors" title="Permalink to this heading">#</a></h2>
@@ -418,6 +449,7 @@ Don’t worry. You can use the following folder structure and scripts:</p>
 <li><a class="reference internal" href="#">Configuration</a><ul>
 <li><a class="reference internal" href="#preprocessing">Preprocessing</a></li>
 <li><a class="reference internal" href="#dataset">Dataset</a></li>
+<li><a class="reference internal" href="#data-augmentation">Data Augmentation</a></li>
 <li><a class="reference internal" href="#appendix-pitch-extractors">Appendix: Pitch Extractors</a></li>
 </ul>
 </li>
