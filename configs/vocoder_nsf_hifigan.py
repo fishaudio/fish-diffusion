@@ -35,12 +35,12 @@ model = dict(
 
 dataset = dict(
     train=dict(
-        type="VOCODERDataset",
+        type="NaiveVOCODERDataset",
         path="/mnt/nvme0/diff-wave-data/train",
         segment_size=16384,
     ),
     valid=dict(
-        type="VOCODERDataset",
+        type="NaiveVOCODERDataset",
         path="/mnt/nvme0/diff-wave-data/valid",
         segment_size=-1,
     ),
