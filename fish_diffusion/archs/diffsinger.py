@@ -61,7 +61,7 @@ class DiffSinger(nn.Module):
         features += speaker_embed
         features += self.pitch_encoder(pitches)
 
-        if pitch_shift is not None:
+        if pitch_shift is not None and hasattr(self, "pitch_shift_encoder"):
             features += self.pitch_shift_encoder(pitch_shift)[:, None]
 
         mel_masks = (
