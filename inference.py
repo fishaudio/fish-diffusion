@@ -145,6 +145,11 @@ def inference(
         text_features = text_features_extractor(segment, sr)[0]
         text_features = repeat_expand(text_features, mel.shape[-1]).T
 
+        # Pitch shift should always be 0 for inference to avoid distortion
+        pitch_shift = None
+        if config.model.get("pitch_shift_encoder"):
+            pitch_shift = torch.zeros((1, 1), device=device)
+
         # Predict
         contents_lens = torch.tensor([mel.shape[-1]]).to(device)
 
@@ -156,8 +161,7 @@ def inference(
             mel_lens=contents_lens,
             mel_max_len=max(contents_lens),
             pitches=pitch[None].to(device),
-            # Pitch shift should always be 0 for inference to avoid distortion
-            pitch_shift=0 if config.model.get("pitch_shift_encoder") else None,
+            pitch_shift=pitch_shift,
         )
 
         result = model.model.diffusion(features["features"], progress=sampler_progress)

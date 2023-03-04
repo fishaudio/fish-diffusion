@@ -48,8 +48,13 @@ def pitch_to_coarse(f0, f0_mel_min=_f0_mel_min, f0_mel_max=_f0_mel_max, f0_bin=_
 
 
 def pitch_to_log(f0):
-    return torch.where(
+    x = torch.where(
         f0 > 0,
         f0.log2(),
         torch.zeros_like(f0),
     )
+
+    if x.ndim == 2:
+        x = x.unsqueeze(-1)
+
+    return x
