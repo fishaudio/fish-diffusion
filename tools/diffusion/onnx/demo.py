@@ -14,7 +14,7 @@ def test():
     feature_extractor = ort.InferenceSession("exported/feature_extractor.onnx")
     feature_embedding = ort.InferenceSession("exported/feature_embedding.onnx")
     diffusion = ort.InferenceSession("exported/diffusion.onnx")
-    vocoder = ort.InferenceSession("checkpoints/nsf_hifigan_onnx/nsf_hifigan.onnx")
+    vocoder = ort.InferenceSession("checkpoints/nsf_hifigan/nsf_hifigan.onnx")
     logger.info("All models loaded.")
 
     audio, sr = librosa.load("raw/一半一半.wav", sr=44100, mono=True)
@@ -73,8 +73,7 @@ def test():
         },
     )[0]
 
-    audio = np.squeeze(audio, 0)
-    sf.write("generated.wav", audio, 44100)
+    sf.write("generated.wav", audio[0, 0], 44100)
 
     logger.info("Congratulations! You have generated a speech sample! 🎉")
 

@@ -6,10 +6,10 @@ import onnxruntime as ort
 import torch
 from loguru import logger
 from mmengine import Config
-from train import FishDiffusion
 
-from fish_diffusion.archs.diffsinger.diffsinger import DiffSinger
+from fish_diffusion.archs.diffsinger.diffsinger import DiffSinger, DiffSingerLightning
 from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
+from fish_diffusion.utils.inference import load_checkpoint
 
 
 class FeatureEmbeddingWrapper(torch.nn.Module):
@@ -248,14 +248,7 @@ def main(config: str, checkpoint: str):
 
     device = "cpu"
     config = Config.fromfile(config)
-    model = FishDiffusion(config)
-    state_dict = torch.load(
-        checkpoint,
-        map_location=device,
-    )["state_dict"]
-    model.load_state_dict(state_dict, strict=False)
-    model.eval()
-    model.to(device)
+    model = load_checkpoint(config, checkpoint, device, model_cls=DiffSingerLightning)
 
     # Ignore vocoder
     model = model.model
