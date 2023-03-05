@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import wandb
-from fish_diffusion.vocoders.nsf_hifigan.models import (
+from fish_diffusion.modules.vocoders.nsf_hifigan.models import (
     AttrDict,
     Generator,
     MultiPeriodDiscriminator,

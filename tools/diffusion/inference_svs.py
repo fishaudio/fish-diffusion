@@ -3,19 +3,16 @@ import json
 import math
 import os
 
-import librosa
 import numpy as np
 import soundfile as sf
 import torch
 from fish_audio_preprocess.utils import loudness_norm
 from loguru import logger
 from mmengine import Config
-from train import FishDiffusion
 
-from fish_diffusion.modules.feature_extractors import (
-    FEATURE_EXTRACTORS,
-    PITCH_EXTRACTORS,
-)
+from fish_diffusion.archs.diffsinger.diffsinger import DiffSingerLightning
+from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
+from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.utils.tensor import repeat_expand
 
 
@@ -55,13 +52,18 @@ def inference(
         checkpoint = os.path.join(checkpoint, checkpoints[-1])
 
     # Load models
-    model = FishDiffusion(config)
+    phoneme_features_extractor = FEATURE_EXTRACTORS.build(
+        config.preprocessing.phoneme_features_extractor
+    ).to(device)
+    phoneme_features_extractor.eval()
+
+    model = DiffSingerLightning(config)
     state_dict = torch.load(checkpoint, map_location="cpu")
 
     if "state_dict" in state_dict:  # Checkpoint is saved by pl
         state_dict = state_dict["state_dict"]
 
-    x = model.load_state_dict(state_dict, strict=False)
+    model.load_state_dict(state_dict)
     model.to(device)
     model.eval()
 
@@ -69,7 +71,14 @@ def inference(
     assert pitch_extractor is not None, "Pitch extractor not found"
 
     # Load dictionary
-    phones_list = config.phonemes
+    phones_list = []
+    for i in open(dictionary_path):
+        _, phones = i.strip().split("\t")
+        for j in phones.split():
+            if j not in phones_list:
+                phones_list.append(j)
+
+    phones_list = ["<PAD>", "<EOS>", "<UNK>", "AP", "SP"] + sorted(phones_list)
 
     # Load ds file
     with open(input_path) as f:
@@ -88,29 +97,13 @@ def inference(
     for idx, chunk in enumerate(ds):
         offset = float(chunk["offset"])
 
-        # Merge slurs
-        phones, durations = [], []
-        for phone, duration, is_slur in zip(
-            chunk["ph_seq"].split(" "),
-            chunk["ph_dur"].split(" "),
-            chunk["is_slur_seq"].split(" "),
-        ):
-            if is_slur == "1":
-                durations[-1] = durations[-1] + float(duration)
-            else:
-                phones.append(phones_list.index(phone))
-                durations.append(float(duration))
-
-        print(phones, durations)
-        phones = np.array(phones)
-        durations = np.array(durations)
-
-        # phones = np.array([phones_list.index(i) for i in chunk["ph_seq"].split(" ")])
-        # durations = np.array([float(i) for i in chunk["ph_dur"].split(" ")])
+        phones = np.array([phones_list.index(i) for i in chunk["ph_seq"].split(" ")])
+        durations = np.array([0] + [float(i) for i in chunk["ph_dur"].split(" ")])
+        durations = np.cumsum(durations)
 
         f0_timestep = float(chunk["f0_timestep"])
         f0_seq = torch.FloatTensor([float(i) for i in chunk["f0_seq"].split(" ")])
-        # f0_seq *= 2 ** (0 / 12)
+        f0_seq *= 2 ** (6 / 12)
 
         total_duration = f0_timestep * len(f0_seq)
 
@@ -119,66 +112,38 @@ def inference(
         )
 
         n_mels = round(total_duration * config.sampling_rate / 512)
-
-        t_max = (len(f0_seq) - 1) * f0_timestep
-        dt = 512 / config.sampling_rate
-        f0_seq = np.interp(
-            np.arange(0, t_max, dt), f0_timestep * np.arange(len(f0_seq)), f0_seq
-        )
-        f0_seq = torch.from_numpy(f0_seq).type(torch.float32)
         f0_seq = repeat_expand(f0_seq, n_mels, mode="linear")
-
         f0_seq = f0_seq.to(device)
 
         # aligned is in 20ms
-        cumsum_durations = np.cumsum(durations)
-        alignment_factor = n_mels / cumsum_durations[-1]
-        num_classes = len(phones_list)
+        aligned_phones = torch.zeros(int(total_duration * 50), dtype=torch.long)
+        for i, phone in enumerate(phones):
+            start = int(durations[i] / f0_timestep / 4)
+            end = int(durations[i + 1] / f0_timestep / 4)
+            aligned_phones[start:end] = phone
 
-        features = torch.zeros((n_mels, num_classes * 2 + 2), dtype=torch.float32)
+        # Extract text features
+        phoneme_features = phoneme_features_extractor.forward(
+            aligned_phones.to(device)
+        )[0]
 
-        for i, (phone, duration, sum_duration) in enumerate(
-            zip(phones, durations, cumsum_durations)
-        ):
-            current_idx = int(sum_duration * alignment_factor)
-            previous_idx = (
-                int(cumsum_durations[i - 1] * alignment_factor) if i > 0 else 0
-            )
-            _temp = torch.zeros(num_classes * 2 + 1, dtype=torch.float32)
+        phoneme_features = repeat_expand(phoneme_features, n_mels).T
 
-            if i > 0:
-                # Previous phoneme
-                _temp[phones[i - 1]] = 1
-
-            _temp[num_classes + phone] = 1
-            _temp[-1] = duration
-
-            features[previous_idx:current_idx, : num_classes * 2 + 1] = _temp
-
-            # End of phoneme
-            features[previous_idx, -1] = 1
-
-        phoneme_features = features.to(device)
         # Predict
         src_lens = torch.tensor([phoneme_features.shape[0]]).to(device)
 
         features = model.model.forward_features(
             speakers=torch.tensor([speaker_id]).long().to(device),
             contents=phoneme_features[None].to(device),
-            src_lens=src_lens,
-            max_src_len=max(src_lens),
+            contents_lens=src_lens,
+            contents_max_len=max(src_lens),
             mel_lens=src_lens,
-            max_mel_len=max(src_lens),
+            mel_max_len=max(src_lens),
             pitches=f0_seq[None],
         )
 
         result = model.model.diffusion(features["features"], progress=sampler_progress)
         wav = model.vocoder.spec2wav(result[0].T, f0=f0_seq).cpu().numpy()
-
-        # Save wav
-        # sf.write("test.wav", wav, config.sampling_rate)
-        # exit()
-
         start = round(offset * config.sampling_rate)
         max_wav_len = generated_audio.shape[-1] - start
         generated_audio[start : start + wav.shape[-1]] = wav[:max_wav_len]

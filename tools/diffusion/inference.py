@@ -20,7 +20,7 @@ from fish_diffusion.utils.tensor import repeat_expand
 from tools.diffusion.gradio_ui import launch_gradio
 
 
-class DiffusionInference(nn.Module):
+class SVCInference(nn.Module):
     def __init__(self, config, checkpoint):
         super().__init__()
 
@@ -328,7 +328,7 @@ if __name__ == "__main__":
     if args.speaker_mapping is not None:
         config.speaker_mapping = json.load(open(args.speaker_mapping))
 
-    model = DiffusionInference(config, args.checkpoint)
+    model = SVCInference(config, args.checkpoint)
     model = model.to(device)
 
     if args.gradio:
