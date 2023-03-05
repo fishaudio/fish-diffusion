@@ -1,7 +1,8 @@
 import soundfile as sf
 import torchaudio
-from fish_diffusion.feature_extractors.pitch import ParselMouthPitchExtractor
 from fish_diffusion.vocoders import NsfHifiGAN
+
+from fish_diffusion.modules.pitch_extractors import ParselMouthPitchExtractor
 
 source = "dataset/valid/opencpop/TruE-干音_0000/0000.wav"
 
