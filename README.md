@@ -118,34 +118,34 @@ python tools/preprocessing/extract_features.py --config configs/svc_hubert_soft.
 
 ```bash
 # 单机单卡 / 单机多卡训练
-python train.py --config configs/svc_hubert_soft.py
+python tools/diffusion/train.py --config configs/svc_hubert_soft.py
 
 # 继续训练
-python train.py --config configs/svc_hubert_soft.py --resume [checkpoint]
+python tools/diffusion/train.py --config configs/svc_hubert_soft.py --resume [checkpoint]
 
 # 微调预训练模型
 # 注意: 你应该调整配置文件中的学习率调度器为 warmup_cosine_finetune
-python train.py --config configs/svc_cn_hubert_soft_finetune.py --pretrained [checkpoint]
+python tools/diffusion/train.py --config configs/svc_cn_hubert_soft_finetune.py --pretrained [checkpoint]
 ```
 
 ## 推理
 ```bash
 # 命令行推理, 你可以使用 --help 查看更多参数
-python inference.py --config [config] \
+python tools/diffusion/inference.py --config [config] \
     --checkpoint [checkpoint] \
     --input [input audio] \
     --output [output audio]
 
 
 # Gradio Web 推理, 其他参数会被转为 Gradio 默认参数
-python inference.py --config [config] \
+python tools/diffusion/inference.py --config [config] \
     --checkpoint [checkpoint] \
     --gradio
 ```
 
 ## 将 DiffSVC 模型转换为 Fish Diffusion 模型
 ```bash
-python tools/diff_svc_converter.py --config configs/svc_hubert_soft_diff_svc.py \
+python tools/diffusion/diff_svc_converter.py --config configs/svc_hubert_soft_diff_svc.py \
     --input-path [DiffSVC ckpt] \
     --output-path [Fish Diffusion ckpt]
 ```
