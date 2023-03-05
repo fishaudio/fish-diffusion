@@ -8,12 +8,12 @@ import numpy as np
 import soundfile as sf
 import torch
 from fish_audio_preprocess.utils import loudness_norm
+from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS, PITCH_EXTRACTORS
 from loguru import logger
 from mmengine import Config
-
-from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS, PITCH_EXTRACTORS
-from fish_diffusion.utils.tensor import repeat_expand
 from train import FishDiffusion
+
+from fish_diffusion.utils.tensor import repeat_expand
 
 
 @torch.no_grad()

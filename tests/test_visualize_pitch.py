@@ -1,16 +1,16 @@
 import librosa
 import numpy as np
 import torch
-from librosa.core import hz_to_mel, mel_frequencies
-from loguru import logger
-from matplotlib import pyplot as plt
-
 from fish_diffusion.feature_extractors.pitch import (
     CrepePitchExtractor,
     DioPitchExtractor,
     HarvestPitchExtractor,
     ParselMouthPitchExtractor,
 )
+from librosa.core import hz_to_mel, mel_frequencies
+from loguru import logger
+from matplotlib import pyplot as plt
+
 from fish_diffusion.utils.audio import get_mel_from_audio
 
 device = "cuda" if torch.cuda.is_available() else "cpu"

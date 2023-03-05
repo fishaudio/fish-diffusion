@@ -1,9 +1,10 @@
 import math
-from typing import Iterable
+from typing import Iterable, Union
 
 import librosa
 import numpy as np
 import torch
+from fish_audio_preprocess.utils import loudness_norm, separate_audio
 from torchaudio.transforms import MelSpectrogram
 
 
@@ -116,3 +117,31 @@ def slice_audio(
 
         for i in range(start, end, chunk_size):
             yield i, i + chunk_size
+
+
+def separate_vocals(
+    audio: np.ndarray, sr: int, device: Union[str, torch.device] = "cpu"
+):
+    model = separate_audio.init_model("htdemucs", device=device)
+    audio = librosa.resample(audio, orig_sr=sr, target_sr=model.samplerate)[None]
+
+    # To two channels
+    audio = np.concatenate([audio, audio], axis=0)
+    audio = torch.from_numpy(audio).to(device)
+    tracks = separate_audio.separate_audio(
+        model, audio, shifts=1, num_workers=0, progress=True
+    )
+    audio = separate_audio.merge_tracks(tracks, filter=["vocals"]).cpu().numpy()
+    non_vocals = (
+        separate_audio.merge_tracks(tracks, filter=["drums", "bass", "other"])
+        .cpu()
+        .numpy()
+    )
+
+    vocals = librosa.resample(audio[0], orig_sr=model.samplerate, target_sr=sr)
+    non_vocals = librosa.resample(non_vocals[0], orig_sr=model.samplerate, target_sr=sr)
+
+    # Normalize loudness
+    non_vocals = loudness_norm.loudness_norm(non_vocals, sr)
+
+    return vocals, non_vocals

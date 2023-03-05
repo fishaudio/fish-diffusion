@@ -1,6 +1,5 @@
 import soundfile as sf
 import torchaudio
-
 from fish_diffusion.feature_extractors.pitch import ParselMouthPitchExtractor
 from fish_diffusion.vocoders import NsfHifiGAN
 

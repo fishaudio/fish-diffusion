@@ -6,10 +6,10 @@ import onnxruntime as ort
 import torch
 from loguru import logger
 from mmengine import Config
+from train import FishDiffusion
 
 from fish_diffusion.archs.diffsinger.diffsinger import DiffSinger
-from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS
-from train import FishDiffusion
+from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
 
 
 class FeatureEmbeddingWrapper(torch.nn.Module):

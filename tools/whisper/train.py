@@ -5,6 +5,7 @@ import librosa
 import numpy as np
 import pytorch_lightning as pl
 import torch
+from fish_diffusion.feature_extractors.whisper import AlignedWhisper
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers.wandb import WandbLogger
@@ -14,8 +15,6 @@ from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, Dataset
 from whisper import log_mel_spectrogram, pad_or_trim
-
-from fish_diffusion.feature_extractors.whisper import AlignedWhisper
 
 phonemes = []
 for i in open("dictionaries/opencpop-strict.txt"):

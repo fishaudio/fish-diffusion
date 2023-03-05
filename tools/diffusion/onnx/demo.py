@@ -5,7 +5,7 @@ import soundfile as sf
 import torch
 from loguru import logger
 
-from fish_diffusion.feature_extractors.pitch import ParselMouthPitchExtractor
+from fish_diffusion.modules.pitch_extractors import ParselMouthPitchExtractor
 from fish_diffusion.utils.tensor import repeat_expand
 
 

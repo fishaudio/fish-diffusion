@@ -1,4 +1,5 @@
 from mmengine import Registry
+
 from fish_diffusion.modules.wavenet import WaveNet
 
 DIFFUSIONS = Registry("diffusions")

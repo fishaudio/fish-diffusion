@@ -6,6 +6,15 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import wandb
+from fish_diffusion.vocoders.nsf_hifigan.models import (
+    AttrDict,
+    Generator,
+    MultiPeriodDiscriminator,
+    MultiScaleDiscriminator,
+    discriminator_loss,
+    feature_loss,
+    generator_loss,
+)
 from loguru import logger
 from mmengine import Config
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
@@ -16,15 +25,6 @@ from torchaudio.transforms import MelSpectrogram
 from fish_diffusion.datasets.utils import build_loader_from_config
 from fish_diffusion.utils.audio import dynamic_range_compression
 from fish_diffusion.utils.viz import plot_mel
-from fish_diffusion.vocoders.nsf_hifigan.models import (
-    AttrDict,
-    Generator,
-    MultiPeriodDiscriminator,
-    MultiScaleDiscriminator,
-    discriminator_loss,
-    feature_loss,
-    generator_loss,
-)
 
 torch.set_float32_matmul_precision("medium")
 

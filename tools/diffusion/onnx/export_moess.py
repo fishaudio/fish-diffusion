@@ -8,9 +8,9 @@ from export import export_feature_extractor
 from loguru import logger
 from mmengine import Config
 from torch.nn import functional as F
+from train import FishDiffusion
 
 from fish_diffusion.archs.diffsinger.diffsinger import DiffSinger
-from train import FishDiffusion
 
 
 def denorm_f0(f0, pitch_padding=None):

@@ -9,9 +9,8 @@ import librosa
 import soundfile
 from flask import Flask, request, send_file
 from flask_cors import CORS
-from mmengine import Config
-
 from inference import inference
+from mmengine import Config
 
 app = Flask(__name__)
 

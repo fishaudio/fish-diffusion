@@ -6,6 +6,7 @@ import torch.nn.functional as F
 
 from .builder import ENCODERS
 
+
 class PositionalEncoding(torch.nn.Module):
     """Positional encoding.
     Args:
