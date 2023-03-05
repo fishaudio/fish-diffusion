@@ -1,5 +1,7 @@
 import argparse
+import json
 import os
+from typing import Optional
 
 import librosa
 import numpy as np
@@ -15,6 +17,7 @@ from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.utils.audio import get_mel_from_audio, separate_vocals, slice_audio
 from fish_diffusion.utils.inference import load_checkpoint
 from fish_diffusion.utils.tensor import repeat_expand
+from tools.diffusion.gradio_ui import launch_gradio
 
 
 class DiffusionInference(nn.Module):
@@ -52,6 +55,7 @@ class DiffusionInference(nn.Module):
         pitch_adjust: int = 0,
         speaker_id: int = 0,
         sampler_progress: bool = False,
+        sampler_interval: Optional[int] = None,
     ):
         mel = get_mel_from_audio(audio, sr)
 
@@ -83,7 +87,9 @@ class DiffusionInference(nn.Module):
         )
 
         result = self.model.model.diffusion(
-            features["features"], progress=sampler_progress
+            features["features"],
+            progress=sampler_progress,
+            sampler_interval=sampler_interval,
         )
         wav = self.model.vocoder.spec2wav(result[0].T, f0=pitch).cpu().numpy()
 
@@ -94,12 +100,13 @@ class DiffusionInference(nn.Module):
         self,
         input_path,
         output_path,
-        speaker_id=0,
+        speaker=0,
         pitch_adjust=0,
         silence_threshold=60,
         max_slice_duration=30.0,
         extract_vocals=True,
         sampler_progress=False,
+        sampler_interval=None,
         gradio_progress=None,
     ):
         """Inference
@@ -107,12 +114,13 @@ class DiffusionInference(nn.Module):
         Args:
             input_path: input path
             output_path: output path
-            speaker_id: speaker id
+            speaker: speaker id or speaker name
             pitch_adjust: pitch adjust
             silence_threshold: silence threshold of librosa.effects.split
             max_slice_duration: maximum duration of each slice
             extract_vocals: extract vocals
             sampler_progress: show sampler progress
+            sampler_interval: sampler interval
             gradio_progress: gradio progress callback
         """
 
@@ -132,7 +140,7 @@ class DiffusionInference(nn.Module):
                 self.inference(
                     os.path.join(input_path, file),
                     os.path.join(output_path, file),
-                    speaker_id,
+                    speaker,
                     pitch_adjust,
                     silence_threshold,
                     max_slice_duration,
@@ -143,6 +151,14 @@ class DiffusionInference(nn.Module):
 
             return
 
+        # Process speaker
+        try:
+            speaker_id = self.config.speaker_mapping[speaker]
+        except KeyError:
+            # Parse speaker id
+            speaker_id = int(speaker)
+
+        # Load audio
         audio, sr = librosa.load(input_path, sr=config.sampling_rate, mono=True)
 
         # Extract vocals
@@ -184,6 +200,7 @@ class DiffusionInference(nn.Module):
                 pitch_adjust=pitch_adjust,
                 speaker_id=speaker_id,
                 sampler_progress=sampler_progress,
+                sampler_interval=sampler_interval,
             )
             max_wav_len = generated_audio.shape[-1] - start
             generated_audio[start : start + wav.shape[-1]] = wav[:max_wav_len]
@@ -243,17 +260,17 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--speaker_id",
-        type=int,
-        default=0,
-        help="Speaker id",
+        "--speaker",
+        type=str,
+        default="0",
+        help="Speaker id or speaker name",
     )
 
     parser.add_argument(
         "--speaker_mapping",
         type=str,
         default=None,
-        help="Speaker mapping file (gradio mode only)",
+        help="Speaker mapping file (if not specified, will be taken from config)",
     )
 
     parser.add_argument(
@@ -291,12 +308,6 @@ def parse_args():
         help="Device to use",
     )
 
-    parser.add_argument(
-        "--half",
-        action="store_true",
-        help="Use half precision",
-    )
-
     return parser.parse_args()
 
 
@@ -314,25 +325,30 @@ if __name__ == "__main__":
 
     config = Config.fromfile(args.config)
 
-    if args.sampler_interval is not None:
-        config.model.diffusion.sampler_interval = args.sampler_interval
+    if args.speaker_mapping is not None:
+        config.speaker_mapping = json.load(open(args.speaker_mapping))
 
     model = DiffusionInference(config, args.checkpoint)
     model = model.to(device)
 
-    if args.half:
-        model = model.half()
-
     if args.gradio:
-        args.device = device
-        launch_gradio(args)
+        launch_gradio(
+            config,
+            model.inference,
+            speaker=args.speaker,
+            pitch_adjust=args.pitch_adjust,
+            sampler_interval=args.sampler_interval,
+            extract_vocals=args.extract_vocals,
+            share=args.gradio_share,
+        )
 
     else:
         model.inference(
             input_path=args.input,
             output_path=args.output,
-            speaker_id=args.speaker_id,
+            speaker=args.speaker,
             pitch_adjust=args.pitch_adjust,
             extract_vocals=args.extract_vocals,
             sampler_progress=args.sampler_progress,
+            sampler_interval=args.sampler_interval,
         )

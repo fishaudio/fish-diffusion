@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import wandb
 from mmengine.optim import OPTIMIZERS
-from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 
 from fish_diffusion.modules.encoders import ENCODERS
 from fish_diffusion.modules.vocoders import VOCODERS
