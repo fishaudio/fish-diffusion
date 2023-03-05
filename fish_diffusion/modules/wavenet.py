@@ -4,8 +4,6 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from .builder import DENOISERS
-
 
 class Mish(nn.Module):
     def forward(self, x):
@@ -151,9 +149,11 @@ class SpectrogramUpsampler(nn.Module):
         return x
 
 
-@DENOISERS.register_module()
-class WaveNetDenoiser(nn.Module):
-    """Conditional Diffusion Denoiser"""
+class WaveNet(nn.Module):
+    """
+    WaveNet
+    https://www.deepmind.com/blog/wavenet-a-generative-model-for-raw-audio
+    """
 
     def __init__(
         self,
@@ -164,7 +164,7 @@ class WaveNetDenoiser(nn.Module):
         use_linear_bias=False,
         dilation_cycle=None,
     ):
-        super(WaveNetDenoiser, self).__init__()
+        super(WaveNet, self).__init__()
 
         self.input_projection = ConvNorm(mel_channels, residual_channels, kernel_size=1)
         self.diffusion_embedding = DiffusionEmbedding(residual_channels)

@@ -6,7 +6,7 @@ import click
 import torch
 from loguru import logger
 
-from fish_diffusion.vocoders.nsf_hifigan.nsf_hifigan import NsfHifiGAN
+from fish_diffusion.modules.vocoders.nsf_hifigan.nsf_hifigan import NsfHifiGAN
 
 
 class ExportableNsfHiFiGAN(NsfHifiGAN):

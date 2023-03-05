@@ -1,5 +1,4 @@
 import json
-from collections import deque
 from functools import partial
 
 import numpy as np
@@ -8,14 +7,8 @@ import torch.nn.functional as F
 from torch import nn
 from tqdm import tqdm
 
-from fish_diffusion.denoisers import DENOISERS
-from fish_diffusion.diffusions.noise_predictor import (
-    NaiveNoisePredictor,
-    PLMSNoisePredictor,
-)
-from fish_diffusion.utils.ssim import ssim_loss
-
-from .builder import DIFFUSIONS
+from .builder import DENOISERS, DIFFUSIONS
+from .noise_predictor import NaiveNoisePredictor, PLMSNoisePredictor
 
 
 def get_noise_schedule_list(schedule_mode, timesteps, max_beta=0.01, s=0.008):
@@ -157,9 +150,6 @@ class GaussianDiffusion(nn.Module):
             loss = F.smooth_l1_loss(noise, epsilon)
         elif loss_fn == "l2":
             loss = F.mse_loss(noise, epsilon)
-        elif loss_fn == "ssim":
-            # There is a bug we need to fix in the SSIM implementation
-            loss = ssim_loss(noise, epsilon)
         elif callable(loss_fn):
             loss = loss_fn(noise, epsilon)
         else:

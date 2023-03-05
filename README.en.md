@@ -99,34 +99,34 @@ python tools/preprocessing/extract_features.py --config configs/svc_hubert_soft.
 
 ```bash
 # Single machine single card / multi-card training
-python train.py --config configs/svc_hubert_soft.py
+python tools/diffusion/train.py --config configs/svc_hubert_soft.py
 
 # Resume training
-python train.py --config configs/svc_hubert_soft.py --resume [checkpoint]
+python tools/diffusion/train.py --config configs/svc_hubert_soft.py --resume [checkpoint]
 
 # Fine-tune the pre-trained model
 # Note: You should adjust the learning rate scheduler in the config file to warmup_cosine_finetune
-python train.py --config configs/svc_cn_hubert_soft_finetune.py --pretrained [checkpoint]
+python tools/diffusion/train.py --config configs/svc_cn_hubert_soft_finetune.py --pretrained [checkpoint]
 ```
 
 ## Inference
 ```bash
 # Inference using shell, you can use --help to view more parameters
-python inference.py --config [config] \
+python tools/diffusion/inference.py --config [config] \
     --checkpoint [checkpoint] \
     --input [input audio] \
     --output [output audio]
 
 
 # Gradio Web Inference, other parameters will be used as gradio default parameters
-python inference.py --config [config] \
+python tools/diffusion/inference.py --config [config] \
     --checkpoint [checkpoint] \
     --gradio
 ```
 
 ## Convert a DiffSVC model to Fish Diffusion
 ```bash
-python tools/diff_svc_converter.py --config configs/svc_hubert_soft_diff_svc.py \
+python tools/diffusion/diff_svc_converter.py --config configs/svc_hubert_soft_diff_svc.py \
     --input-path [DiffSVC ckpt] \
     --output-path [Fish Diffusion ckpt]
 ```

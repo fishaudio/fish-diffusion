@@ -5,7 +5,7 @@ from librosa.core import hz_to_mel, mel_frequencies
 from loguru import logger
 from matplotlib import pyplot as plt
 
-from fish_diffusion.feature_extractors.pitch import (
+from fish_diffusion.modules.pitch_extractors import (
     CrepePitchExtractor,
     DioPitchExtractor,
     HarvestPitchExtractor,

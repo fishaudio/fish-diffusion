@@ -14,9 +14,7 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torchaudio.transforms import MelSpectrogram
 
 from fish_diffusion.datasets.utils import build_loader_from_config
-from fish_diffusion.utils.audio import dynamic_range_compression
-from fish_diffusion.utils.viz import plot_mel
-from fish_diffusion.vocoders.nsf_hifigan.models import (
+from fish_diffusion.modules.vocoders.nsf_hifigan.models import (
     AttrDict,
     Generator,
     MultiPeriodDiscriminator,
@@ -25,6 +23,8 @@ from fish_diffusion.vocoders.nsf_hifigan.models import (
     feature_loss,
     generator_loss,
 )
+from fish_diffusion.utils.audio import dynamic_range_compression
+from fish_diffusion.utils.viz import plot_mel
 
 torch.set_float32_matmul_precision("medium")
 

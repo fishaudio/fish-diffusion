@@ -3,7 +3,6 @@ import json
 import math
 import os
 
-import librosa
 import numpy as np
 import soundfile as sf
 import torch
@@ -11,9 +10,9 @@ from fish_audio_preprocess.utils import loudness_norm
 from loguru import logger
 from mmengine import Config
 
-from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS, PITCH_EXTRACTORS
+from fish_diffusion.archs.diffsinger.diffsinger import DiffSingerLightning
+from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.utils.tensor import repeat_expand
-from train import FishDiffusion
 
 
 @torch.no_grad()
@@ -52,7 +51,7 @@ def inference(
         checkpoint = os.path.join(checkpoint, checkpoints[-1])
 
     # Load models
-    model = FishDiffusion(config)
+    model = DiffSingerLightning(config)
     state_dict = torch.load(checkpoint, map_location="cpu")
 
     if "state_dict" in state_dict:  # Checkpoint is saved by pl
@@ -98,7 +97,6 @@ def inference(
                 phones.append(phones_list.index(phone))
                 durations.append(float(duration))
 
-        print(phones, durations)
         phones = np.array(phones)
         durations = np.array(durations)
 
@@ -162,10 +160,10 @@ def inference(
         features = model.model.forward_features(
             speakers=torch.tensor([speaker_id]).long().to(device),
             contents=phoneme_features[None].to(device),
-            src_lens=src_lens,
-            max_src_len=max(src_lens),
+            contents_lens=src_lens,
+            contents_max_len=max(src_lens),
             mel_lens=src_lens,
-            max_mel_len=max(src_lens),
+            mel_max_len=max(src_lens),
             pitches=f0_seq[None],
         )
 

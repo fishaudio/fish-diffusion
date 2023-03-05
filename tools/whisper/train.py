@@ -15,7 +15,7 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader, Dataset
 from whisper import log_mel_spectrogram, pad_or_trim
 
-from fish_diffusion.feature_extractors.whisper import AlignedWhisper
+from fish_diffusion.modules.feature_extractors.whisper import AlignedWhisper
 
 phonemes = []
 for i in open("dictionaries/opencpop-strict.txt"):

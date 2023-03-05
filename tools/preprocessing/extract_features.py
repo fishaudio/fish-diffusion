@@ -16,12 +16,13 @@ from loguru import logger
 from mmengine import Config
 from tqdm import tqdm
 
-from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS, PITCH_EXTRACTORS
-from fish_diffusion.feature_extractors.base import BaseFeatureExtractor
-from fish_diffusion.feature_extractors.pitch.builder import BasePitchExtractor
+from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
+from fish_diffusion.modules.feature_extractors.base import BaseFeatureExtractor
+from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
+from fish_diffusion.modules.pitch_extractors.builder import BasePitchExtractor
+from fish_diffusion.modules.vocoders import VOCODERS
+from fish_diffusion.modules.vocoders.nsf_hifigan.nsf_hifigan import NsfHifiGAN
 from fish_diffusion.utils.tensor import repeat_expand
-from fish_diffusion.vocoders import VOCODERS
-from fish_diffusion.vocoders.nsf_hifigan.nsf_hifigan import NsfHifiGAN
 
 model_caches = None
 

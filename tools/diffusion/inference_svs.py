@@ -10,9 +10,10 @@ from fish_audio_preprocess.utils import loudness_norm
 from loguru import logger
 from mmengine import Config
 
-from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS, PITCH_EXTRACTORS
+from fish_diffusion.archs.diffsinger.diffsinger import DiffSingerLightning
+from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
+from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.utils.tensor import repeat_expand
-from train import FishDiffusion
 
 
 @torch.no_grad()
@@ -56,7 +57,7 @@ def inference(
     ).to(device)
     phoneme_features_extractor.eval()
 
-    model = FishDiffusion(config)
+    model = DiffSingerLightning(config)
     state_dict = torch.load(checkpoint, map_location="cpu")
 
     if "state_dict" in state_dict:  # Checkpoint is saved by pl
@@ -134,10 +135,10 @@ def inference(
         features = model.model.forward_features(
             speakers=torch.tensor([speaker_id]).long().to(device),
             contents=phoneme_features[None].to(device),
-            src_lens=src_lens,
-            max_src_len=max(src_lens),
+            contents_lens=src_lens,
+            contents_max_len=max(src_lens),
             mel_lens=src_lens,
-            max_mel_len=max(src_lens),
+            mel_max_len=max(src_lens),
             pitches=f0_seq[None],
         )
 

@@ -1,24 +1,125 @@
-from argparse import ArgumentParser
-
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
+import torch.nn as nn
 import wandb
-from loguru import logger
-from mmengine import Config
 from mmengine.optim import OPTIMIZERS
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 
-from fish_diffusion.archs.diffsinger import DiffSinger
-from fish_diffusion.datasets.utils import build_loader_from_config
-from fish_diffusion.utils.scheduler import LR_SCHEUDLERS
+from fish_diffusion.modules.encoders import ENCODERS
+from fish_diffusion.modules.vocoders import VOCODERS
+from fish_diffusion.modules.vocoders.builder import VOCODERS
+from fish_diffusion.schedulers import LR_SCHEUDLERS
 from fish_diffusion.utils.viz import viz_synth_sample
-from fish_diffusion.vocoders import VOCODERS
 
-torch.set_float32_matmul_precision("medium")
+from .diffusions import DIFFUSIONS
 
 
-class FishDiffusion(pl.LightningModule):
+class DiffSinger(nn.Module):
+    """DiffSinger"""
+
+    def __init__(self, model_config):
+        super(DiffSinger, self).__init__()
+
+        self.text_encoder = ENCODERS.build(model_config.text_encoder)
+        self.diffusion = DIFFUSIONS.build(model_config.diffusion)
+        self.speaker_encoder = ENCODERS.build(model_config.speaker_encoder)
+        self.pitch_encoder = ENCODERS.build(model_config.pitch_encoder)
+
+        if "pitch_shift_encoder" in model_config:
+            self.pitch_shift_encoder = ENCODERS.build(model_config.pitch_shift_encoder)
+
+    @staticmethod
+    def get_mask_from_lengths(lengths, max_len=None):
+        batch_size = lengths.shape[0]
+        if max_len is None:
+            max_len = torch.max(lengths).item()
+
+        ids = (
+            torch.arange(0, max_len)
+            .unsqueeze(0)
+            .expand(batch_size, -1)
+            .to(lengths.device)
+        )
+        mask = ids >= lengths.unsqueeze(1).expand(-1, max_len)
+
+        return mask
+
+    def forward_features(
+        self,
+        speakers,
+        contents,
+        contents_lens,
+        contents_max_len,
+        mel_lens=None,
+        mel_max_len=None,
+        pitches=None,
+        pitch_shift=None,
+    ):
+        src_masks = (
+            self.get_mask_from_lengths(contents_lens, contents_max_len)
+            if contents_lens is not None
+            else None
+        )
+
+        features = self.text_encoder(contents, src_masks)
+
+        speaker_embed = (
+            self.speaker_encoder(speakers).unsqueeze(1).expand(-1, contents_max_len, -1)
+        )
+
+        features += speaker_embed
+        features += self.pitch_encoder(pitches)
+
+        if pitch_shift is not None and hasattr(self, "pitch_shift_encoder"):
+            features += self.pitch_shift_encoder(pitch_shift)[:, None]
+
+        mel_masks = (
+            self.get_mask_from_lengths(mel_lens, mel_max_len)
+            if mel_lens is not None
+            else None
+        )
+
+        return dict(
+            features=features,
+            src_masks=src_masks,
+            mel_masks=mel_masks,
+        )
+
+    def forward(
+        self,
+        speakers,
+        contents,
+        contents_lens,
+        contents_max_len,
+        mel=None,
+        mel_lens=None,
+        mel_max_len=None,
+        pitches=None,
+        pitch_shift=None,
+    ):
+        features = self.forward_features(
+            speakers=speakers,
+            contents=contents,
+            contents_lens=contents_lens,
+            contents_max_len=contents_max_len,
+            mel_lens=mel_lens,
+            mel_max_len=mel_max_len,
+            pitches=pitches,
+            pitch_shift=pitch_shift,
+        )
+
+        output_dict = self.diffusion.train_step(
+            features["features"], mel, features["mel_masks"]
+        )
+
+        # For validation
+        output_dict["features"] = features["features"]
+
+        return output_dict
+
+
+class DiffSingerLightning(pl.LightningModule):
     def __init__(self, config):
         super().__init__()
         self.save_hyperparameters()
@@ -129,84 +230,3 @@ class FishDiffusion(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         return self._step(batch, batch_idx, mode="valid")
-
-
-if __name__ == "__main__":
-    pl.seed_everything(42, workers=True)
-
-    parser = ArgumentParser()
-    parser.add_argument("--config", type=str, required=True)
-    parser.add_argument("--resume", type=str, default=None)
-    parser.add_argument(
-        "--tensorboard",
-        action="store_true",
-        default=False,
-        help="Use tensorboard logger, default is wandb.",
-    )
-    parser.add_argument("--resume-id", type=str, default=None, help="Wandb run id.")
-    parser.add_argument("--entity", type=str, default=None, help="Wandb entity.")
-    parser.add_argument("--name", type=str, default=None, help="Wandb run name.")
-    parser.add_argument(
-        "--pretrained", type=str, default=None, help="Pretrained model."
-    )
-    parser.add_argument(
-        "--only-train-speaker-embeddings",
-        action="store_true",
-        default=False,
-        help="Only train speaker embeddings.",
-    )
-
-    args = parser.parse_args()
-
-    cfg = Config.fromfile(args.config)
-
-    model = FishDiffusion(cfg)
-
-    # We only load the state_dict of the model, not the optimizer.
-    if args.pretrained:
-        state_dict = torch.load(args.pretrained, map_location="cpu")
-        if "state_dict" in state_dict:
-            state_dict = state_dict["state_dict"]
-
-        result = model.load_state_dict(state_dict, strict=False)
-
-        missing_keys = set(result.missing_keys)
-        unexpected_keys = set(result.unexpected_keys)
-
-        # Make sure incorrect keys are just noise predictor keys.
-        unexpected_keys = unexpected_keys - set(
-            i.replace(".naive_noise_predictor.", ".") for i in missing_keys
-        )
-
-        assert len(unexpected_keys) == 0
-
-        if args.only_train_speaker_embeddings:
-            for name, param in model.named_parameters():
-                if "speaker_encoder" not in name:
-                    param.requires_grad = False
-
-            logger.info(
-                "Only train speaker embeddings, all other parameters are frozen."
-            )
-
-    logger = (
-        TensorBoardLogger("logs", name=cfg.model.type)
-        if args.tensorboard
-        else WandbLogger(
-            project=cfg.model.type,
-            save_dir="logs",
-            log_model=True,
-            name=args.name,
-            entity=args.entity,
-            resume="must" if args.resume_id else False,
-            id=args.resume_id,
-        )
-    )
-
-    trainer = pl.Trainer(
-        logger=logger,
-        **cfg.trainer,
-    )
-
-    train_loader, valid_loader = build_loader_from_config(cfg, trainer.num_devices)
-    trainer.fit(model, train_loader, valid_loader, ckpt_path=args.resume)

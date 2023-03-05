@@ -3,12 +3,10 @@ from .chinese_hubert import ChineseHubertSoft
 from .content_vec import ContentVec
 from .hubert_soft import HubertSoft
 from .opencpop_transcription import OpenCpopTranscriptionToPhonemesDuration
-from .pitch import PITCH_EXTRACTORS
 from .whisper import AlignedWhisper
 
 __all__ = [
     "FEATURE_EXTRACTORS",
-    "PITCH_EXTRACTORS",
     "ChineseHubertSoft",
     "HubertSoft",
     "OpenCpopTranscriptionToPhonemesDuration",

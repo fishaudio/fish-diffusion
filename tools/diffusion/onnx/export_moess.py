@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import click
-import numpy as np
 import onnxruntime as ort
 import torch
 from export import export_feature_extractor
@@ -9,8 +8,8 @@ from loguru import logger
 from mmengine import Config
 from torch.nn import functional as F
 
-from fish_diffusion.archs.diffsinger import DiffSinger
-from train import FishDiffusion
+from fish_diffusion.archs.diffsinger.diffsinger import DiffSinger, DiffSingerLightning
+from fish_diffusion.utils.inference import load_checkpoint
 
 
 def denorm_f0(f0, pitch_padding=None):
@@ -278,14 +277,7 @@ def main(config: str, checkpoint: str):
 
     device = "cpu"
     config = Config.fromfile(config)
-    model = FishDiffusion(config)
-    state_dict = torch.load(
-        checkpoint,
-        map_location=device,
-    )["state_dict"]
-    model.load_state_dict(state_dict, strict=False)
-    model.eval()
-    model.to(device)
+    model = load_checkpoint(config, checkpoint, device, model_cls=DiffSingerLightning)
 
     # Ignore vocoder
     model = model.model
