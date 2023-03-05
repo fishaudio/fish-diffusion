@@ -9,7 +9,7 @@ from mmengine import Config
 from mmengine.optim import OPTIMIZERS
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 
-from fish_diffusion.archs.diffsinger import DiffSinger
+from fish_diffusion.archs.diffsinger.diffsinger import DiffSinger
 from fish_diffusion.datasets.utils import build_loader_from_config
 from fish_diffusion.utils.scheduler import LR_SCHEUDLERS
 from fish_diffusion.utils.viz import viz_synth_sample

@@ -7,7 +7,7 @@ import torch
 from loguru import logger
 from mmengine import Config
 
-from fish_diffusion.archs.diffsinger import DiffSinger
+from fish_diffusion.archs.diffsinger.diffsinger import DiffSinger
 from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS
 from train import FishDiffusion
 

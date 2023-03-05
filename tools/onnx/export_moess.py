@@ -9,7 +9,7 @@ from loguru import logger
 from mmengine import Config
 from torch.nn import functional as F
 
-from fish_diffusion.archs.diffsinger import DiffSinger
+from fish_diffusion.archs.diffsinger.diffsinger import DiffSinger
 from train import FishDiffusion
 
 
