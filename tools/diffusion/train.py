@@ -59,7 +59,7 @@ if __name__ == "__main__":
             i.replace(".naive_noise_predictor.", ".") for i in missing_keys
         )
 
-        assert len(unexpected_keys) == 0
+        assert len(unexpected_keys) == 0, f"Unexpected keys: {unexpected_keys}"
 
         if args.only_train_speaker_embeddings:
             for name, param in model.named_parameters():
