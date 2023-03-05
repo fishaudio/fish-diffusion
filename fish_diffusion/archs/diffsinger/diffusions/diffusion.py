@@ -13,7 +13,6 @@ from fish_diffusion.diffusions.noise_predictor import (
     NaiveNoisePredictor,
     PLMSNoisePredictor,
 )
-from fish_diffusion.utils.ssim import ssim_loss
 
 from .builder import DIFFUSIONS
 
@@ -157,9 +156,6 @@ class GaussianDiffusion(nn.Module):
             loss = F.smooth_l1_loss(noise, epsilon)
         elif loss_fn == "l2":
             loss = F.mse_loss(noise, epsilon)
-        elif loss_fn == "ssim":
-            # There is a bug we need to fix in the SSIM implementation
-            loss = ssim_loss(noise, epsilon)
         elif callable(loss_fn):
             loss = loss_fn(noise, epsilon)
         else:
