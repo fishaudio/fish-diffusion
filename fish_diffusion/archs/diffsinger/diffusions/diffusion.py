@@ -1,5 +1,4 @@
 import json
-from collections import deque
 from functools import partial
 
 import numpy as np
@@ -8,13 +7,8 @@ import torch.nn.functional as F
 from torch import nn
 from tqdm import tqdm
 
-from fish_diffusion.denoisers import DENOISERS
-from fish_diffusion.diffusions.noise_predictor import (
-    NaiveNoisePredictor,
-    PLMSNoisePredictor,
-)
-
-from .builder import DIFFUSIONS
+from .builder import DENOISERS, DIFFUSIONS
+from .noise_predictor import NaiveNoisePredictor, PLMSNoisePredictor
 
 
 def get_noise_schedule_list(schedule_mode, timesteps, max_beta=0.01, s=0.008):

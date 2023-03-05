@@ -11,7 +11,7 @@ from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 
 from fish_diffusion.archs.diffsinger.diffsinger import DiffSinger
 from fish_diffusion.datasets.utils import build_loader_from_config
-from fish_diffusion.utils.scheduler import LR_SCHEUDLERS
+from fish_diffusion.schedulers import LR_SCHEUDLERS
 from fish_diffusion.utils.viz import viz_synth_sample
 from fish_diffusion.vocoders import VOCODERS
 

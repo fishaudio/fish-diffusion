@@ -1,4 +1,3 @@
-import librosa
 import torchaudio
 from torch import nn
 

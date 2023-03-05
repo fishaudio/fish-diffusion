@@ -13,7 +13,8 @@ from fish_audio_preprocess.utils import loudness_norm, separate_audio
 from loguru import logger
 from mmengine import Config
 
-from fish_diffusion.feature_extractors import FEATURE_EXTRACTORS, PITCH_EXTRACTORS
+from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
+from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.utils.audio import get_mel_from_audio, slice_audio
 from fish_diffusion.utils.inference import load_checkpoint
 from fish_diffusion.utils.tensor import repeat_expand
