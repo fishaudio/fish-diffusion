@@ -66,7 +66,7 @@ class HSFHifiGAN(pl.LightningModule):
                 # Shouldn't ise fmin and fmax here
                 # Otherwise high frequency will be cut off
                 f_min=0,
-                f_max=self.h.sample_rate // 2,
+                f_max=self.h.sampling_rate // 2,
                 n_mels=self.h.num_mels,
             )
             for (n_fft, hop_length, win_length) in [
