@@ -57,15 +57,18 @@ class SVCInference(nn.Module):
         sampler_progress: bool = False,
         sampler_interval: Optional[int] = None,
     ):
-        mel = get_mel_from_audio(audio, sr)
+        mel_len = audio.shape[-1] // 512
 
         # Extract and process pitch
-        pitch = self.pitch_extractor(audio, sr, pad_to=mel.shape[-1]).float()
+        pitch = self.pitch_extractor(audio, sr, pad_to=mel_len).float()
+        if (pitch == 0).all():
+            return np.zeros(audio.shape)
+
         pitch *= 2 ** (pitch_adjust / 12)
 
         # Extract and process text features
         text_features = self.text_features_extractor(audio, sr)[0]
-        text_features = repeat_expand(text_features, mel.shape[-1]).T
+        text_features = repeat_expand(text_features, mel_len).T
 
         # Pitch shift should always be 0 for inference to avoid distortion
         pitch_shift = None
@@ -73,7 +76,7 @@ class SVCInference(nn.Module):
             pitch_shift = torch.zeros((1, 1), device=self.device)
 
         # Predict
-        contents_lens = torch.tensor([mel.shape[-1]]).to(self.device)
+        contents_lens = torch.tensor([mel_len]).to(self.device)
 
         features = self.model.model.forward_features(
             speakers=torch.tensor([speaker_id]).long().to(self.device),

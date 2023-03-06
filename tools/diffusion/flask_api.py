@@ -85,4 +85,4 @@ if __name__ == "__main__":
     model = model.to(device)
 
     # 此处与vst插件对应，不建议更改
-    app.run(port=6842, host="0.0.0.0", debug=False, threaded=False)
+    app.run(port=6842, host="0.0.0.0", debug=False, threaded=True)
