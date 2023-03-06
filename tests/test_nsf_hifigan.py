@@ -1,20 +1,19 @@
 import soundfile as sf
 import torchaudio
-from fish_diffusion.vocoders import NsfHifiGAN
 
 from fish_diffusion.modules.pitch_extractors import ParselMouthPitchExtractor
+from fish_diffusion.modules.vocoders import NsfHifiGAN
 
-source = "dataset/valid/opencpop/TruE-干音_0000/0000.wav"
+source = "dataset/valid/opencpop/TruE-干音_0000/0002.wav"
 
-gan = NsfHifiGAN()
+gan = NsfHifiGAN("checkpoints/model", "checkpoints/nsf_hifigan/config.json")
 
 audio, sr = torchaudio.load(source)
 
-mel = gan.wav2spec(audio, key_shift=0)
-f0 = ParselMouthPitchExtractor(
-    f0_min=40.0,
-    f0_max=1600.0,
-)(audio, sr, pad_to=mel.shape[-1])
+mel = gan.wav2spec(audio)
+f0 = ParselMouthPitchExtractor(f0_min=40.0, f0_max=2000.0, keep_zeros=False)(
+    audio, sr, pad_to=mel.shape[-1]
+)
 
 out = gan.spec2wav(mel, f0)
 

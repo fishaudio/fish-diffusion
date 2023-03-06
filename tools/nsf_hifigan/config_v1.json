@@ -60,6 +60,6 @@
     "hop_size": 512,
     "win_size": 2048,
     "sampling_rate": 44100,
-    "fmin": 40,
-    "fmax": 16000
+    "fmin": 0,
+    "fmax": 22050
 }
