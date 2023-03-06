@@ -54,9 +54,13 @@ class HSFHifiGAN(pl.LightningModule):
             f_max=self.h.fmax,
             n_mels=self.h.num_mels,
         )
+
         self.multi_scale_mels = [
             self.get_mel_transform(
                 sample_rate=self.h.sampling_rate,
+                n_fft=self.h.n_fft,
+                hop_length=self.h.hop_size,
+                win_length=self.h.win_size,
                 f_min=self.h.fmin,
                 f_max=self.h.fmax,
                 n_mels=self.h.num_mels,
