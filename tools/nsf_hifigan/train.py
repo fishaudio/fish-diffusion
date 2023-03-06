@@ -45,6 +45,7 @@ class HSFHifiGAN(pl.LightningModule):
         self.mpd = MultiPeriodDiscriminator(self.h["discriminator_periods"])
         self.msd = MultiScaleDiscriminator()
 
+        # This is for validation only
         self.mel_transform = self.get_mel_transform(
             sample_rate=self.h.sampling_rate,
             n_fft=self.h.n_fft,
@@ -55,14 +56,17 @@ class HSFHifiGAN(pl.LightningModule):
             n_mels=self.h.num_mels,
         )
 
+        # The bellow are for training
         self.multi_scale_mels = [
             self.get_mel_transform(
                 sample_rate=self.h.sampling_rate,
                 n_fft=n_fft,
                 hop_length=hop_length,
                 win_length=win_length,
-                f_min=self.h.fmin,
-                f_max=self.h.fmax,
+                # Shouldn't ise fmin and fmax here
+                # Otherwise high frequency will be cut off
+                f_min=0,
+                f_max=self.h.sample_rate // 2,
                 n_mels=self.h.num_mels,
             )
             for (n_fft, hop_length, win_length) in [
