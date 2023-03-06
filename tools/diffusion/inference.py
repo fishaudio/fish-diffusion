@@ -61,8 +61,9 @@ class SVCInference(nn.Module):
 
         # Extract and process pitch
         pitch = self.pitch_extractor(audio, sr, pad_to=mel_len).float()
+
         if (pitch == 0).all():
-            return np.zeros(audio.shape)
+            return np.zeros((audio.shape[-1],))
 
         pitch *= 2 ** (pitch_adjust / 12)
 

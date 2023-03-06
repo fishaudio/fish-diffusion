@@ -48,12 +48,25 @@ while True:
     data, buff = buff[:frame_size], buff[frame_size:]
     audio = np.frombuffer(data, dtype=np.float32)
 
+    intervals = librosa.effects.split(audio, top_db=10)
+    new_audio = np.zeros_like(audio)
+
+    if len(intervals) == 1 and intervals[0][0] == 0 and intervals[0][1] == len(audio):
+        connection.sendall(new_audio.tobytes())
+        continue
+
+    for start, end in intervals:
+        new_audio[start:end] = audio[start:end]
+
     audio = torch.from_numpy(audio).unsqueeze(0).to(device)
 
     # Inference
     audio = model.forward(
         audio, 44100, pitch_adjust=4, speaker_id=0, sampler_interval=10
     )
+
+    if len(audio) < frame_size // 4:
+        audio = np.pad(audio, (0, frame_size // 4 - len(audio)), "constant")
 
     data = audio.tobytes()[:frame_size]
     print(f"Time: {time.time() - start_time}")
