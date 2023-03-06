@@ -1,6 +1,6 @@
 import torch
 
-from fish_diffusion.archs.diffsinger.diffsinger import DiffSingerLightning
+from fish_diffusion.archs.diffsinger import DiffSingerLightning
 
 
 def load_checkpoint(config, checkpoint, device="cuda", model_cls=DiffSingerLightning):

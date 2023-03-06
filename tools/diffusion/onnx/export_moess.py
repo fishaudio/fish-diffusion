@@ -8,7 +8,7 @@ from loguru import logger
 from mmengine import Config
 from torch.nn import functional as F
 
-from fish_diffusion.archs.diffsinger.diffsinger import DiffSinger, DiffSingerLightning
+from fish_diffusion.archs.diffsinger import DiffSinger, DiffSingerLightning
 from fish_diffusion.utils.inference import load_checkpoint
 
 

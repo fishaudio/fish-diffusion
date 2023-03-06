@@ -6,7 +6,7 @@ from loguru import logger
 from mmengine import Config
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 
-from fish_diffusion.archs.diffsinger.diffsinger import DiffSingerLightning
+from fish_diffusion.archs.diffsinger import DiffSingerLightning
 from fish_diffusion.datasets.utils import build_loader_from_config
 
 torch.set_float32_matmul_precision("medium")

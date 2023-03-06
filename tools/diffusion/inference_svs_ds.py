@@ -10,7 +10,7 @@ from fish_audio_preprocess.utils import loudness_norm
 from loguru import logger
 from mmengine import Config
 
-from fish_diffusion.archs.diffsinger.diffsinger import DiffSingerLightning
+from fish_diffusion.archs.diffsinger import DiffSingerLightning
 from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.utils.tensor import repeat_expand
 
