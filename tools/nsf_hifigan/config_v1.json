@@ -7,14 +7,16 @@
     "upsample_rates": [
         8,
         8,
-        4,
+        2,
+        2,
         2
     ],
     "upsample_kernel_sizes": [
         16,
         16,
         8,
-        4
+        2,
+        2
     ],
     "upsample_initial_channel": 512,
     "resblock_kernel_sizes": [
