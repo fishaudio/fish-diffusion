@@ -16,7 +16,7 @@ _base_ = [
 ## Preprocessing
 Preprocessing config currently includes two components: `text_features_extractor` and `pitch_extractor.` 
 
-Stable feature extractors are `HubertSoft` and `ChineseHubertSoft.` Although there is a `Chinese` in the second one, it works on multilingual and outperforms the vanilla one.
+Stable feature extractors are `HubertSoft`, `ChineseHubertSoft`, and `ContentVec`. Although there is a `Chinese` in the second one, it works on multilingual and outperforms the vanilla one.
 
 To extract the pitch, you can choose `ParselMouthPitchExtractor` or `CrepePitchExtractor`. ParselMouth is good enough in most cases, and it's literally 100x faster than Crepe. However, in some edge cases, Crepe is more robust and stable. For more results, see [Pitch Extractors](https://github.com/fishaudio/fish-diffusion/wiki/Pitch-Extractors).
 

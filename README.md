@@ -84,11 +84,22 @@ python tools/download_nsf_hifigan.py --use-ghproxy
 python tools/download_nsf_hifigan.py --agree-license
 ```
 
-### 手动下载
-下载 [441khz 声码器](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) 中的 `nsf_hifigan_20221211.zip`
+如果 OpenVPI 的声码器表现不佳, 你可以尝试 [Fish Audio 测试版声码器](https://github.com/fishaudio/fish-diffusion/releases/tag/v1.12)
+```bash
+python tools/download_nsf_hifigan.py --vocoder FishAudioBeta
+```
 
+如果你想尝试最新的 [ContentVec](https://github.com/auspicious3000/contentvec) 来提取音素特征, 你可以使用以下命令下载
+```bash
+python tools/download_nsf_hifigan.py --content-vec
+```
+
+### 手动下载
+下载 [441khz 声码器](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) 中的 `nsf_hifigan_20221211.zip`  
+或者 [Fish Audio 测试版声码器](https://github.com/fishaudio/fish-diffusion/releases/tag/v1.12) 中的 `nsf_hifigan-beta-v2-epoch-434.zip`  
 解压 `nsf_hifigan` 文件夹到 `checkpoints` 目录下 (如果没有则创建)
 
+如果你想手动下载 [ContentVec](https://github.com/auspicious3000/contentvec), 你可以从 [这里](https://github.com/fishaudio/fish-diffusion/releases/download/v1.12/content-vec-best-legacy-500.pt) 下载, 并将其放入 `checkpoints` 目录下.
 ## 数据集准备
 仅需要以以下文件结构将数据集放入 dataset 目录即可
 
@@ -121,25 +132,25 @@ python tools/preprocessing/extract_features.py --config configs/svc_hubert_soft.
 python tools/diffusion/train.py --config configs/svc_hubert_soft.py
 
 # 继续训练
-python tools/diffusion/train.py --config configs/svc_hubert_soft.py --resume [checkpoint]
+python tools/diffusion/train.py --config configs/svc_hubert_soft.py --resume [checkpoint file]
 
 # 微调预训练模型
 # 注意: 你应该调整配置文件中的学习率调度器为 warmup_cosine_finetune
-python tools/diffusion/train.py --config configs/svc_cn_hubert_soft_finetune.py --pretrained [checkpoint]
+python tools/diffusion/train.py --config configs/svc_cn_hubert_soft_finetune.py --pretrained [checkpoint file]
 ```
 
 ## 推理
 ```bash
 # 命令行推理, 你可以使用 --help 查看更多参数
 python tools/diffusion/inference.py --config [config] \
-    --checkpoint [checkpoint] \
+    --checkpoint [checkpoint file] \
     --input [input audio] \
     --output [output audio]
 
 
 # Gradio Web 推理, 其他参数会被转为 Gradio 默认参数
 python tools/diffusion/inference.py --config [config] \
-    --checkpoint [checkpoint] \
+    --checkpoint [checkpoint file] \
     --gradio
 ```
 

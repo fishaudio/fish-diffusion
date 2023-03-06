@@ -72,9 +72,13 @@ def main(
     target_dir.mkdir(parents=True, exist_ok=True)
 
     # Show license Information
-    logger.info("NSF HifiGan (OpenVPI) is released under the CC BY-NC-SA 4.0 license.")
+    logger.info(
+        f"NSF HifiGan ({vocoder}) is released under the CC BY-NC-SA 4.0 license."
+    )
     logger.info(
         "See https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1 for more information."
+        if vocoder == "OpenVPI"
+        else "See https://github.com/fishaudio/fish-diffusion/releases/tag/v1.12 for more information."
     )
 
     if agree_license:
