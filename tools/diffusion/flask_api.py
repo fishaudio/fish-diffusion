@@ -39,20 +39,18 @@ def voice_change_model():
 
     # http获得wav文件并转换
     input_wav_file = io.BytesIO(wave_file.read())
+    audio, sr = librosa.load(input_wav_file, sr=model.config.sampling_rate, mono=True)
+    audio = torch.from_numpy(audio).unsqueeze(0).to(device)
 
     # 模型推理
-    _audio, _model_sr = model.inference(
-        input_path=input_wav_file,
-        output_path=None,
-        speaker=int_speaker_id,
+    _audio = model.forward(
+        audio,
+        sr,
         pitch_adjust=f_pitch_change,
-        silence_threshold=silence_threshold,
-        max_slice_duration=max_slice_duration,
-        extract_vocals=extract_vocals,
-        sampler_interval=sampler_interval,
+        speaker_id=int_speaker_id,
     )
 
-    tar_audio = librosa.resample(_audio, _model_sr, daw_sample)
+    tar_audio = librosa.resample(_audio, sr, daw_sample)
 
     # 返回音频
     out_wav_path = io.BytesIO()
@@ -65,9 +63,9 @@ def voice_change_model():
 if __name__ == "__main__":
     # fish下只需传入下列参数，文件路径以项目根目录为准
     checkpoint_path = (
-        "logs/DiffSVC/version_0/checkpoints/epoch=123-step=300000-valid_loss=0.17.ckpt"
+        "logs/DiffSVC/9ddsi2gk/checkpoints/epoch=88-step=300000-valid_loss=0.08.ckpt"
     )
-    config_path = "configs/svc_cn_hubert_soft_ms.py"
+    config_path = "configs/exp_super_mix_v2.py"
     # 加速倍率，None即采用配置文件的值
     sampler_interval = None
     # 是否提取人声

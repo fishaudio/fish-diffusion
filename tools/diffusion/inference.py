@@ -124,7 +124,7 @@ class SVCInference(nn.Module):
             gradio_progress: gradio progress callback
         """
 
-        if os.path.isdir(input_path):
+        if isinstance(input_path, str) and os.path.isdir(input_path):
             # Batch inference
             if output_path is None:
                 logger.error("Output path is required for batch inference")
@@ -159,7 +159,7 @@ class SVCInference(nn.Module):
             speaker_id = int(speaker)
 
         # Load audio
-        audio, sr = librosa.load(input_path, sr=config.sampling_rate, mono=True)
+        audio, sr = librosa.load(input_path, sr=self.config.sampling_rate, mono=True)
 
         # Extract vocals
 

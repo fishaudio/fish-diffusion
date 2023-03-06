@@ -50,7 +50,7 @@ class BasePitchExtractor:
         time_org = self.hop_length / sampling_rate * nzindex.cpu().numpy()
         time_frame = np.arange(pad_to) * self.hop_length / sampling_rate
 
-        if f0.shape[0] == 0:
+        if f0.shape[0] <= 2:
             return torch.zeros(time_frame.shape[0]).float().to(x.device)
 
         # 大概可以用 torch 重写?
