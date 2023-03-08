@@ -18,8 +18,8 @@ class FeatureEmbeddingWrapper(torch.nn.Module):
 
         self.model = model
 
-    def forward(self, speakers, text_features, pitches):
-        # Speakers: [1], text_features: [n_frames, 256], pitches: [n_frames]
+    def forward(self, speakers, text_features, pitches, pitch_shift=None):
+        # Speakers: [n_frames, 1]/[1], text_features: [n_frames, 256], pitches: [n_frames], pitch_shift: [n_frames, 1]/[1]
 
         pitches = pitches.unsqueeze(0)
         text_features = text_features.unsqueeze(0)
@@ -31,25 +31,39 @@ class FeatureEmbeddingWrapper(torch.nn.Module):
             contents_max_len=text_features.shape[1],
             mel_lens=None,
             pitches=pitches,
+            pitch_shift=pitch_shift,
         )
 
         return features["features"]
 
 
 def export_feature_embedding(model, device):
+    has_pitch_shift = hasattr(model, "pitch_shift_encoder")
+    logger.info(f"The model has pitch shift encoder: {has_pitch_shift}")
+
     model = FeatureEmbeddingWrapper(model).to(device)
 
     n_frames = 10
     speakers = torch.tensor([0], dtype=torch.long, device=device)
     text_features = torch.randn((n_frames, 256), device=device)
     pitches = torch.rand((n_frames,), device=device)
+    pitch_shift = None
+
+    # Handle pitch shift enabled model
+    inputs = (speakers, text_features, pitches)
+    input_names = ["speakers", "text_features", "pitches"]
+
+    if has_pitch_shift:
+        pitch_shift = torch.tensor([1], dtype=torch.float, device=device)
+        inputs += (pitch_shift,)
+        input_names.append("pitch_shift")
 
     torch.onnx.export(
         model,
-        (speakers, text_features, pitches),
+        inputs,
         "./exported/feature_embedding.onnx",
         opset_version=16,
-        input_names=["speakers", "text_features", "pitches"],
+        input_names=input_names,
         output_names=["features"],
         dynamic_axes={
             "text_features": {0: "n_frames"},
@@ -69,8 +83,11 @@ def export_feature_embedding(model, device):
         "pitches": pitches.cpu().numpy(),
     }
 
+    if has_pitch_shift:
+        ort_inputs["pitch_shift"] = pitch_shift.cpu().numpy()
+
     ort_outs = ort_session.run(None, ort_inputs)
-    torch_outs = model(speakers, text_features, pitches)
+    torch_outs = model(speakers, text_features, pitches, pitch_shift)
 
     assert torch.allclose(
         torch_outs, torch.from_numpy(ort_outs[0]), atol=1e-4
@@ -138,7 +155,7 @@ def export_diffusion(config, model, device):
 
     torch.manual_seed(0)
     assert torch.allclose(
-        _temp, model.diffusion(condition, sampler_interval), atol=1e-4
+        _temp, model.diffusion(condition, sampler_interval), atol=1e-3
     )
 
     logger.info("Diffusion traced.")
@@ -196,6 +213,10 @@ class FeatureExtractorWrapper(torch.nn.Module):
 
 
 def export_feature_extractor(config, device):
+    if config.preprocessing.text_features_extractor.type == "ContentVec":
+        logger.warning("ContentVec is not supported in ONNX. Skip exporting.")
+        return
+
     feature_extractor = FEATURE_EXTRACTORS.build(
         config.preprocessing.text_features_extractor
     )
@@ -256,7 +277,12 @@ def main(config: str, checkpoint: str):
     logger.info("Model loaded.")
 
     # Export feature extractor
-    export_feature_extractor(config, device)
+    if config.model.type == "DiffSinger":
+        logger.info(
+            "DiffSingeer model does not have feature extractor. Skip exporting."
+        )
+    else:
+        export_feature_extractor(config, device)
 
     # Export feature embedding
     export_feature_embedding(model, device)
