@@ -158,7 +158,7 @@ class SVCInference(nn.Module):
         # Process speaker
         try:
             speaker_id = self.config.speaker_mapping[speaker]
-        except KeyError:
+        except (KeyError, AttributeError):
             # Parse speaker id
             speaker_id = int(speaker)
 
