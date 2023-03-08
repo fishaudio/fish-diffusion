@@ -1,5 +1,7 @@
 # Warning: This config is developing, and subject to change.
 
+from fish_diffusion.utils.dictionary import load_dictionary
+
 _base_ = [
     "./_base_/archs/diff_svc_v2.py",
     "./_base_/trainers/base.py",
@@ -7,72 +9,35 @@ _base_ = [
     "./_base_/datasets/naive_svc.py",
 ]
 
-phonemes = [
-    "AP",
-    "SP",
-    "E",
-    "En",
-    "a",
-    "ai",
-    "an",
-    "ang",
-    "ao",
-    "b",
-    "c",
-    "ch",
-    "d",
-    "e",
-    "ei",
-    "en",
-    "eng",
-    "er",
-    "f",
-    "g",
-    "h",
-    "i",
-    "i0",
-    "ia",
-    "ian",
-    "iang",
-    "iao",
-    "ie",
-    "in",
-    "ing",
-    "iong",
-    "ir",
-    "iu",
-    "j",
-    "k",
-    "l",
-    "m",
-    "n",
-    "o",
-    "ong",
-    "ou",
-    "p",
-    "q",
-    "r",
-    "s",
-    "sh",
-    "t",
-    "u",
-    "ua",
-    "uai",
-    "uan",
-    "uang",
-    "ui",
-    "un",
-    "uo",
-    "v",
-    "van",
-    "ve",
-    "vn",
-    "w",
-    "x",
-    "y",
-    "z",
-    "zh",
-]
+speaker_mapping = {
+    "default": 0,
+}
+
+dictionary, phonemes = load_dictionary("dictionaries/opencpop-extension.txt")
+
+model = dict(
+    type="DiffSinger",
+    text_encoder=dict(
+        _delete_=True,
+        type="NaiveProjectionEncoder",
+        input_size=len(phonemes) * 2 + 2,
+        output_size=256,
+    ),
+)
+
+dataset = dict(
+    _delete_=True,
+    train=dict(
+        type="NaiveSVCDataset",
+        path="dataset/train",
+        speaker_id=speaker_mapping["default"],
+    ),
+    valid=dict(
+        type="NaiveSVCDataset",
+        path="dataset/valid",
+        speaker_id=speaker_mapping["default"],
+    ),
+)
 
 preprocessing = dict(
     text_features_extractor=dict(
@@ -83,32 +48,14 @@ preprocessing = dict(
     pitch_extractor=dict(
         type="ParselMouthPitchExtractor",
         keep_zeros=False,
+        f0_min=40.0,
+        f0_max=2000.0,
     ),
-)
-
-model = dict(
-    type="DiffSinger",
-    text_encoder=dict(
-        _delete_=True,
-        type="NaiveProjectionEncoder",
-        input_size=len(phonemes) * 2 + 2,
-        output_size=256,
-    ),
-    diffusion=dict(
-        max_beta=0.02,
-    ),
-)
-
-dataset = dict(
-    _delete_=True,
-    train=dict(
-        type="AudioFolderDataset",
-        path="dataset/diff-singer/train",
-        speaker_id=0,
-    ),
-    valid=dict(
-        type="AudioFolderDataset",
-        path="dataset/diff-singer/valid",
-        speaker_id=0,
-    ),
+    augmentations=[
+        dict(
+            type="RandomPitchShifting",
+            key_shifts=[-5.0, 5.0],
+            probability=1.5,
+        ),
+    ],
 )
