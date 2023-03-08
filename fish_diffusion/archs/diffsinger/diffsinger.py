@@ -64,15 +64,20 @@ class DiffSinger(nn.Module):
 
         features = self.text_encoder(contents, src_masks)
 
-        speaker_embed = (
-            self.speaker_encoder(speakers).unsqueeze(1).expand(-1, contents_max_len, -1)
-        )
+        speaker_embed = self.speaker_encoder(speakers)
+        if speaker_embed.ndim == 2:
+            speaker_embed = speaker_embed[:, None, :]
 
         features += speaker_embed
         features += self.pitch_encoder(pitches)
 
         if pitch_shift is not None and hasattr(self, "pitch_shift_encoder"):
-            features += self.pitch_shift_encoder(pitch_shift)[:, None]
+            pitch_shift_embed = self.pitch_shift_encoder(pitch_shift)
+
+            if pitch_shift_embed.ndim == 2:
+                pitch_shift_embed = pitch_shift_embed[:, None, :]
+
+            features += pitch_shift_embed
 
         mel_masks = (
             self.get_mask_from_lengths(mel_lens, mel_max_len)
