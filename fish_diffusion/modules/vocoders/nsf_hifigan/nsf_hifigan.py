@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -7,7 +6,7 @@ import librosa
 import pytorch_lightning as pl
 import torch
 
-from fish_diffusion.utils.audio import dynamic_range_compression, get_mel_from_audio
+from fish_diffusion.utils.audio import dynamic_range_compression
 from fish_diffusion.utils.pitch_adjustable_mel import PitchAdjustableMelSpectrogram
 
 from ..builder import VOCODERS

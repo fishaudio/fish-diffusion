@@ -1,16 +1,17 @@
 import json
-import os
+from pathlib import Path
+from typing import Optional
 
 import librosa
 import pytorch_lightning as pl
 import torch
 
-from fish_diffusion.utils.audio import get_mel_from_audio
+from fish_diffusion.utils.audio import dynamic_range_compression
+from fish_diffusion.utils.pitch_adjustable_mel import PitchAdjustableMelSpectrogram
 
 from ..builder import VOCODERS
-from ..nsf_hifigan import NsfHifiGAN
-from .mel import mel_spectrogram
-from .models import AttrDict, Generator
+from ..nsf_hifigan.models import AttrDict
+from .models import Generator
 
 
 @VOCODERS.register_module()
@@ -18,11 +19,15 @@ class ISTFTNet(pl.LightningModule):
     def __init__(
         self,
         checkpoint_path: str = "checkpoints/istft_net/g_00045000",
+        config_file: Optional[str] = None,
         use_natural_log: bool = True,
+        **kwargs,
     ):
         super().__init__()
 
-        config_file = os.path.join(os.path.split(checkpoint_path)[0], "config.json")
+        if config_file is None:
+            config_file = Path(checkpoint_path).parent / "config.json"
+
         with open(config_file) as f:
             data = f.read()
 
@@ -46,9 +51,24 @@ class ISTFTNet(pl.LightningModule):
 
         self.model.eval()
         self.model.remove_weight_norm()
-        self.register_buffer(
-            "hanning_window", torch.hann_window(self.h.gen_istft_n_fft)
+
+        self.mel_transform = PitchAdjustableMelSpectrogram(
+            sample_rate=self.h.sampling_rate,
+            n_fft=self.h.n_fft,
+            win_length=self.h.win_size,
+            hop_length=self.h.hop_size,
+            f_min=self.h.fmin,
+            f_max=self.h.fmax,
+            n_mels=self.h.num_mels,
         )
+
+        # Validate kwargs if any
+        if "mel_channels" in kwargs:
+            kwargs["num_mels"] = kwargs.pop("mel_channels")
+
+        for k, v in kwargs.items():
+            if getattr(self.h, k, None) != v:
+                raise ValueError(f"Incorrect value for {k}: {v}")
 
     @torch.no_grad()
     def spec2wav(self, mel, f0):
@@ -60,9 +80,6 @@ class ISTFTNet(pl.LightningModule):
         f0 = f0[None].to(c.dtype)
         spec, phase = self.model(c)
 
-        audio_1 = spec * torch.exp(phase * 1j)
-        audio_1 = torch.view_as_real(audio_1)
-        print(audio_1.shape, "Audio 0", torch.max(audio_1), torch.min(audio_1))
         y = torch.istft(
             spec * torch.exp(phase * 1j),
             n_fft=self.h.gen_istft_n_fft,
@@ -71,52 +88,23 @@ class ISTFTNet(pl.LightningModule):
             window=self.hanning_window,
         )
 
-        # * 32768.0
-        print(y.shape)
-
         return y[0]
 
     @torch.no_grad()
-    def wav2spec(self, audio, sr=None):
+    def wav2spec(self, wav_torch, sr=None, key_shift=0, speed=1.0):
         if sr is None:
             sr = self.h.sampling_rate
 
         if sr != self.h.sampling_rate:
             _wav_torch = librosa.resample(
-                audio.cpu().numpy(), orig_sr=sr, target_sr=self.h.sampling_rate
+                wav_torch.cpu().numpy(), orig_sr=sr, target_sr=self.h.sampling_rate
             )
-            audio = torch.from_numpy(_wav_torch).to(audio.device)
+            wav_torch = torch.from_numpy(_wav_torch).to(wav_torch.device)
 
-        # audio = audio / 32768.0
-
-        # mel = mel_spectrogram(audio, self.n_fft, self.num_mels,
-        #                       self.sampling_rate, self.hop_size, self.win_size, self.fmin, self.fmax,
-        #                       center=False)
-
-        audio_1 = torch.stft(
-            audio,
-            n_fft=self.h.gen_istft_n_fft,
-            hop_length=self.h.gen_istft_hop_size,
-            win_length=self.h.gen_istft_n_fft,
-            window=self.hanning_window,
-            return_complex=True,
-        )
-        audio_1 = torch.view_as_real(audio_1)
-        print(audio_1.shape, "Audio 1", torch.max(audio_1), torch.min(audio_1))
-
-        x = mel_spectrogram(
-            audio,
-            self.h.n_fft,
-            self.h.num_mels,
-            self.h.sampling_rate,
-            self.h.hop_size,
-            self.h.win_size,
-            self.h.fmin,
-            self.h.fmax,
-            center=False,
-        )[0]
+        mel_torch = self.mel_transform(wav_torch, key_shift=key_shift, speed=speed)[0]
+        mel_torch = dynamic_range_compression(mel_torch)
 
         if self.use_natural_log is False:
-            x = 0.434294 * x
+            mel_torch = 0.434294 * mel_torch
 
-        return x
+        return mel_torch

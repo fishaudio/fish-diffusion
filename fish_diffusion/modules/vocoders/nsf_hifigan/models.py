@@ -391,6 +391,7 @@ class Generator(torch.nn.Module):
                 )
             else:
                 self.noise_convs.append(Conv1d(1, c_cur, kernel_size=1))
+
         self.resblocks = nn.ModuleList()
         for i in range(len(self.ups)):
             ch = h.upsample_initial_channel // (2 ** (i + 1))
@@ -404,27 +405,27 @@ class Generator(torch.nn.Module):
         self.conv_post.apply(init_weights)
 
     def forward(self, x, f0):
-        # print(1,x.shape,f0.shape,f0[:, None].shape)
         f0 = self.f0_upsamp(f0[:, None]).transpose(1, 2)  # bs,n,t
-        # print(2,f0.shape)
-        har_source, noi_source, uv = self.m_source(f0)
+
+        har_source, _, _ = self.m_source(f0)
         har_source = har_source.transpose(1, 2)
         x = self.conv_pre(x)
-        # print(124,x.shape,har_source.shape)
+
         for i in range(self.num_upsamples):
             x = F.leaky_relu(x, LRELU_SLOPE)
-            # print(3,x.shape)
             x = self.ups[i](x)
             x_source = self.noise_convs[i](har_source)
-            # print(4,x_source.shape,har_source.shape,x.shape)
             x = x + x_source
             xs = None
+
             for j in range(self.num_kernels):
                 if xs is None:
                     xs = self.resblocks[i * self.num_kernels + j](x)
                 else:
                     xs += self.resblocks[i * self.num_kernels + j](x)
+
             x = xs / self.num_kernels
+
         x = F.leaky_relu(x)
         x = self.conv_post(x)
         x = torch.tanh(x)
