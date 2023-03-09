@@ -73,7 +73,9 @@ class DiffSinger(nn.Module):
         features = self.text_encoder(contents, src_masks)
 
         if phones2mel is not None:
-            phones2mel = F.one_hot(phones2mel.long(), num_classes=features.shape[-1])
+            phones2mel = (
+                phones2mel.unsqueeze(-1).repeat([1, 1, features.shape[-1]]).long()
+            )
             features = torch.gather(features, 1, phones2mel) * (
                 1 - mel_masks[:, :, None].float()
             )
