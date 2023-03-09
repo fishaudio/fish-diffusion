@@ -174,8 +174,11 @@ sphinx-autobuild docs docs/_build/html
 ## 参考项目
 + [diff-svc original](https://github.com/prophesier/diff-svc)
 + [diff-svc optimized](https://github.com/innnky/diff-svc/)
-+ [DiffSinger](https://github.com/openvpi/DiffSinger/)
++ [DiffSinger](https://github.com/openvpi/DiffSinger/) [Paper](https://arxiv.org/abs/2105.02446)
 + [so-vits-svc](https://github.com/innnky/so-vits-svc)
++ [iSTFTNet](https://github.com/rishikksh20/iSTFTNet-pytorch) [Paper](https://arxiv.org/pdf/2203.02395.pdf)
++ [CookieTTS](https://github.com/CookiePPP/cookietts/tree/master/CookieTTS/_4_mtw/hifigan)
++ [HiFi-GAN](https://github.com/jik876/hifi-gan) [Paper](https://arxiv.org/abs/2010.05646)
 
 ## 感谢所有贡献者作出的努力
 
