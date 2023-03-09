@@ -856,16 +856,16 @@ class FFTBlocks(nn.Module):
         :param padding_mask: [B, T]
         :return: [B, T, C] or [L, B, T, C]
         """
-        padding_mask = (
-            x.abs().sum(-1).eq(0).data if padding_mask is None else padding_mask
-        )
+
         nonpadding_mask_TB = (
             1 - padding_mask.transpose(0, 1).float()[:, :, None]
         )  # [T, B, 1]
+
         if self.use_pos_embed:
             positions = self.pos_embed_alpha * self.embed_positions(x[..., 0])
             x = x + positions
             x = F.dropout(x, p=self.dropout, training=self.training)
+
         # B x T x C -> T x B x C
         x = x.transpose(0, 1) * nonpadding_mask_TB
         hiddens = []

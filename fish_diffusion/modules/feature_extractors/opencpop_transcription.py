@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+from torch.nn import functional as F
 
 from .base import BaseFeatureExtractor
 from .builder import FEATURE_EXTRACTORS
@@ -38,29 +39,21 @@ class OpenCpopTranscriptionToPhonemesDuration(BaseFeatureExtractor):
 
         cumsum_durations = np.cumsum(durations)
         alignment_factor = mel_len / cumsum_durations[-1]
-        num_classes = len(self.phonemes)
 
-        features = torch.zeros((mel_len, num_classes * 2 + 2), dtype=torch.float32)
+        # Create one-hot encoding for phonemes
+        features = F.one_hot(
+            torch.tensor([self.phonemes.index(i) for i in phones]),
+            num_classes=len(self.phonemes),
+        ).float()
 
-        for i, (phone, duration, sum_duration) in enumerate(
-            zip(phones, durations, cumsum_durations)
-        ):
+        # Create phones to mel alignment
+        phones2mel = torch.zeros(mel_len, dtype=torch.long)
+
+        for i, sum_duration in enumerate(cumsum_durations):
             current_idx = int(sum_duration * alignment_factor)
             previous_idx = (
                 int(cumsum_durations[i - 1] * alignment_factor) if i > 0 else 0
             )
-            _temp = torch.zeros(num_classes * 2 + 1, dtype=torch.float32)
+            phones2mel[previous_idx:current_idx] = i
 
-            if i > 0:
-                # Previous phoneme
-                _temp[self.phonemes.index(phones[i - 1])] = 1
-
-            _temp[num_classes + self.phonemes.index(phone)] = 1
-            _temp[-1] = duration
-
-            features[previous_idx:current_idx, : num_classes * 2 + 1] = _temp
-
-            # End of phoneme
-            features[previous_idx, -1] = 1
-
-        return features.T
+        return features.T, phones2mel

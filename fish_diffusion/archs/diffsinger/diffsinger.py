@@ -5,6 +5,7 @@ import torch.nn as nn
 import wandb
 from mmengine.optim import OPTIMIZERS
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
+from torch.nn import functional as F
 
 from fish_diffusion.modules.encoders import ENCODERS
 from fish_diffusion.modules.vocoders import VOCODERS
@@ -55,6 +56,7 @@ class DiffSinger(nn.Module):
         mel_max_len=None,
         pitches=None,
         pitch_shift=None,
+        phones2mel=None,
     ):
         src_masks = (
             self.get_mask_from_lengths(contents_lens, contents_max_len)
@@ -62,7 +64,19 @@ class DiffSinger(nn.Module):
             else None
         )
 
+        mel_masks = (
+            self.get_mask_from_lengths(mel_lens, mel_max_len)
+            if mel_lens is not None
+            else None
+        )
+
         features = self.text_encoder(contents, src_masks)
+
+        if phones2mel is not None:
+            phones2mel = F.one_hot(phones2mel.long(), num_classes=features.shape[-1])
+            features = torch.gather(features, 1, phones2mel) * (
+                1 - mel_masks[:, :, None].float()
+            )
 
         speaker_embed = self.speaker_encoder(speakers)
         if speaker_embed.ndim == 2:
@@ -78,12 +92,6 @@ class DiffSinger(nn.Module):
                 pitch_shift_embed = pitch_shift_embed[:, None, :]
 
             features += pitch_shift_embed
-
-        mel_masks = (
-            self.get_mask_from_lengths(mel_lens, mel_max_len)
-            if mel_lens is not None
-            else None
-        )
 
         return dict(
             features=features,
@@ -102,6 +110,7 @@ class DiffSinger(nn.Module):
         mel_max_len=None,
         pitches=None,
         pitch_shift=None,
+        phones2mel=None,
     ):
         features = self.forward_features(
             speakers=speakers,
@@ -112,6 +121,7 @@ class DiffSinger(nn.Module):
             mel_max_len=mel_max_len,
             pitches=pitches,
             pitch_shift=pitch_shift,
+            phones2mel=phones2mel,
         )
 
         output_dict = self.diffusion.train_step(
@@ -161,6 +171,7 @@ class DiffSingerLightning(pl.LightningModule):
             mel_max_len=batch["mel_max_len"],
             pitches=batch["pitches"],
             pitch_shift=batch.get("key_shift", None),
+            phones2mel=batch.get("phones2mel", None),
         )
 
         self.log(f"{mode}_loss", output["loss"], batch_size=batch_size, sync_dist=True)

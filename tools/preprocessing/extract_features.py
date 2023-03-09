@@ -109,7 +109,8 @@ def process(
     # Extract text features
     if text_features_extractor is not None:
         if config.model.type == "DiffSinger":
-            contents = text_features_extractor(audio_path, mel_length)
+            contents, phones2mel = text_features_extractor(audio_path, mel_length)
+            sample["phones2mel"] = phones2mel.cpu().numpy()
         else:
             contents = text_features_extractor(audio, sr)[0]
             contents = repeat_expand(contents, mel_length)
