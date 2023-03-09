@@ -49,6 +49,11 @@ if __name__ == "__main__":
         if "state_dict" in state_dict:
             state_dict = state_dict["state_dict"]
 
+        # Drop vocoder.*
+        state_dict = {
+            k: v for k, v in state_dict.items() if not k.startswith("vocoder.")
+        }
+
         result = model.load_state_dict(state_dict, strict=False)
 
         missing_keys = set(result.missing_keys)
