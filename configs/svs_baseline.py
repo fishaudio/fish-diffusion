@@ -19,21 +19,21 @@ model = dict(
     type="DiffSinger",
     text_encoder=dict(
         _delete_=True,
-        type="NaiveProjectionEncoder",
-        input_size=len(phonemes) * 2 + 2,
-        output_size=256,
+        type="FastSpeech2Encoder",
+        input_size=len(phonemes),
+        hidden_size=256,
     ),
 )
 
 dataset = dict(
     _delete_=True,
     train=dict(
-        type="NaiveSVCDataset",
+        type="NaiveSVSDataset",
         path="dataset/train",
         speaker_id=speaker_mapping["default"],
     ),
     valid=dict(
-        type="NaiveSVCDataset",
+        type="NaiveSVSDataset",
         path="dataset/valid",
         speaker_id=speaker_mapping["default"],
     ),
