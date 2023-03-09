@@ -18,8 +18,12 @@ def load_checkpoint(config, checkpoint, device="cuda", model_cls=DiffSingerLight
     model = model_cls(config)
     state_dict = torch.load(checkpoint, map_location="cpu")
 
-    if "state_dict" in state_dict:  # Checkpoint is saved by pl
+    # Checkpoint is saved by pl
+    if "state_dict" in state_dict:
         state_dict = state_dict["state_dict"]
+
+    # Remove vocoder.*
+    state_dict = {k: v for k, v in state_dict.items() if not k.startswith("vocoder.")}
 
     model.load_state_dict(state_dict, strict=False)
     model.to(device)
