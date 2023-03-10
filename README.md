@@ -11,97 +11,79 @@
 <a href="https://hub.docker.com/r/lengyue233/fish-diffusion">
 <img alt="Docker Hub" src="https://img.shields.io/docker/cloud/build/lengyue233/fish-diffusion?style=flat-square&logo=Docker&logoColor=white">
 </a>
-<a href="https://colab.research.google.com/drive/1GPNq1FWH5LE2f79M4QV2UbdWWazfgrpt">
-<img alt="Colab" src="https://img.shields.io/badge/Colab-Notebook-F9AB00?logo=Google%20Colab&style=flat-square&logoColor=white">
-</a>
-</div>
-
-<div>
 <a href="https://discord.gg/wbYSRBrW2E">
 <img alt="Discord" src="https://img.shields.io/discord/1044927142900809739?color=%23738ADB&label=Discord&logo=discord&logoColor=white&style=flat-square">
 </a>
-<a href="https://space.bilibili.com/23195420">
-<img alt="BiliBili" src="https://img.shields.io/badge/BiliBili-%E5%86%B7%E6%9C%882333-00A1D6?logo=bilibili&style=flat-square&logoColor=white">
-</a>
-<img alt="QQ" src="https://img.shields.io/badge/QQ-588056461-EB1923?logo=Tencent%20QQ&style=flat-square">
 </div>
 
 </div>
 
 ------
 
-一个简单易懂的 TTS / SVS / SVC 框架.
+An easy to understand TTS / SVS / SVC training framework.
 
-> 从阅读 [Wiki](https://fishaudio.github.io/fish-diffusion/) 开始! 
+> Check our [Wiki](https://fishaudio.github.io/fish-diffusion/) to get started! 
  
-> 由于 main 分支在积极开发, 我们建议新用户选择一个稳定版本, 例如 [v1.12](https://github.com/fishaudio/fish-diffusion/tree/v1.12)  
-[English Document](README.en.md)
+> As the main branch is actively developing, we recommend that new users choose a stable version, such as [v1.12](https://github.com/fishaudio/fish-diffusion/tree/v1.12)
 
-## 简介
-基于 DiffSinger 实现歌声音色转换。相较于原 diffsvc 仓库，本仓库优缺点如下
-+ 支持多说话人
-+ 本仓库代码结构更简单易懂, 模块全部解耦
-+ 声码器同样使用 [441khz Diff Singer 社区声码器](https://openvpi.github.io/vocoders/)
-+ 支持多机多卡训练, 支持半精度训练, 拯救你的训练速度和显存
+[中文文档](README.md)
 
-## 环境准备
-以下命令需要在 python 3.10 的 conda 环境下执行
+## Summary
+Using Diffusion Model to solve different voice generating tasks. Compared with the original diffsvc repository, the advantages and disadvantages of this repository are as follows:
++ Support multi-speaker
++ The code structure of this repository is simpler and easier to understand, and all modules are decoupled
++ Support [441khz Diff Singer community vocoder](https://openvpi.github.io/vocoders/)
++ Support multi-machine multi-devices training, support half-precision training, save your training speed and memory
+
+## Preparing the environment
+The following commands need to be executed in the conda environment of python 3.10
 
 ```bash
-# 安装 PyTorch 相关核心依赖, 如果已安装则跳过
-# 参考 https://pytorch.org/get-started/locally/
+# Install PyTorch related core dependencies, skip if installed
+# Reference: https://pytorch.org/get-started/locally/
 conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
 
-# 安装 Poetry 依赖管理工具, 如果已安装则跳过
-# 参考 https://python-poetry.org/docs/#installation
+# Install Poetry dependency management tool, skip if installed
+# Reference: https://python-poetry.org/docs/#installation
 curl -sSL https://install.python-poetry.org | python3 -
 
-# 安装依赖 (推荐)
+# Install the project dependencies
 poetry install
-
-# 如果 Poetry 不可用, 或者速度较慢, 可以使用 pip 安装依赖
-pip install -r requirements.txt
-pip install -e .
 ```
 
-## 声码器准备
-Fish Diffusion 需要 [OPENVPI 441khz NSF-HiFiGAN](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) 声码器来生成音频.
+## Vocoder preparation
+Fish Diffusion requires the [OPENVPI 441khz NSF-HiFiGAN](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) vocoder to generate audio.
 
-### 自动下载
+### Automatic download
 ```bash
 python tools/download_nsf_hifigan.py
 ```
 
-如果你的训练环境处于国内, 可以使用 [GitHub Proxy](https://ghproxy.com/) 来加速下载.
-
-```bash
-python tools/download_nsf_hifigan.py --use-ghproxy
-```
-
-如果你正在使用脚本自动化训练, 可以使用传参 `--agree-license` 的方式同意 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) 许可证.
+If you are using the script to download the model, you can use the `--agree-license` parameter to agree to the [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) license.
 
 ```bash
 python tools/download_nsf_hifigan.py --agree-license
 ```
 
-如果 OpenVPI 的声码器表现不佳, 你可以尝试 [Fish Audio 测试版声码器](https://github.com/fishaudio/fish-diffusion/releases/tag/v1.12)
+If the OpenVPI vocoder performs poorly on high notes, you can try the [Fish Audio Beta Vocoder](https://github.com/fishaudio/fish-diffusion/releases/tag/v1.12).
 ```bash
 python tools/download_nsf_hifigan.py --vocoder FishAudioBeta
 ```
 
-如果你想尝试最新的 [ContentVec](https://github.com/auspicious3000/contentvec) 来提取音素特征, 你可以使用以下命令下载
+If you want to try the latest [ContentVec](https://github.com/auspicious3000/contentvec) to extract phoneme features, you can use the following command to download it.
 ```bash
 python tools/download_nsf_hifigan.py --content-vec
 ```
 
-### 手动下载
-下载 [441khz 声码器](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) 中的 `nsf_hifigan_20221211.zip`  
-或者 [Fish Audio 测试版声码器](https://github.com/fishaudio/fish-diffusion/releases/tag/v1.12) 中的 `nsf_hifigan-beta-v2-epoch-434.zip`  
-解压 `nsf_hifigan` 文件夹到 `checkpoints` 目录下 (如果没有则创建)
+### Manual download
+Download and unzip `nsf_hifigan_20221211.zip` from [441khz vocoder](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1)  
+Or `nsf_hifigan-beta-v2-epoch-434.zip` from [Fish Audio Beta Vocoder](https://github.com/fishaudio/fish-diffusion/releases/tag/v1.12)  
+Copy the `nsf_hifigan` folder to the `checkpoints` directory (create if not exist)
 
-如果你想手动下载 [ContentVec](https://github.com/auspicious3000/contentvec), 你可以从 [这里](https://github.com/fishaudio/fish-diffusion/releases/download/v1.12/content-vec-best-legacy-500.pt) 下载, 并将其放入 `checkpoints` 目录下.
-## 数据集准备
-仅需要以以下文件结构将数据集放入 dataset 目录即可
+If you want to download [ContentVec](https://github.com/auspicious3000/contentvec) manually, you can download it from [here](https://github.com/fishaudio/fish-diffusion/releases/download/v1.12/content-vec-best-legacy-500.pt) and put it in the `checkpoints` directory.
+
+## Dataset preparation
+You only need to put the dataset into the `dataset` directory in the following file structure
 
 ```shell
 dataset
@@ -109,7 +91,7 @@ dataset
 │   ├───xxx1-xxx1.wav
 │   ├───...
 │   ├───Lxx-0xx8.wav
-│   └───speaker0 (支持子目录)
+│   └───speaker0 (Subdirectory is also supported)
 │       └───xxx1-xxx1.wav
 └───valid
     ├───xx2-0xxx2.wav
@@ -118,60 +100,59 @@ dataset
 ```
 
 ```bash
-# 提取全部数据的特征, 如 pitch, text features, mel features 等
+# Extract all data features, such as pitch, text features, mel features, etc.
 python tools/preprocessing/extract_features.py --config configs/svc_hubert_soft.py --path dataset --clean
 ```
 
-## 基本训练
-> 该项目仍在积极开发, 请记得备份你的 config 文件  
-> 该项目仍在积极开发, 请记得备份你的 config 文件  
-> 该项目仍在积极开发, 请记得备份你的 config 文件
+## Baseline training
+> The project is under active development, please backup your config file  
+> The project is under active development, please backup your config file  
+> The project is under active development, please backup your config file  
 
 ```bash
-# 单机单卡 / 单机多卡训练
+# Single machine single card / multi-card training
 python tools/diffusion/train.py --config configs/svc_hubert_soft.py
 
-# 继续训练
+# Resume training
 python tools/diffusion/train.py --config configs/svc_hubert_soft.py --resume [checkpoint file]
 
-# 微调预训练模型
-# 注意: 你应该调整配置文件中的学习率调度器为 warmup_cosine_finetune
+# Fine-tune the pre-trained model
+# Note: You should adjust the learning rate scheduler in the config file to warmup_cosine_finetune
 python tools/diffusion/train.py --config configs/svc_cn_hubert_soft_finetune.py --pretrained [checkpoint file]
 ```
 
-## 推理
+## Inference
 ```bash
-# 命令行推理, 你可以使用 --help 查看更多参数
+# Inference using shell, you can use --help to view more parameters
 python tools/diffusion/inference.py --config [config] \
     --checkpoint [checkpoint file] \
     --input [input audio] \
     --output [output audio]
 
 
-# Gradio Web 推理, 其他参数会被转为 Gradio 默认参数
+# Gradio Web Inference, other parameters will be used as gradio default parameters
 python tools/diffusion/inference.py --config [config] \
     --checkpoint [checkpoint file] \
     --gradio
 ```
 
-## 将 DiffSVC 模型转换为 Fish Diffusion 模型
+## Convert a DiffSVC model to Fish Diffusion
 ```bash
 python tools/diffusion/diff_svc_converter.py --config configs/svc_hubert_soft_diff_svc.py \
     --input-path [DiffSVC ckpt] \
     --output-path [Fish Diffusion ckpt]
 ```
 
-## 参与本项目
-如果你有任何问题, 请提交 issue 或 pull request.  
-你应该在提交 pull request 之前运行 `tools/lint.sh`
+## Contributing
+If you have any questions, please submit an issue or pull request.  
+You should run `tools/lint.sh` before submitting a pull request.
 
-实时预览文档
+Real-time documentation can be generated by
 ```bash
 sphinx-autobuild docs docs/_build/html
 ```
 
-
-## 参考项目
+## Credits
 + [diff-svc original](https://github.com/prophesier/diff-svc)
 + [diff-svc optimized](https://github.com/innnky/diff-svc/)
 + [DiffSinger](https://github.com/openvpi/DiffSinger/) [Paper](https://arxiv.org/abs/2105.02446)
@@ -180,7 +161,7 @@ sphinx-autobuild docs docs/_build/html
 + [CookieTTS](https://github.com/CookiePPP/cookietts/tree/master/CookieTTS/_4_mtw/hifigan)
 + [HiFi-GAN](https://github.com/jik876/hifi-gan) [Paper](https://arxiv.org/abs/2010.05646)
 
-## 感谢所有贡献者作出的努力
+## Thanks to all contributors for their efforts
 
 <a href="https://github.com/fishaudio/fish-diffusion/graphs/contributors" target="_blank">
   <img src="https://contrib.rocks/image?repo=fishaudio/fish-diffusion" />
