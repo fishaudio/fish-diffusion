@@ -26,7 +26,7 @@ An easy to understand TTS / SVS / SVC training framework.
  
 > As the main branch is actively developing, we recommend that new users choose a stable version, such as [v1.12](https://github.com/fishaudio/fish-diffusion/tree/v1.12)
 
-[中文文档](README.md)
+[中文文档](README.zh.md)
 
 ## Summary
 Using Diffusion Model to solve different voice generating tasks. Compared with the original diffsvc repository, the advantages and disadvantages of this repository are as follows:

@@ -23,7 +23,6 @@
 <a href="https://space.bilibili.com/23195420">
 <img alt="BiliBili" src="https://img.shields.io/badge/BiliBili-%E5%86%B7%E6%9C%882333-00A1D6?logo=bilibili&style=flat-square&logoColor=white">
 </a>
-<img alt="QQ" src="https://img.shields.io/badge/QQ-588056461-EB1923?logo=Tencent%20QQ&style=flat-square">
 </div>
 
 </div>
@@ -35,7 +34,7 @@
 > 从阅读 [Wiki](https://fishaudio.github.io/fish-diffusion/) 开始! 
  
 > 由于 main 分支在积极开发, 我们建议新用户选择一个稳定版本, 例如 [v1.12](https://github.com/fishaudio/fish-diffusion/tree/v1.12)  
-[English Document](README.en.md)
+[English Document](README.md)
 
 ## 简介
 基于 DiffSinger 实现歌声音色转换。相较于原 diffsvc 仓库，本仓库优缺点如下
