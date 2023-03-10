@@ -46,8 +46,9 @@ def viz_synth_sample(
         [
             mel_prediction.cpu().numpy(),
             mel_target.cpu().numpy(),
+            (mel_prediction - mel_target).abs().cpu().numpy(),
         ],
-        ["Sampled Spectrogram", "Ground-Truth Spectrogram"],
+        ["Sampled Spectrogram", "Ground-Truth Spectrogram", "Difference"],
     )
 
     wav_reconstruction = vocoder.spec2wav(mel_target, pitch)
