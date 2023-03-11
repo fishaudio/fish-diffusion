@@ -132,7 +132,7 @@ python tools/diffusion/train.py --config configs/svc_hubert_soft.py
 
 # 多机训练
 python tools/diffusion/train.py --config configs/svc_content_vec_multi_node.py
-# 需要配置环境变量，具体请见https://pytorch-lightning.readthedocs.io/en/1.6.5/clouds/cluster.html
+# 需要在每个节点上配置环境变量，具体请见 https://pytorch-lightning.readthedocs.io/en/1.6.5/clouds/cluster.html
 
 # 继续训练
 python tools/diffusion/train.py --config configs/svc_hubert_soft.py --resume [checkpoint file]
