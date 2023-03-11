@@ -74,6 +74,51 @@ class NaiveSVCDataset(NaiveDataset):
 
 
 @DATASETS.register_module()
+class NaiveSVCPowerDataset(NaiveDataset):
+    processing_pipeline = [
+        dict(
+            type="PickKeys",
+            keys=[
+                "path",
+                "time_stretch",
+                "mel",
+                "contents",
+                "pitches",
+                "key_shift",
+                "speaker",
+                "energy",
+            ],
+        ),
+        dict(type="Transpose", keys=[("mel", 1, 0), ("contents", 1, 0)]),
+    ]
+
+    collating_pipeline = [
+        dict(type="ListToDict"),
+        dict(
+            type="PadStack",
+            keys=[("mel", -2), ("contents", -2), ("pitches", -1), ("energy", -1)],
+        ),
+        dict(
+            type="ToTensor",
+            keys=[
+                ("time_stretch", torch.float32),
+                ("key_shift", torch.float32),
+                ("speaker", torch.int64),
+            ],
+        ),
+        dict(
+            type="UnSqueeze",
+            keys=[
+                ("pitches", -1),
+                ("time_stretch", -1),
+                ("key_shift", -1),
+                ("energy", -1),
+            ],
+        ),  # (N, T) -> (N, T, 1)
+    ]
+
+
+@DATASETS.register_module()
 class NaiveVOCODERDataset(NaiveDataset):
     processing_pipeline = [
         dict(type="PickKeys", keys=["path", "audio", "mel", "pitches"]),

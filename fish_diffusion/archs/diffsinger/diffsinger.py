@@ -30,6 +30,9 @@ class DiffSinger(nn.Module):
         if "pitch_shift_encoder" in model_config:
             self.pitch_shift_encoder = ENCODERS.build(model_config.pitch_shift_encoder)
 
+        if "energy_encoder" in model_config:
+            self.energy_encoder = ENCODERS.build(model_config.energy_encoder)
+
     @staticmethod
     def get_mask_from_lengths(lengths, max_len=None):
         batch_size = lengths.shape[0]
@@ -57,6 +60,7 @@ class DiffSinger(nn.Module):
         pitches=None,
         pitch_shift=None,
         phones2mel=None,
+        energy=None,
     ):
         src_masks = (
             self.get_mask_from_lengths(contents_lens, contents_max_len)
@@ -95,6 +99,14 @@ class DiffSinger(nn.Module):
 
             features += pitch_shift_embed
 
+        if energy is not None and hasattr(self, "energy_encoder"):
+            energy_embed = self.energy_encoder(energy)
+
+            if energy_embed.ndim == 2:
+                energy_embed = energy_embed[:, None, :]
+
+            features += energy_embed
+
         return dict(
             features=features,
             src_masks=src_masks,
@@ -113,6 +125,7 @@ class DiffSinger(nn.Module):
         pitches=None,
         pitch_shift=None,
         phones2mel=None,
+        energy=None,
     ):
         features = self.forward_features(
             speakers=speakers,
@@ -124,6 +137,7 @@ class DiffSinger(nn.Module):
             pitches=pitches,
             pitch_shift=pitch_shift,
             phones2mel=phones2mel,
+            energy=energy,
         )
 
         output_dict = self.diffusion.train_step(
@@ -174,6 +188,7 @@ class DiffSingerLightning(pl.LightningModule):
             pitches=batch["pitches"],
             pitch_shift=batch.get("key_shift", None),
             phones2mel=batch.get("phones2mel", None),
+            energy=batch.get("energy", None),
         )
 
         self.log(f"{mode}_loss", output["loss"], batch_size=batch_size, sync_dist=True)

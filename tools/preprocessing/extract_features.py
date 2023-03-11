@@ -16,6 +16,7 @@ from loguru import logger
 from mmengine import Config
 from tqdm import tqdm
 
+from fish_diffusion.modules.energy_extractors import ENERGY_EXTRACTORS
 from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
 from fish_diffusion.modules.feature_extractors.base import BaseFeatureExtractor
 from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
@@ -49,7 +50,7 @@ def init(
     logger.info(f"Rank {rank} uses device {device}")
 
     text_features_extractor = None
-    if config.preprocessing.text_features_extractor is not None:
+    if hasattr(config.preprocessing, "text_features_extractor"):
         text_features_extractor = FEATURE_EXTRACTORS.build(
             config.preprocessing.text_features_extractor
         )
@@ -57,20 +58,33 @@ def init(
         text_features_extractor.eval()
 
     pitch_extractor = None
-    if config.preprocessing.pitch_extractor is not None:
+    if hasattr(config.preprocessing, "pitch_extractor"):
         if config.preprocessing.pitch_extractor.type == "CrepePitchExtractor":
             torchcrepe.load.model(device, "full")
 
         pitch_extractor = PITCH_EXTRACTORS.build(config.preprocessing.pitch_extractor)
 
+    energy_extractor = None
+    if hasattr(config.preprocessing, "energy_extractor"):
+        energy_extractor = ENERGY_EXTRACTORS.build(
+            config.preprocessing.energy_extractor
+        )
+        energy_extractor.to(device)
+        energy_extractor.eval()
+
     vocoder = None
-    if config.model.vocoder is not None:
+    if hasattr(config.model, "vocoder"):
         vocoder = VOCODERS.build(config.model.vocoder)
         vocoder.to(device)
         vocoder.eval()
 
-    # return text_features_extractor, pitch_extractor, vocoder, device
-    model_caches = (text_features_extractor, pitch_extractor, vocoder, device)
+    model_caches = (
+        text_features_extractor,
+        pitch_extractor,
+        energy_extractor,
+        vocoder,
+        device,
+    )
 
 
 def process(
@@ -82,7 +96,13 @@ def process(
 ):
     if model_caches is None:
         init(config)
-    text_features_extractor, pitch_extractor, vocoder, device = model_caches
+    (
+        text_features_extractor,
+        pitch_extractor,
+        energy_extractor,
+        vocoder,
+        device,
+    ) = model_caches
 
     save_path = audio_path.with_suffix(f".{idx}.data.npy")
     if save_path.exists():
@@ -124,6 +144,11 @@ def process(
 
         sample["pitches"] = pitches.cpu().numpy()
         sample["key_shift"] = key_shift  # Pitch is also gender params
+
+    # Extract power
+    if energy_extractor is not None:
+        power = energy_extractor(audio, sr, pad_to=mel_length)
+        sample["energy"] = power.cpu().numpy()
 
     # Save
     np.save(save_path, sample)
