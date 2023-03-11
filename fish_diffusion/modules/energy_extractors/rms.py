@@ -41,6 +41,7 @@ class RMSEnergyExtractor(nn.Module):
         assert x.ndim == 2, f"Expected 2D tensor, got {x.ndim}D tensor."
         assert x.shape[0] == 1, f"Expected 1 channel, got {x.shape[0]} channels."
 
+        device = x.device
         x = x.squeeze(0).cpu().numpy()
 
         energy = librosa.feature.rms(
@@ -51,7 +52,7 @@ class RMSEnergyExtractor(nn.Module):
             pad_mode=self.pad_mode,
         )
 
-        energy = torch.from_numpy(energy).squeeze(-2)
+        energy = torch.from_numpy(energy).squeeze(-2).to(device)
 
         if pad_to is None:
             return energy

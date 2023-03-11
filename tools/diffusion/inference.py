@@ -12,6 +12,7 @@ from loguru import logger
 from mmengine import Config
 from torch import nn
 
+from fish_diffusion.modules.energy_extractors import ENERGY_EXTRACTORS
 from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
 from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.utils.audio import separate_vocals, slice_audio
@@ -32,6 +33,11 @@ class SVCInference(nn.Module):
         self.pitch_extractor = PITCH_EXTRACTORS.build(
             config.preprocessing.pitch_extractor
         )
+
+        if hasattr(config.preprocessing, "energy_extractor"):
+            self.energy_extractor = ENERGY_EXTRACTORS.build(
+                config.preprocessing.energy_extractor
+            )
 
         if os.path.isdir(checkpoint):
             # Find the latest checkpoint
@@ -76,6 +82,11 @@ class SVCInference(nn.Module):
         if self.config.model.get("pitch_shift_encoder"):
             pitch_shift = torch.zeros((1, 1), device=self.device)
 
+        energy = None
+        if self.config.model.get("energy_encoder"):
+            energy = self.energy_extractor(audio, sr, pad_to=mel_len)
+            energy = energy[None, :, None]  # (1, mel_len, 1)
+
         # Predict
         contents_lens = torch.tensor([mel_len]).to(self.device)
 
@@ -88,6 +99,7 @@ class SVCInference(nn.Module):
             mel_max_len=max(contents_lens),
             pitches=pitch[None].to(self.device),
             pitch_shift=pitch_shift,
+            energy=energy,
         )
 
         result = self.model.model.diffusion(
