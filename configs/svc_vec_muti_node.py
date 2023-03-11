@@ -5,7 +5,7 @@ from fish_diffusion.utils.pitch import pitch_to_log
 
 _base_ = [
     "./_base_/archs/diff_svc_v2.py",
-    "./_base_/trainers/base.py",
+    "./_base_/trainers/base_muti_node.py",
     "./_base_/schedulers/warmup_cosine.py",
     "./_base_/datasets/naive_svc.py",
 ]
@@ -14,7 +14,6 @@ val_mapping = {}
 speaker_mapping = get_speaker_map_from_subfolder("dataset/train", speaker_mapping) # Update speaker_mapping using subfolders in `dataset/train`.
 val_mapping = get_speaker_map_from_subfolder("dataset/valid", val_mapping)
 # This will update speaker_mapping to {'speaker0': 0, 'speaker': 1}
-#print(speaker_mapping)
 train_datasets = get_datasets_from_subfolder("NaiveSVCDataset", "dataset/train", speaker_mapping)  # Build datasets manually.
 valid_datasets = get_datasets_from_subfolder("NaiveSVCDataset", "dataset/valid", val_mapping)  # Build datasets manually.
 
@@ -69,3 +68,10 @@ augmentations=[
             probability=0.75,
         )
 ]
+trainer = dict(
+    devices=8,      #The number of GPUs that Every nodes has
+    num_nodes=6,    #Total nodes
+    max_steps=100000,   #It is highly recommended to make it lower when you use more GPUs
+    val_check_interval=None,
+    check_val_every_n_epoch=5,  #Steps val is suggested to disable,Because the steps are only calcating in one rank,so Epoch val is better
+)
