@@ -81,15 +81,15 @@ augmentations = [
 trainer = dict(
     devices=8,  # The number of GPUs that Every nodes has
     num_nodes=6,  # Total nodes
-    max_steps=100000,  # It is highly recommended to make it lower when you use more GPUs
+    max_steps=100000,  # It is recommended to make it lower when you use more GPUs
     val_check_interval=None,
-    check_val_every_n_epoch=5,  # Steps val is suggested to disable,Because the steps are only calcating in one rank,so Epoch val is better
+    check_val_every_n_epoch=5,  # Steps val is suggested to disable,because the steps are only calcating in one rank,so Epoch val is better
 )
 # Learning rate setting override
 lambda_func = LambdaWarmUpCosineScheduler(
     warm_up_steps=400,
-    lr_min=6e-4,  # Too small value is not recommended
-    lr_max=2e-3,  # Modify with your total batch_size
-    lr_start=2e-4,
-    max_decay_steps=40000,
+    lr_min=8e-4,  # Too small value is not recommended if you have many GPUs to train
+    lr_max=1.5e-3,  # Modify with your total batch_size,don't make it too high
+    lr_start=5e-4,
+    max_decay_steps=60000,
 )
