@@ -78,8 +78,8 @@ trainer = dict(
 #Learning rate setting override
 lambda_func = LambdaWarmUpCosineScheduler(
     warm_up_steps=400,
-    lr_min=6e-4,
-    lr_max=2e-3,  # Modified
-    lr_start=2e-4,
+    lr_min=6e-4,  # Too small value is not recommended
+    lr_max=2e-3,  # Modify with your total batch_size
+    lr_start=2e-4, 
     max_decay_steps=40000,
 )
