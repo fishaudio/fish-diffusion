@@ -3,7 +3,7 @@ import sys
 import torch
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.strategies import DDPStrategy
-
+from torch.distributed.algorithms.ddp_comm_hooks import default_hooks as default
 trainer = dict(
     accelerator="gpu",
     devices=-1,
