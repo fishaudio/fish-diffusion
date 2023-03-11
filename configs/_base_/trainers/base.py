@@ -4,6 +4,7 @@ import torch
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.strategies import DDPStrategy
 from torch.distributed.algorithms.ddp_comm_hooks import default_hooks as default
+
 trainer = dict(
     accelerator="gpu",
     devices=-1,
@@ -30,6 +31,8 @@ if torch.cuda.is_available() and torch.cuda.device_count() > 1:
     process_group_backend = "nccl" if sys.platform != "win32" else "gloo"
 
     trainer["strategy"] = DDPStrategy(
-        find_unused_parameters=False, process_group_backend=process_group_backend, 
-        gradient_as_bucket_view=True, ddp_comm_hook=default.fp16_compress_hook
+        find_unused_parameters=False,
+        process_group_backend=process_group_backend,
+        gradient_as_bucket_view=True,
+        ddp_comm_hook=default.fp16_compress_hook,
     )
