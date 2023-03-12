@@ -50,7 +50,7 @@ def voice_change_model():
         speaker_id=int_speaker_id,
     )
 
-    tar_audio = librosa.resample(_audio, sr, daw_sample)
+    tar_audio = librosa.resample(_audio, orig_sr=sr, target_sr=daw_sample)
 
     # 返回音频
     out_wav_path = io.BytesIO()
