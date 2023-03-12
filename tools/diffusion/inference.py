@@ -47,7 +47,7 @@ class SVCInference(nn.Module):
             )
             checkpoint = os.path.join(checkpoint, checkpoints[-1])
 
-        self.model = load_checkpoint(config, checkpoint)
+        self.model = load_checkpoint(config, checkpoint, device="cpu")
 
     @property
     def device(self):
@@ -161,8 +161,9 @@ class SVCInference(nn.Module):
                     silence_threshold,
                     max_slice_duration,
                     extract_vocals,
-                    sampler_progress,
-                    gradio_progress,
+                    sampler_interval=sampler_interval,
+                    sampler_progress=sampler_progress,
+                    gradio_progress=gradio_progress,
                 )
 
             return
