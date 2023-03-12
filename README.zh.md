@@ -118,7 +118,7 @@ dataset
 
 ```bash
 # 提取全部数据的特征, 如 pitch, text features, mel features 等
-python tools/preprocessing/extract_features.py --config configs/svc_hubert_soft.py --path dataset --clean
+python tools/preprocessing/extract_features.py --config configs/svc_hubert_soft.py --path dataset/train --clean
 ```
 
 ## 基本训练
@@ -129,6 +129,10 @@ python tools/preprocessing/extract_features.py --config configs/svc_hubert_soft.
 ```bash
 # 单机单卡 / 单机多卡训练
 python tools/diffusion/train.py --config configs/svc_hubert_soft.py
+
+# 多机训练
+python tools/diffusion/train.py --config configs/svc_content_vec_multi_node.py
+# 需要在每个节点上配置环境变量，具体请见 https://pytorch-lightning.readthedocs.io/en/1.6.5/clouds/cluster.html
 
 # 继续训练
 python tools/diffusion/train.py --config configs/svc_hubert_soft.py --resume [checkpoint file]
