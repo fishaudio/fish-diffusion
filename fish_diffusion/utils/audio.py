@@ -84,6 +84,7 @@ def slice_audio(
     top_db: int = 60,
     frame_length: int = 2048,
     hop_length: int = 512,
+    min_silence_duration: float = 0,
 ) -> Iterable[tuple[int, int]]:
     """Slice audio by silence
 
@@ -94,6 +95,7 @@ def slice_audio(
         top_db: top_db of librosa.effects.split
         frame_length: frame_length of librosa.effects.split
         hop_length: hop_length of librosa.effects.split
+        min_silence_duration: minimum silence duration
 
     Returns:
         Iterable of start/end frame
@@ -102,6 +104,20 @@ def slice_audio(
     intervals = librosa.effects.split(
         audio.T, top_db=top_db, frame_length=frame_length, hop_length=hop_length
     )
+
+    # Merge intervals that are too close
+    if min_silence_duration > 0:
+        new_intervals = []
+        for start, end in intervals:
+            if (
+                new_intervals
+                and new_intervals[-1][1] + min_silence_duration * rate >= start
+            ):
+                new_intervals[-1] = (new_intervals[-1][0], end)
+            else:
+                new_intervals.append((start, end))
+
+        intervals = new_intervals
 
     for start, end in intervals:
         if end - start <= rate * max_duration:
