@@ -124,6 +124,7 @@ class SVCInference(nn.Module):
         sampler_progress=False,
         sampler_interval=None,
         gradio_progress=None,
+        min_silence_duration=0,
     ):
         """Inference
 
@@ -138,6 +139,7 @@ class SVCInference(nn.Module):
             sampler_progress: show sampler progress
             sampler_interval: sampler interval
             gradio_progress: gradio progress callback
+            min_silence_duration: minimum silence duration
         """
 
         if isinstance(input_path, str) and os.path.isdir(input_path):
@@ -154,16 +156,17 @@ class SVCInference(nn.Module):
 
             for file in os.listdir(input_path):
                 self.inference(
-                    os.path.join(input_path, file),
-                    os.path.join(output_path, file),
-                    speaker,
-                    pitch_adjust,
-                    silence_threshold,
-                    max_slice_duration,
-                    extract_vocals,
+                    input_path=os.path.join(input_path, file),
+                    output_path=os.path.join(output_path, file),
+                    speaker=speaker,
+                    pitch_adjust=pitch_adjust,
+                    silence_threshold=silence_threshold,
+                    max_slice_duration=max_slice_duration,
+                    extract_vocals=extract_vocals,
                     sampler_interval=sampler_interval,
                     sampler_progress=sampler_progress,
                     gradio_progress=gradio_progress,
+                    min_silence_duration=min_silence_duration,
                 )
 
             return
@@ -177,6 +180,8 @@ class SVCInference(nn.Module):
 
         # Load audio
         audio, sr = librosa.load(input_path, sr=self.config.sampling_rate, mono=True)
+
+        logger.info(f"Loaded {input_path} with sr={sr}")
 
         # Extract vocals
 
@@ -194,7 +199,11 @@ class SVCInference(nn.Module):
         # Slice into segments
         segments = list(
             slice_audio(
-                audio, sr, max_duration=max_slice_duration, top_db=silence_threshold
+                audio,
+                sr,
+                max_duration=max_slice_duration,
+                top_db=silence_threshold,
+                min_silence_duration=min_silence_duration,
             )
         )
         logger.info(f"Sliced into {len(segments)} segments")
@@ -228,6 +237,9 @@ class SVCInference(nn.Module):
         logger.info("Done")
 
         if output_path is not None:
+            if os.path.exists(os.path.dirname(output_path)) is False:
+                os.makedirs(os.path.dirname(output_path))
+
             sf.write(output_path, generated_audio, sr)
 
         return generated_audio, sr
@@ -325,6 +337,28 @@ def parse_args():
         help="Device to use",
     )
 
+    # Slicer arguments
+    parser.add_argument(
+        "--silence_threshold",
+        type=int,
+        default=60,
+        help="Silence threshold in dB",
+    )
+
+    parser.add_argument(
+        "--max_slice_duration",
+        type=int,
+        default=30,
+        help="Max slice duration in seconds",
+    )
+
+    parser.add_argument(
+        "--min_silence_duration",
+        type=int,
+        default=0,
+        help="Min silence duration in seconds",
+    )
+
     return parser.parse_args()
 
 
@@ -368,4 +402,7 @@ if __name__ == "__main__":
             extract_vocals=args.extract_vocals,
             sampler_progress=args.sampler_progress,
             sampler_interval=args.sampler_interval,
+            silence_threshold=args.silence_threshold,
+            max_slice_duration=args.max_slice_duration,
+            min_silence_duration=args.min_silence_duration,
         )
