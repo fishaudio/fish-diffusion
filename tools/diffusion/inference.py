@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+from pathlib import Path
 from typing import Optional
 
 import librosa
@@ -62,16 +63,18 @@ class SVCInference(nn.Module):
         speaker_id: int = 0,
         sampler_progress: bool = False,
         sampler_interval: Optional[int] = None,
+        pitches: Optional[torch.Tensor] = None,
     ):
         mel_len = audio.shape[-1] // 512
 
         # Extract and process pitch
-        pitch = self.pitch_extractor(audio, sr, pad_to=mel_len).float()
+        if pitches is None:
+            pitches = self.pitch_extractor(audio, sr, pad_to=mel_len).float()
 
-        if (pitch == 0).all():
+        if (pitches == 0).all():
             return np.zeros((audio.shape[-1],))
 
-        pitch *= 2 ** (pitch_adjust / 12)
+        pitches *= 2 ** (pitch_adjust / 12)
 
         # Extract and process text features
         text_features = self.text_features_extractor(audio, sr)[0]
@@ -97,7 +100,7 @@ class SVCInference(nn.Module):
             contents_max_len=max(contents_lens),
             mel_lens=contents_lens,
             mel_max_len=max(contents_lens),
-            pitches=pitch[None].to(self.device),
+            pitches=pitches[None].to(self.device),
             pitch_shift=pitch_shift,
             energy=energy,
         )
@@ -107,7 +110,7 @@ class SVCInference(nn.Module):
             progress=sampler_progress,
             sampler_interval=sampler_interval,
         )
-        wav = self.model.vocoder.spec2wav(result[0].T, f0=pitch).cpu().numpy()
+        wav = self.model.vocoder.spec2wav(result[0].T, f0=pitches).cpu().numpy()
 
         return wav
 
@@ -125,6 +128,7 @@ class SVCInference(nn.Module):
         sampler_interval=None,
         gradio_progress=None,
         min_silence_duration=0,
+        pitches_path=None,
     ):
         """Inference
 
@@ -140,9 +144,14 @@ class SVCInference(nn.Module):
             sampler_interval: sampler interval
             gradio_progress: gradio progress callback
             min_silence_duration: minimum silence duration
+            pitches_path: disable pitch extraction and use the pitch from the given path
         """
 
         if isinstance(input_path, str) and os.path.isdir(input_path):
+            if pitches_path is not None:
+                logger.error("Pitch path is not supported for batch inference")
+                return
+
             # Batch inference
             if output_path is None:
                 logger.error("Output path is required for batch inference")
@@ -196,6 +205,13 @@ class SVCInference(nn.Module):
         # Normalize loudness
         audio = loudness_norm.loudness_norm(audio, sr)
 
+        # Restore pitches if *.pitch.npy exists
+        pitches = None
+
+        if pitches_path is not None:
+            logger.info(f"Restoring pitches from {pitches_path}")
+            pitches = torch.from_numpy(np.load(pitches_path)).to(self.device)
+
         # Slice into segments
         segments = list(
             slice_audio(
@@ -220,6 +236,11 @@ class SVCInference(nn.Module):
                 f"Processing segment {idx + 1}/{len(segments)}, duration: {segment.shape[-1] / sr:.2f}s"
             )
 
+            pitches_segment = None
+            if pitches is not None:
+                pitches_segment = pitches[start // 512 : end // 512]
+                pitches_segment[torch.isnan(pitches_segment)] = 0
+
             wav = self(
                 segment,
                 sr,
@@ -227,6 +248,7 @@ class SVCInference(nn.Module):
                 speaker_id=speaker_id,
                 sampler_progress=sampler_progress,
                 sampler_interval=sampler_interval,
+                pitches=pitches_segment,
             )
             max_wav_len = generated_audio.shape[-1] - start
             generated_audio[start : start + wav.shape[-1]] = wav[:max_wav_len]
@@ -307,6 +329,13 @@ def parse_args():
         type=int,
         default=0,
         help="Pitch adjustment in semitones",
+    )
+
+    parser.add_argument(
+        "--pitches_path",
+        type=str,
+        default=None,
+        help="Path to the pitch file",
     )
 
     parser.add_argument(
@@ -399,6 +428,7 @@ if __name__ == "__main__":
             output_path=args.output,
             speaker=args.speaker,
             pitch_adjust=args.pitch_adjust,
+            pitches_path=args.pitches_path,
             extract_vocals=args.extract_vocals,
             sampler_progress=args.sampler_progress,
             sampler_interval=args.sampler_interval,
