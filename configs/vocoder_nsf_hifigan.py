@@ -62,7 +62,6 @@ dataloader = dict(
 )
 
 preprocessing = dict(
-    text_features_extractor=None,
     pitch_extractor=dict(
         type="ParselMouthPitchExtractor",
         keep_zeros=False,
