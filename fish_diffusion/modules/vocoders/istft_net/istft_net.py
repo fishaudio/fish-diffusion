@@ -39,7 +39,7 @@ class ISTFTNet(pl.LightningModule):
         cp_dict = torch.load(checkpoint_path)
 
         if "state_dict" not in cp_dict:
-            self.model.load_state_dict(cp_dict["generator"])
+            self.model.load_state_dict(cp_dict["generator"], map_location="cpu")
         else:
             self.model.load_state_dict(
                 {

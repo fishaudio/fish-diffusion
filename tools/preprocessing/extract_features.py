@@ -122,9 +122,12 @@ def process(
     audio = torch.from_numpy(audio).unsqueeze(0).to(device)
 
     # Obtain mel spectrogram
-    mel = vocoder.wav2spec(audio, sr, key_shift=key_shift)
-    mel_length = mel.shape[-1]
-    sample["mel"] = mel.cpu().numpy()
+    if vocoder is not None:
+        mel = vocoder.wav2spec(audio, sr, key_shift=key_shift)
+        mel_length = mel.shape[-1]
+        sample["mel"] = mel.cpu().numpy()
+    else:
+        mel_length = None
 
     # Extract text features
     if text_features_extractor is not None:
