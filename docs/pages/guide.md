@@ -91,7 +91,13 @@ _I STRONGLY RECOMMEND FOR LOCAL TRAINING, THAT THE WAVS AREN'T HIGHER THAN 10 SE
 
 To start the preprocessing you need to run the following command
 
-    python tools/preprocessing/extract_features.py --config configs/svc_content_vec.py --path dataset --clean
+```bash
+# Process the training data (with augmentation if included in the config)
+python tools/preprocessing/extract_features.py --config configs/svc_content_vec.py --path dataset/train --clean
+
+# Process the validation data without augmentation
+python tools/preprocessing/extract_features.py --config configs/svc_content_vec.py --path dataset/valid --clean --no-augmentation
+```
 
   Once that is done you have your data prepared to start training!
 
