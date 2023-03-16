@@ -283,7 +283,11 @@ After installing Miniconda, open “Anaconda”, in my case I have Windows so I 
 </div></blockquote>
 <p><em>I STRONGLY RECOMMEND FOR LOCAL TRAINING, THAT THE WAVS AREN’T HIGHER THAN 10 SECONDS LONG IF YOU HAVE 4GB OF VRAM</em></p>
 <p>To start the preprocessing you need to run the following command</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>python tools/preprocessing/extract_features.py --config configs/svc_content_vec.py --path dataset --clean
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Process the training data (with augmentation if included in the config)</span>
+python<span class="w"> </span>tools/preprocessing/extract_features.py<span class="w"> </span>--config<span class="w"> </span>configs/svc_content_vec.py<span class="w"> </span>--path<span class="w"> </span>dataset/train<span class="w"> </span>--clean
+
+<span class="c1"># Process the validation data without augmentation</span>
+python<span class="w"> </span>tools/preprocessing/extract_features.py<span class="w"> </span>--config<span class="w"> </span>configs/svc_content_vec.py<span class="w"> </span>--path<span class="w"> </span>dataset/valid<span class="w"> </span>--clean<span class="w"> </span>--no-augmentation
 </pre></div>
 </div>
 <p>Once that is done you have your data prepared to start training!</p>
