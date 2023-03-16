@@ -35,7 +35,7 @@ class NsfHifiGAN(pl.LightningModule):
         self.model = Generator(self.h)
         self.use_natural_log = use_natural_log
 
-        cp_dict = torch.load(checkpoint_path)
+        cp_dict = torch.load(checkpoint_path, map_location="cpu")
 
         if "state_dict" not in cp_dict:
             self.model.load_state_dict(cp_dict["generator"])
