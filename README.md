@@ -103,7 +103,15 @@ dataset
 # Extract all data features, such as pitch, text features, mel features, etc.
 python tools/preprocessing/extract_features.py --config configs/svc_hubert_soft.py --path dataset --clean
 ```
+PLEASE MAKE SURE YOU HAVE WHISPER PACKAGES FROM THE OFFICIAL REPO 
+```bash 
+pip3 install git+https://github.com/openai/whisper.git
+```
 
+Also, 
+```bash
+ln -s fish_diffusion tools/preprocessing/
+```
 ## Baseline training
 > The project is under active development, please backup your config file  
 > The project is under active development, please backup your config file  
