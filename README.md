@@ -52,7 +52,7 @@ poetry install
 ```
 
 ## Vocoder preparation
-Fish Diffusion requires the [OPENVPI 441khz NSF-HiFiGAN](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) vocoder to generate audio.
+Fish Diffusion requires the [FishAudio NSF-HiFiGAN](https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0) vocoder to generate audio.
 
 ### Automatic download
 ```bash
@@ -64,10 +64,6 @@ If you are using the script to download the model, you can use the `--agree-lice
 ```bash
 python tools/download_nsf_hifigan.py --agree-license
 ```
-
-If the OpenVPI vocoder performs poorly on high notes, you can try the [Fish Audio Beta Vocoder](https://github.com/fishaudio/fish-diffusion/releases/tag/v1.12).
-```bash
-python tools/download_nsf_hifigan.py --vocoder FishAudioBeta
 ```
 
 If you want to try the latest [ContentVec](https://github.com/auspicious3000/contentvec) to extract phoneme features, you can use the following command to download it.

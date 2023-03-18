@@ -55,7 +55,7 @@ And then run the command
     poetry install
 
   
- Fish Diffusion requires the OPENVPI 441khz NSF-HiFiGAN vocoder to generate audio, there is an automatic download for it, just run the command
+ Fish Diffusion requires the [FishAudio NSF-HiFiGAN](https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0) vocoder to generate audio, there is an automatic download for it, just run the command
 
      python tools/download_nsf_hifigan.py --content-vec
 

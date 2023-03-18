@@ -64,7 +64,7 @@ pip install -e .
 ```
 
 ## 声码器准备
-Fish Diffusion 需要 [OPENVPI 441khz NSF-HiFiGAN](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) 声码器来生成音频.
+Fish Diffusion 需要 [FishAudio NSF-HiFiGAN](https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0) 声码器来生成音频.
 
 ### 自动下载
 ```bash
@@ -81,11 +81,6 @@ python tools/download_nsf_hifigan.py --use-ghproxy
 
 ```bash
 python tools/download_nsf_hifigan.py --agree-license
-```
-
-如果 OpenVPI 的声码器表现不佳, 你可以尝试 [Fish Audio 测试版声码器](https://github.com/fishaudio/fish-diffusion/releases/tag/v1.12)
-```bash
-python tools/download_nsf_hifigan.py --vocoder FishAudioBeta
 ```
 
 如果你想尝试最新的 [ContentVec](https://github.com/auspicious3000/contentvec) 来提取音素特征, 你可以使用以下命令下载
