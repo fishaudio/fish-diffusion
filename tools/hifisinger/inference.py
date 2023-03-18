@@ -208,7 +208,7 @@ class SVCInference(nn.Module):
 
         if pitches_path is not None:
             logger.info(f"Restoring pitches from {pitches_path}")
-            pitches = torch.from_numpy(np.load(pitches_path)).to(self.device)
+            pitches = torch.from_numpy(np.load(pitches_path)).to(self.device).float()
 
         # Slice into segments
         segments = list(
