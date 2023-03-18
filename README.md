@@ -64,7 +64,6 @@ If you are using the script to download the model, you can use the `--agree-lice
 ```bash
 python tools/download_nsf_hifigan.py --agree-license
 ```
-```
 
 If you want to try the latest [ContentVec](https://github.com/auspicious3000/contentvec) to extract phoneme features, you can use the following command to download it.
 ```bash
