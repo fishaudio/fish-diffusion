@@ -71,8 +71,7 @@ python tools/download_nsf_hifigan.py --content-vec
 ```
 
 ### Manual download
-Download and unzip `nsf_hifigan_20221211.zip` from [441khz vocoder](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1)  
-Or `nsf_hifigan-beta-v2-epoch-434.zip` from [Fish Audio Beta Vocoder](https://github.com/fishaudio/fish-diffusion/releases/tag/v1.12)  
+Download and unzip `nsf_hifigan-stable-v1.zip` from [Fish Diffusion Release](https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0)  
 Copy the `nsf_hifigan` folder to the `checkpoints` directory (create if not exist)
 
 If you want to download [ContentVec](https://github.com/auspicious3000/contentvec) manually, you can download it from [here](https://github.com/fishaudio/fish-diffusion/releases/download/v1.12/content-vec-best-legacy-500.pt) and put it in the `checkpoints` directory.

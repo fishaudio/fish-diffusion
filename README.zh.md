@@ -89,8 +89,7 @@ python tools/download_nsf_hifigan.py --content-vec
 ```
 
 ### 手动下载
-下载 [441khz 声码器](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) 中的 `nsf_hifigan_20221211.zip`  
-或者 [Fish Audio 测试版声码器](https://github.com/fishaudio/fish-diffusion/releases/tag/v1.12) 中的 `nsf_hifigan-beta-v2-epoch-434.zip`  
+下载 [Fish Diffusion Release](https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0) 中的 `nsf_hifigan-stable-v1.zip`  
 解压 `nsf_hifigan` 文件夹到 `checkpoints` 目录下 (如果没有则创建)
 
 如果你想手动下载 [ContentVec](https://github.com/auspicious3000/contentvec), 你可以从 [这里](https://github.com/fishaudio/fish-diffusion/releases/download/v1.12/content-vec-best-legacy-500.pt) 下载, 并将其放入 `checkpoints` 目录下.
