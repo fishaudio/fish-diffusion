@@ -1,6 +1,6 @@
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
-
-from fish_diffusion.datasets.naive import NaiveSVCDataset
+from fish_diffusion.schedulers.warmup_cosine_scheduler import LambdaWarmUpCosineScheduler
+from fish_diffusion.datasets.naive import NaiveSVCDataset\
 from fish_diffusion.datasets.utils import (
     get_datasets_from_subfolder,
     get_speaker_map_from_subfolder,
