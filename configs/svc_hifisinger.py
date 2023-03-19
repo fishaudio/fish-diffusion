@@ -91,5 +91,6 @@ preprocessing = dict(
 
 trainer = dict(
     # Disable gradient clipping, which is not supported by custom optimization
-    gradient_clip_val=None
+    gradient_clip_val=None,
+    max_steps=1000000
 )
