@@ -17,7 +17,9 @@ from fairseq import checkpoint_utils
 @FEATURE_EXTRACTORS.register_module()
 class ContentVec(BaseFeatureExtractor):
     def __init__(
-        self, checkpoint_path: str = "checkpoints/content-vec-best-legacy-500.pt"
+        self,
+        checkpoint_path: str = "checkpoints/content-vec-best-legacy-500.pt",
+        output_layer: int = 9,
     ):
         super().__init__()
 
@@ -41,6 +43,8 @@ class ContentVec(BaseFeatureExtractor):
         self.model = models[0]
         self.model.eval()
 
+        self.output_layer = output_layer
+
     @torch.no_grad()
     def forward(self, path_or_audio, sampling_rate=None):
         audio = self.preprocess(path_or_audio, sampling_rate)
@@ -52,7 +56,10 @@ class ContentVec(BaseFeatureExtractor):
         assert audio.dim() == 2
 
         padding_mask = torch.zeros(audio.shape, dtype=torch.bool, device=audio.device)
-        inputs = {"source": audio, "padding_mask": padding_mask, "output_layer": 9}
+        inputs = {"source": audio, "padding_mask": padding_mask}
+
+        if self.output_layer is not None:
+            inputs["output_layer"] = self.output_layer
 
         features = self.model.extract_features(**inputs)
         units = self.model.final_proj(features[0])
