@@ -52,7 +52,7 @@ poetry install
 ```
 
 ## Vocoder preparation
-Fish Diffusion requires the [OPENVPI 441khz NSF-HiFiGAN](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1) vocoder to generate audio.
+Fish Diffusion requires the [FishAudio NSF-HiFiGAN](https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0) vocoder to generate audio.
 
 ### Automatic download
 ```bash
@@ -65,19 +65,13 @@ If you are using the script to download the model, you can use the `--agree-lice
 python tools/download_nsf_hifigan.py --agree-license
 ```
 
-If the OpenVPI vocoder performs poorly on high notes, you can try the [Fish Audio Beta Vocoder](https://github.com/fishaudio/fish-diffusion/releases/tag/v1.12).
-```bash
-python tools/download_nsf_hifigan.py --vocoder FishAudioBeta
-```
-
 If you want to try the latest [ContentVec](https://github.com/auspicious3000/contentvec) to extract phoneme features, you can use the following command to download it.
 ```bash
 python tools/download_nsf_hifigan.py --content-vec
 ```
 
 ### Manual download
-Download and unzip `nsf_hifigan_20221211.zip` from [441khz vocoder](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1)  
-Or `nsf_hifigan-beta-v2-epoch-434.zip` from [Fish Audio Beta Vocoder](https://github.com/fishaudio/fish-diffusion/releases/tag/v1.12)  
+Download and unzip `nsf_hifigan-stable-v1.zip` from [Fish Diffusion Release](https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0)  
 Copy the `nsf_hifigan` folder to the `checkpoints` directory (create if not exist)
 
 If you want to download [ContentVec](https://github.com/auspicious3000/contentvec) manually, you can download it from [here](https://github.com/fishaudio/fish-diffusion/releases/download/v1.12/content-vec-best-legacy-500.pt) and put it in the `checkpoints` directory.

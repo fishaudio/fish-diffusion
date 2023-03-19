@@ -20,6 +20,7 @@ from fish_diffusion.utils.audio import separate_vocals, slice_audio
 from fish_diffusion.utils.inference import load_checkpoint
 from fish_diffusion.utils.tensor import repeat_expand
 from tools.diffusion.gradio_ui import launch_gradio
+from tools.hifisinger.train import HiFiSingerLightning
 
 
 class SVCInference(nn.Module):
@@ -48,7 +49,9 @@ class SVCInference(nn.Module):
             )
             checkpoint = os.path.join(checkpoint, checkpoints[-1])
 
-        self.model = load_checkpoint(config, checkpoint, device="cpu")
+        self.model = load_checkpoint(
+            config, checkpoint, device="cpu", model_cls=HiFiSingerLightning
+        )
 
     @property
     def device(self):
@@ -93,24 +96,19 @@ class SVCInference(nn.Module):
         # Predict
         contents_lens = torch.tensor([mel_len]).to(self.device)
 
-        features = self.model.model.forward_features(
-            speakers=torch.tensor([speaker_id]).long().to(self.device),
-            contents=text_features[None].to(self.device),
-            contents_lens=contents_lens,
-            contents_max_len=max(contents_lens),
-            mel_lens=contents_lens,
-            mel_max_len=max(contents_lens),
-            pitches=pitches[None].to(self.device),
-            pitch_shift=pitch_shift,
-            energy=energy,
+        wav = (
+            self.model.generator(
+                speakers=torch.tensor([speaker_id]).long().to(self.device),
+                contents=text_features[None].to(self.device),
+                contents_lens=contents_lens,
+                contents_max_len=max(contents_lens),
+                pitches=pitches[None, :, None].to(self.device),
+                pitch_shift=pitch_shift,
+                energy=energy,
+            )
+            .cpu()
+            .numpy()[0]
         )
-
-        result = self.model.model.diffusion(
-            features["features"],
-            progress=sampler_progress,
-            sampler_interval=sampler_interval,
-        )
-        wav = self.model.vocoder.spec2wav(result[0].T, f0=pitches).cpu().numpy()
 
         return wav
 

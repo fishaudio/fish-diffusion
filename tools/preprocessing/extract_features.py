@@ -127,7 +127,8 @@ def process(
         mel_length = mel.shape[-1]
         sample["mel"] = mel.cpu().numpy()
     else:
-        mel_length = None
+        # Calculate mel length from audio length
+        mel_length = int(audio.shape[-1] / 512) + 1
 
     # Extract text features
     if text_features_extractor is not None:

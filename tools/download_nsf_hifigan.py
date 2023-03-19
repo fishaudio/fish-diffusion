@@ -10,6 +10,7 @@ from tqdm import tqdm
 DOWNLOAD_URLS = {
     "OpenVPI": "https://github.com/openvpi/vocoders/releases/download/nsf-hifigan-v1/nsf_hifigan_20221211.zip",
     "FishAudioBeta": "https://github.com/fishaudio/fish-diffusion/releases/download/v1.12/nsf_hifigan-beta-v2-epoch-434.zip",
+    "FishAudioStableV1": "https://github.com/fishaudio/fish-diffusion/releases/download/v2.0.0/nsf_hifigan-stable-v1.zip",
     "ContentVec": "https://github.com/fishaudio/fish-diffusion/releases/download/v1.12/content-vec-best-legacy-500.pt",
 }
 
@@ -51,9 +52,9 @@ def download_model(file, model: str, use_ghproxy: bool = False):
 )
 @click.option(
     "--vocoder",
-    default="OpenVPI",
+    default="FishAudioStableV1",
     help="Model to download",
-    type=click.Choice(["OpenVPI", "FishAudioBeta"]),
+    type=click.Choice(["OpenVPI", "FishAudioBeta", "FishAudioStableV1"]),
 )
 @click.option(
     "--content-vec",
@@ -65,7 +66,7 @@ def main(
     target_dir: str = "checkpoints",
     use_ghproxy: bool = False,
     agree_license: bool = False,
-    vocoder: str = "OpenVPI",
+    vocoder: str = "FishAudioStableV1",
     content_vec: bool = False,
 ):
     target_dir = Path(target_dir)
@@ -78,7 +79,7 @@ def main(
     logger.info(
         "See https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1 for more information."
         if vocoder == "OpenVPI"
-        else "See https://github.com/fishaudio/fish-diffusion/releases/tag/v1.12 for more information."
+        else "See https://github.com/fishaudio/fish-diffusion/releases for more information."
     )
 
     if agree_license:
