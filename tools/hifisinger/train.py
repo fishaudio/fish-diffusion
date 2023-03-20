@@ -351,12 +351,31 @@ if __name__ == "__main__":
     parser.add_argument("--resume-id", type=str, default=None, help="Wandb run id.")
     parser.add_argument("--entity", type=str, default=None, help="Wandb entity.")
     parser.add_argument("--name", type=str, default=None, help="Wandb run name.")
+    parser.add_argument(
+        "--pretrained", type=str, default=None, help="Pretrained model."
+    )
 
     args = parser.parse_args()
 
     cfg = Config.fromfile(args.config)
 
     model = HiFiSingerLightning(cfg)
+
+    # We only load the state_dict of the model, not the optimizer.
+    if args.pretrained:
+        state_dict = torch.load(args.pretrained, map_location="cpu")
+        if "state_dict" in state_dict:
+            state_dict = state_dict["state_dict"]
+
+        result = model.load_state_dict(state_dict, strict=False)
+
+        missing_keys = set(result.missing_keys)
+        unexpected_keys = set(result.unexpected_keys)
+
+        missing_keys.remove("generator.speaker_encoder.embedding.weight")
+
+        assert len(unexpected_keys) == 0, f"Unexpected keys: {unexpected_keys}"
+        assert len(missing_keys) == 0, f"Missing keys: {missing_keys}"
 
     logger = (
         TensorBoardLogger("logs", name=cfg.model.type)
