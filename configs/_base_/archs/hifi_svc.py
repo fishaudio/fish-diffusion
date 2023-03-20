@@ -4,25 +4,33 @@ sampling_rate = 44100
 hidden_size = 256
 
 vocoder_config = {
+    "sampling_rate": sampling_rate,
+    # Model config
     "resblock": "1",
-    "learning_rate": 0.0002,
-    "adam_b1": 0.8,
-    "adam_b2": 0.99,
-    "lr_decay": 0.999,
     "upsample_rates": [8, 8, 2, 2, 2],
     "upsample_kernel_sizes": [16, 16, 8, 2, 2],
     "upsample_initial_channel": 512,
     "resblock_kernel_sizes": [3, 7, 11],
     "resblock_dilation_sizes": [[1, 3, 5], [1, 3, 5], [1, 3, 5]],
     "discriminator_periods": [3, 5, 7, 11, 17, 23, 37],
-    "segment_size": 16384,
+    # The folowing parameters are used for validation
     "num_mels": 256,
     "n_fft": 2048,
     "hop_size": 512,
     "win_size": 2048,
-    "sampling_rate": 44100,
     "fmin": 40,
     "fmax": 16000,
+    # The following parameters are used for training
+    "multi_scale_mels": [
+        (2048, 512, 2048),  # (n_fft, hop_size, win_size)
+        (2048, 270, 1080),
+        (4096, 540, 2160),
+    ],
+    "multi_scale_stfts": [
+        (512, 50, 240),  # (n_fft, hop_size, win_size)
+        (1024, 120, 600),
+        (2048, 240, 1200),
+    ],
 }
 
 

@@ -2,13 +2,12 @@ from pathlib import Path
 
 from fish_diffusion.datasets.hifisinger import HiFiSVCDataset
 from fish_diffusion.datasets.utils import get_datasets_from_subfolder
-from fish_diffusion.utils.pitch import pitch_to_log
 
 _base_ = [
     "./_base_/archs/hifi_svc.py",
     "./_base_/trainers/base.py",
-    "./_base_/schedulers/warmup_cosine.py",
-    "./_base_/datasets/audio_folder.py",
+    "./_base_/schedulers/exponential.py",
+    "./_base_/datasets/naive_svc.py",
 ]
 
 speaker_mapping = {
@@ -92,5 +91,5 @@ preprocessing = dict(
 trainer = dict(
     # Disable gradient clipping, which is not supported by custom optimization
     gradient_clip_val=None,
-    max_steps=1000000
+    max_steps=1000000,
 )

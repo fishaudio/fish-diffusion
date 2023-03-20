@@ -163,11 +163,19 @@ class DiffSingerLightning(pl.LightningModule):
         self.vocoder.freeze()
 
     def configure_optimizers(self):
-        self.config.optimizer.params = self.parameters()
-        optimizer = OPTIMIZERS.build(self.config.optimizer)
+        optimizer = OPTIMIZERS.build(
+            {
+                "params": self.parameters(),
+                **self.config.optimizer,
+            }
+        )
 
-        self.config.scheduler.optimizer = optimizer
-        scheduler = LR_SCHEUDLERS.build(self.config.scheduler)
+        scheduler = LR_SCHEUDLERS.build(
+            {
+                "optimizer": optimizer,
+                **self.config.scheduler,
+            }
+        )
 
         return [optimizer], dict(scheduler=scheduler, interval="step")
 

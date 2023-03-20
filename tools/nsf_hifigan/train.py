@@ -23,7 +23,7 @@ from fish_diffusion.modules.vocoders.nsf_hifigan.models import (
     feature_loss,
     generator_loss,
 )
-from fish_diffusion.utils.audio import dynamic_range_compression
+from fish_diffusion.utils.audio import dynamic_range_compression, get_mel_transform
 from fish_diffusion.utils.viz import plot_mel
 
 torch.set_float32_matmul_precision("medium")
@@ -46,7 +46,7 @@ class HSFHifiGAN(pl.LightningModule):
         self.msd = MultiScaleDiscriminator()
 
         # This is for validation only
-        self.mel_transform = self.get_mel_transform(
+        self.mel_transform = get_mel_transform(
             sample_rate=self.h.sampling_rate,
             n_fft=self.h.n_fft,
             hop_length=self.h.hop_size,
@@ -58,7 +58,7 @@ class HSFHifiGAN(pl.LightningModule):
 
         # The bellow are for training
         self.multi_scale_mels = [
-            self.get_mel_transform(
+            get_mel_transform(
                 sample_rate=self.h.sampling_rate,
                 n_fft=n_fft,
                 hop_length=hop_length,
@@ -197,38 +197,6 @@ class HSFHifiGAN(pl.LightningModule):
         if self.trainer.is_last_batch:
             scheduler_g.step()
             scheduler_d.step()
-
-    def get_mel_transform(
-        self,
-        sample_rate=44100,
-        n_fft=2048,
-        win_length=2048,
-        hop_length=512,
-        f_min=40,
-        f_max=16000,
-        n_mels=128,
-        center=True,
-        power=1.0,
-        pad_mode="reflect",
-        norm="slaney",
-        mel_scale="slaney",
-    ) -> torch.Tensor:
-        transform = MelSpectrogram(
-            sample_rate=sample_rate,
-            n_fft=n_fft,
-            win_length=win_length,
-            hop_length=hop_length,
-            f_min=f_min,
-            f_max=f_max,
-            n_mels=n_mels,
-            center=center,
-            power=power,
-            pad_mode=pad_mode,
-            norm=norm,
-            mel_scale=mel_scale,
-        )
-
-        return transform
 
     def get_mels(self, audios, transform=None):
         if transform is None:
