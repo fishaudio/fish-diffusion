@@ -63,12 +63,26 @@ def extract(path):
         "Dio": DioPitchExtractor,
     }
 
+    pitches = {}
+
     for name, extractor in extractors.items():
-        pitch_extractor = extractor(f0_min=40.0, f0_max=1600, keep_zeros=True)
+        pitch_extractor = extractor(f0_min=40.0, f0_max=1600, keep_zeros=False)
         f0 = pitch_extractor(audio, sr, pad_to=mel.shape[-1]).cpu().numpy()
         logger.info(f"Got {name} pitch with shape {f0.shape}")
 
         np.save(workspace / f"{name}.npy", f0)
+        pitches[name] = f0.tolist()
+
+    pitches["final"] = pitches["Crepe"]
+    data = {
+        "mel": mel.tolist(),
+        "pitches": pitches,
+    }
+
+    import json
+
+    with open(workspace / "data.json", "w") as f:
+        json.dump(data, f)
 
 
 @cli.command()
@@ -98,6 +112,7 @@ def plot():
 
         ax.imshow(mel, aspect="auto", origin="lower")
         ax.plot(f0, label=name, color="red")
+        print(name, f0)
         ax.set_yticks(np.arange(0, 128, 10))
         ax.set_yticklabels(np.round(mel_freqs[::10]).astype(int))
         ax.set_ylabel("Frequency (Hz)")
