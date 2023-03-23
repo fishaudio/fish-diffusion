@@ -42,6 +42,8 @@ model = dict(
         denoiser=dict(
             residual_channels=384,
         ),
+        spec_min=[-5]*128,
+        spec_max=[0]*128,
     ),
 )
 
