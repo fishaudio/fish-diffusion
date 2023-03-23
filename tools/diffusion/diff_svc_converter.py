@@ -3,12 +3,12 @@ from argparse import ArgumentParser
 import torch
 from loguru import logger
 from mmengine import Config
-from train import FishDiffusion
+from fish_diffusion.archs.diffsinger import DiffSingerLightning
 
 
 def convert(config_path, input_path, output_path):
     config = Config.fromfile(config_path)
-    model = FishDiffusion(config)
+    model = DiffSingerLightning(config)
 
     logger.info("Loading Diff-SVC checkpoint...")
 
