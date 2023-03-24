@@ -1,23 +1,12 @@
 import argparse
 import json
-import os
 from typing import Optional
 
-import librosa
 import numpy as np
-import soundfile as sf
 import torch
-from fish_audio_preprocess.utils import loudness_norm
-from loguru import logger
 from mmengine import Config
-from torch import nn
 
 from fish_diffusion.archs.hifisinger import HiFiSingerLightning
-from fish_diffusion.modules.energy_extractors import ENERGY_EXTRACTORS
-from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
-from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
-from fish_diffusion.utils.audio import separate_vocals, slice_audio
-from fish_diffusion.utils.inference import load_checkpoint
 from fish_diffusion.utils.tensor import repeat_expand
 from tools.diffusion.gradio_ui import launch_gradio
 from tools.diffusion.inference import SVCInference
@@ -224,7 +213,7 @@ if __name__ == "__main__":
     if args.speaker_mapping is not None:
         config.speaker_mapping = json.load(open(args.speaker_mapping))
 
-    model = SVCInference(config, args.checkpoint)
+    model = HiFiSingerSVCInference(config, args.checkpoint)
     model = model.to(device)
 
     if args.gradio:
