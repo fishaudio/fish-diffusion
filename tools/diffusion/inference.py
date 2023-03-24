@@ -13,6 +13,7 @@ from loguru import logger
 from mmengine import Config
 from torch import nn
 
+from fish_diffusion.archs.diffsinger.diffsinger import DiffSingerLightning
 from fish_diffusion.modules.energy_extractors import ENERGY_EXTRACTORS
 from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
 from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
@@ -23,7 +24,7 @@ from tools.diffusion.gradio_ui import launch_gradio
 
 
 class SVCInference(nn.Module):
-    def __init__(self, config, checkpoint):
+    def __init__(self, config, checkpoint, model_cls=DiffSingerLightning):
         super().__init__()
 
         self.config = config
@@ -48,7 +49,9 @@ class SVCInference(nn.Module):
             )
             checkpoint = os.path.join(checkpoint, checkpoints[-1])
 
-        self.model = load_checkpoint(config, checkpoint, device="cpu")
+        self.model = load_checkpoint(
+            config, checkpoint, device="cpu", model_cls=model_cls
+        )
 
     @property
     def device(self):
@@ -210,7 +213,16 @@ class SVCInference(nn.Module):
 
         if pitches_path is not None:
             logger.info(f"Restoring pitches from {pitches_path}")
-            pitches = torch.from_numpy(np.load(pitches_path)).to(self.device).float()
+
+            # If pitches_path is a json file, load it as a list of pitches
+            if Path(pitches_path).suffix == ".json":
+                with open(pitches_path, "r") as f:
+                    pitches = json.load(f)
+                    pitches = torch.FloatTensor(pitches).to(self.device)
+            else:
+                pitches = (
+                    torch.from_numpy(np.load(pitches_path)).to(self.device).float()
+                )
 
         # Slice into segments
         segments = list(

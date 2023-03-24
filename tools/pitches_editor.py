@@ -118,12 +118,6 @@ def plot():
         ax.set_ylabel("Frequency (Hz)")
         ax.set_xlabel("Time")
 
-        # Only keep minutes, seconds and milliseconds
-        # myFmt = mdates.DateFormatter("%M:%S.%f")
-        # ax.xaxis.set_major_formatter(myFmt)
-        # ax.set_xticks(np.arange(0, f0.shape[-1] * 512 / 44100))
-        # ax.set_xticklabels(np.arange(0, f0.shape[-1] * 512 / 44100, 1))
-
         ax.legend()
 
     plt.savefig("pitch.png")
