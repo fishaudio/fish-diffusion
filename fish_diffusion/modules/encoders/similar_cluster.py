@@ -5,7 +5,7 @@ from .builder import ENCODERS
 
 
 @ENCODERS.register_module()
-class SimilarClusterEncoder(nn.Identity):
+class SimilarClusterEncoder(nn.Module):
     def __init__(
         self, n_clusters: int = 100, input_size: int = 256, output_size: int = 256
     ):
@@ -18,6 +18,7 @@ class SimilarClusterEncoder(nn.Identity):
             input_size (int, optional): Input size. Defaults to 256.
             output_size (int, optional): Output size. Defaults to 256.
         """
+        super().__init__()
 
         self.cluster_centers = nn.Parameter(
             torch.randn(n_clusters, input_size), requires_grad=True
@@ -29,11 +30,15 @@ class SimilarClusterEncoder(nn.Identity):
             # No need to project
             self.proj = nn.Identity()
 
-    def forward(self, x):
+    def forward(self, x, src_masks=None):
         distances = torch.cdist(x, self.cluster_centers)
-        selected = torch.argmin(distances, dim=1)
+        selected = torch.argmin(distances, dim=2)
 
         # We still have gradients flowing through the cluster centers
         x = self.cluster_centers[selected]
+        x = self.proj(x)
 
-        return self.proj(x)
+        if src_masks is not None:
+            x = x * src_masks.unsqueeze(-1)
+
+        return x
