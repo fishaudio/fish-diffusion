@@ -65,11 +65,6 @@ If you are using the script to download the model, you can use the `--agree-lice
 python tools/download_nsf_hifigan.py --agree-license
 ```
 
-If you want to try the latest [ContentVec](https://github.com/auspicious3000/contentvec) to extract phoneme features, you can use the following command to download it.
-```bash
-python tools/download_nsf_hifigan.py --content-vec
-```
-
 ### Manual download
 Download and unzip `nsf_hifigan-stable-v1.zip` from [Fish Diffusion Release](https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0)  
 Copy the `nsf_hifigan` folder to the `checkpoints` directory (create if not exist)

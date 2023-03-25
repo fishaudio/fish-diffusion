@@ -83,11 +83,6 @@ python tools/download_nsf_hifigan.py --use-ghproxy
 python tools/download_nsf_hifigan.py --agree-license
 ```
 
-如果你想尝试最新的 [ContentVec](https://github.com/auspicious3000/contentvec) 来提取音素特征, 你可以使用以下命令下载
-```bash
-python tools/download_nsf_hifigan.py --content-vec
-```
-
 ### 手动下载
 下载 [Fish Diffusion Release](https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0) 中的 `nsf_hifigan-stable-v1.zip`  
 解压 `nsf_hifigan` 文件夹到 `checkpoints` 目录下 (如果没有则创建)
