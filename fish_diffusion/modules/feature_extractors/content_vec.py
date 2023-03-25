@@ -1,49 +1,33 @@
-import logging
-import os
-
 import torch
-from loguru import logger
+from torch import nn
+from transformers import HubertModel
 
 from .base import BaseFeatureExtractor
 from .builder import FEATURE_EXTRACTORS
 
-# Ignore fairseq's logger
-logging.getLogger("fairseq").setLevel(logging.WARNING)
-logging.getLogger("torch.distributed.nn.jit.instantiator").setLevel(logging.WARNING)
 
-from fairseq import checkpoint_utils
+class HubertModelWithFinalProj(HubertModel):
+    def __init__(self, config):
+        super().__init__(config)
+
+        self.final_proj = nn.Linear(config.hidden_size, config.classifier_proj_size)
 
 
 @FEATURE_EXTRACTORS.register_module()
 class ContentVec(BaseFeatureExtractor):
     def __init__(
         self,
-        checkpoint_path: str = "checkpoints/content-vec-best-legacy-500.pt",
+        checkpoint_path: str = "lengyue233/content-vec-best",
         output_layer: int = 9,
+        use_projection: bool = True,
     ):
         super().__init__()
 
-        if os.path.exists(checkpoint_path) is False:
-            logger.error(f"Checkpoint {checkpoint_path} does not exist")
-            logger.error(
-                f"If you are trying to use the pretrained ContentVec, you can either:"
-            )
-            logger.error(
-                f"1. Download the ContentVec from https://github.com/fishaudio/fish-diffusion/releases/tag/v1.12"
-            )
-            logger.error(
-                f"2. Run `python tools/download_nsf_hifigan.py --content-vec` to download the ContentVec model"
-            )
-
-            raise FileNotFoundError(f"Checkpoint {checkpoint_path} does not exist")
-
-        models, _, _ = checkpoint_utils.load_model_ensemble_and_task(
-            [checkpoint_path], suffix=""
-        )
-        self.model = models[0]
+        self.model = HubertModelWithFinalProj.from_pretrained(checkpoint_path)
         self.model.eval()
 
         self.output_layer = output_layer
+        self.use_projection = use_projection
 
     @torch.no_grad()
     def forward(self, path_or_audio, sampling_rate=None):
@@ -55,13 +39,14 @@ class ContentVec(BaseFeatureExtractor):
         audio = audio[None].to(self.device)
         assert audio.dim() == 2
 
-        padding_mask = torch.zeros(audio.shape, dtype=torch.bool, device=audio.device)
-        inputs = {"source": audio, "padding_mask": padding_mask}
-
         if self.output_layer is not None:
-            inputs["output_layer"] = self.output_layer
+            x = self.model(audio, output_hidden_states=True)["hidden_states"][
+                self.output_layer
+            ]
+        else:
+            x = self.model(audio)["last_hidden_state"]
 
-        features = self.model.extract_features(**inputs)
-        units = self.model.final_proj(features[0])
+        if self.use_projection:
+            x = self.model.final_proj(x)
 
-        return units.transpose(1, 2)
+        return x.transpose(1, 2)
