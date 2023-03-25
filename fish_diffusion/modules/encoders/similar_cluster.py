@@ -21,7 +21,7 @@ class SimilarClusterEncoder(nn.Module):
         super().__init__()
 
         self.cluster_centers = nn.Parameter(
-            torch.randn(n_clusters, input_size), requires_grad=True
+            torch.rand(n_clusters, input_size), requires_grad=True
         )
 
         if input_size != output_size:
@@ -31,8 +31,23 @@ class SimilarClusterEncoder(nn.Module):
             self.proj = nn.Identity()
 
     def forward(self, x, src_masks=None):
-        distances = torch.cdist(x, self.cluster_centers)
+        # Normalize the input vectors, so that the cluster centers are not
+        # biased towards a particular direction
+
+        distances = torch.cdist(x + 1e-6, self.cluster_centers)
         selected = torch.argmin(distances, dim=2)
+
+        # Randomly select 1% of the cluster centers if training (exploration)
+        # This may avoid getting stuck in local minima
+        if self.training:
+            random_selected = torch.randint_like(
+                selected, 0, self.cluster_centers.shape[0]
+            )
+            selected = torch.where(
+                torch.rand_like(selected, dtype=x.dtype) < 0.01,
+                random_selected,
+                selected,
+            )
 
         # We still have gradients flowing through the cluster centers
         x = self.cluster_centers[selected]
