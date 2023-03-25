@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "Fish DIffusion"
+project = "Fish Diffusion"
 copyright = "2023, Fish Audio Team"
 author = "Fish Audio Team"
 

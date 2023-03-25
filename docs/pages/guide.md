@@ -57,7 +57,7 @@ And then run the command
   
  Fish Diffusion requires the [FishAudio NSF-HiFiGAN](https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0) vocoder to generate audio, there is an automatic download for it, just run the command
 
-     python tools/download_nsf_hifigan.py --content-vec
+     python tools/download_nsf_hifigan.py
 
 It will start downloading the vocoder automatically and will put it on the checkpoints folder,, wait until it's done or you can do a manual download for it. [Hifigan Link](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1)
 
@@ -207,7 +207,7 @@ python tools/diffusion/inference.py –-config configs/svc_hubert_soft.py \
 
 ## DIFF SVC CONVERSION TO FISH SVC
 
-This is pretty straightforward, conversion takes 2 minutes to run and it allows inference inmediatly!
+This is pretty straightforward, conversion takes 2 minutes to run and it allows inference immediatly!
 You first need to copy your DiffSVC checkpoint of the model you want to convert, in my case I created a specific folder called "conversion"
 
  
