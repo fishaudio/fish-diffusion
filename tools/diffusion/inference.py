@@ -11,6 +11,7 @@ import torch
 from fish_audio_preprocess.utils import loudness_norm
 from loguru import logger
 from mmengine import Config
+from natsort import natsorted
 from torch import nn
 
 from fish_diffusion.archs.diffsinger.diffsinger import DiffSingerLightning
@@ -43,7 +44,7 @@ class SVCInference(nn.Module):
 
         if os.path.isdir(checkpoint):
             # Find the latest checkpoint
-            checkpoints = sorted(os.listdir(checkpoint))
+            checkpoints = natsorted(os.listdir(checkpoint))
             logger.info(
                 f"Found {len(checkpoints)} checkpoints, using {checkpoints[-1]}"
             )
