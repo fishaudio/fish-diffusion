@@ -16,7 +16,7 @@ jobs:
           python-version: "3.10"
       - name: Install dependencies
         run: |
-          curl -sSL https://install.python-poetry.org | python -
+          pip install poetry
           poetry config virtualenvs.create false
           poetry install
       - name: Lint with black and isort
@@ -37,9 +37,9 @@ jobs:
           python-version: "3.10"
       - name: Install dependencies
         run: |
-          curl -sSL https://install.python-poetry.org | python -
+          pip install poetry
           poetry config virtualenvs.create false
-          poetry install -E docs
+          poetry install --with docs
       - name: Build docs
         run: cd docs && make html
       - name: Deploy
