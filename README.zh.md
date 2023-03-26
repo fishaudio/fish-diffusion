@@ -49,7 +49,7 @@
 ```bash
 # 安装 PyTorch 相关核心依赖, 如果已安装则跳过
 # 参考 https://pytorch.org/get-started/locally/
-conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
+conda install "pytorch>=2.0.0" "torchvision>=0.15.0" "torchaudio>=2.0.0" pytorch-cuda=11.8 -c pytorch -c nvidia
 
 # 安装 Poetry 依赖管理工具, 如果已安装则跳过
 # 参考 https://python-poetry.org/docs/#installation

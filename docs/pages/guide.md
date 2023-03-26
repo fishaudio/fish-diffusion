@@ -33,7 +33,7 @@ Then you will be already on your Fish environment and you can proceed installati
 
   First you need to install PyTorch to be able to train, inference and etc with this command:
 
-    conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
+    conda install "pytorch>=2.0.0" "torchvision>=0.15.0" "torchaudio>=2.0.0" pytorch-cuda=11.8 -c pytorch -c nvidia
 
  After that you need to run
 

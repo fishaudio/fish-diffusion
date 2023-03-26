@@ -41,7 +41,7 @@ The following commands need to be executed in the conda environment of python 3.
 ```bash
 # Install PyTorch related core dependencies, skip if installed
 # Reference: https://pytorch.org/get-started/locally/
-conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
+conda install "pytorch>=2.0.0" "torchvision>=0.15.0" "torchaudio>=2.0.0" pytorch-cuda=11.8 -c pytorch -c nvidia
 
 # Install Poetry dependency management tool, skip if installed
 # Reference: https://python-poetry.org/docs/#installation

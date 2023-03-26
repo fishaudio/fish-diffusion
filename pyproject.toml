@@ -32,6 +32,9 @@ onnxruntime = "^1.14.0"
 flask = "^2.2.3"
 flask-cors = "^3.0.10"
 natsort = "^8.3.1"
+torch = { version = "^2.0.0", source = "torch-cu118" }
+torchvision = { version = "^0.15.1", source = "torch-cu118" }
+torchaudio = { version = "^2.0.0", source = "torch-cu118" }
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.11.4"
@@ -44,6 +47,12 @@ optional = true
 furo = "^2022.12.7"
 sphinx-autobuild = "^2021.3.14"
 myst-parser = "^0.18.1"
+
+[[tool.poetry.source]]
+name = "torch-cu118"
+url = "https://download.pytorch.org/whl/cu118"
+default = false
+secondary = true
 
 [build-system]
 requires = ["poetry-core>=1.2.0"]
