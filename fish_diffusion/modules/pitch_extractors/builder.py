@@ -51,7 +51,10 @@ class BasePitchExtractor:
         time_frame = np.arange(pad_to) * self.hop_length / sampling_rate
 
         if f0.shape[0] <= 0:
-            return torch.zeros(time_frame.shape[0]).float().to(x.device)
+            return torch.zeros(pad_to, dtype=torch.float, device=x.device)
+
+        if f0.shape[0] == 1:
+            return torch.ones(pad_to, dtype=torch.float, device=x.device) * f0[0]
 
         # 大概可以用 torch 重写?
         f0 = np.interp(time_frame, time_org, f0, left=f0[0], right=f0[-1])
