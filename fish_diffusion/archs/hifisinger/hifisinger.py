@@ -5,10 +5,10 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import wandb
+from fish_audio_preprocess.utils.loudness_norm import loudness_norm
 from mmengine.optim import OPTIMIZERS
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.nn import functional as F
-from torch.optim.lr_scheduler import ExponentialLR
 
 from fish_diffusion.modules.encoders import ENCODERS
 from fish_diffusion.modules.vocoders.nsf_hifigan.models import (
@@ -382,18 +382,23 @@ class HiFiSingerLightning(pl.LightningModule):
                 ["Sampled Spectrogram", "Ground-Truth Spectrogram"],
             )
 
+            wav_gt = loudness_norm(audio[0, :audio_len], 44100, block_size=0.1)
+            wav_prediction = loudness_norm(
+                gen_audio[0, :audio_len], 44100, block_size=0.1
+            )
+
             if isinstance(self.logger, WandbLogger):
                 self.logger.experiment.log(
                     {
                         f"reconstruction_mel": wandb.Image(image_mels, caption="mels"),
                         f"wavs": [
                             wandb.Audio(
-                                audio[0, :audio_len],
+                                wav_gt,
                                 sample_rate=self.config.sampling_rate,
                                 caption=f"gt",
                             ),
                             wandb.Audio(
-                                gen_audio[0, :audio_len],
+                                wav_prediction,
                                 sample_rate=self.config.sampling_rate,
                                 caption=f"prediction",
                             ),
@@ -409,13 +414,13 @@ class HiFiSingerLightning(pl.LightningModule):
                 )
                 self.logger.experiment.add_audio(
                     f"sample-{idx}/wavs/gt",
-                    audio[0, :audio_len],
+                    wav_gt,
                     self.global_step,
                     sample_rate=self.config.sampling_rate,
                 )
                 self.logger.experiment.add_audio(
                     f"sample-{idx}/wavs/prediction",
-                    gen_audio[0, :audio_len],
+                    wav_prediction,
                     self.global_step,
                     sample_rate=self.config.sampling_rate,
                 )
