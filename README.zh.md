@@ -32,9 +32,6 @@
 一个简单易懂的 TTS / SVS / SVC 框架.
 
 > 从阅读 [Wiki](https://fishaudio.github.io/fish-diffusion/) 开始! 
- 
-> 由于 main 分支在积极开发, 我们建议新用户选择一个稳定版本, 例如 [v1.12](https://github.com/fishaudio/fish-diffusion/tree/v1.12)  
-[English Document](README.md)
 
 ## 简介
 基于 DiffSinger 实现歌声音色转换。相较于原 diffsvc 仓库，本仓库优缺点如下
