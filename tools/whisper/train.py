@@ -10,7 +10,6 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning.strategies import DDPStrategy
 from textgrid import TextGrid
-from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, Dataset
 from whisper import log_mel_spectrogram, pad_or_trim

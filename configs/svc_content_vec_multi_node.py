@@ -1,5 +1,3 @@
-from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
-
 from fish_diffusion.datasets.naive import NaiveSVCDataset
 from fish_diffusion.datasets.utils import (
     get_datasets_from_subfolder,
@@ -63,6 +61,7 @@ model = dict(
         use_embedding=False,
     ),
 )
+
 preprocessing = dict(
     text_features_extractor=dict(
         type="ContentVec",
@@ -71,6 +70,7 @@ preprocessing = dict(
         type="ParselMouthPitchExtractor",
     ),
 )
+
 augmentations = [
     dict(
         type="FixedPitchShifting",
@@ -84,12 +84,4 @@ trainer = dict(
     max_steps=100000,  # It is recommended to make it lower when you use more GPUs
     val_check_interval=None,
     check_val_every_n_epoch=5,  # Steps val is suggested to disable,because the steps are only calcating in one rank,so Epoch val is better
-)
-# Learning rate setting override
-lambda_func = LambdaWarmUpCosineScheduler(
-    warm_up_steps=400,
-    lr_min=8e-4,  # Too small value is not recommended if you have many GPUs to train
-    lr_max=1.5e-3,  # Modify with your total batch_size,don't make it too high
-    lr_start=5e-4,
-    max_decay_steps=60000,
 )

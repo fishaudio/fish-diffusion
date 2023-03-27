@@ -11,7 +11,6 @@ from mmengine import Config
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.nn import functional as F
 from torch.optim.lr_scheduler import ExponentialLR
-from torchaudio.transforms import MelSpectrogram
 
 from fish_diffusion.datasets.utils import build_loader_from_config
 from fish_diffusion.modules.vocoders.nsf_hifigan.models import (
