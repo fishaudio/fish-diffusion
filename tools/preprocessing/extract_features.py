@@ -113,7 +113,11 @@ def process(
     }
 
     audio, sr = librosa.load(str(audio_path), sr=config.sampling_rate, mono=True)
-    audio = librosa.effects.time_stretch(audio, rate=time_stretch)
+
+    # If time_stretch is > 1, the audio length will be shorter (speed up)
+    if time_stretch != 1.0:
+        audio = librosa.effects.time_stretch(audio, rate=time_stretch)
+
     sample["audio"] = audio
     sample["sampling_rate"] = sr
     sample["time_stretch"] = time_stretch
@@ -176,20 +180,20 @@ def safe_process(args, config, audio_path: Path):
                 if random.random() > probability:
                     break
 
-                aug_count += 1
                 probability -= 1
+                aug_count += 1
 
-            if augmentation.type == "FixedPitchShifting":
-                key_shift = random.choice(augmentation.key_shifts)
-                process(config, audio_path, idx=aug_count, key_shift=key_shift)
-            elif augmentation.type == "RandomPitchShifting":
-                assert len(augmentation.key_shifts) == 2
-                key_shift = random.uniform(*augmentation.key_shifts)
-                process(config, audio_path, idx=aug_count, key_shift=key_shift)
-            elif augmentation.type == "RandomTimeStretching":
-                assert len(augmentation.factors) == 2
-                factor = random.uniform(*augmentation.factors)
-                process(config, audio_path, idx=aug_count, time_stretch=factor)
+                if augmentation.type == "FixedPitchShifting":
+                    key_shift = random.choice(augmentation.key_shifts)
+                    process(config, audio_path, idx=aug_count, key_shift=key_shift)
+                elif augmentation.type == "RandomPitchShifting":
+                    assert len(augmentation.key_shifts) == 2
+                    key_shift = random.uniform(*augmentation.key_shifts)
+                    process(config, audio_path, idx=aug_count, key_shift=key_shift)
+                elif augmentation.type == "RandomTimeStretching":
+                    assert len(augmentation.factors) == 2
+                    factor = random.uniform(*augmentation.factors)
+                    process(config, audio_path, idx=aug_count, time_stretch=factor)
 
         return aug_count + 1
     except Exception as e:
