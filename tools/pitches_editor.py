@@ -112,7 +112,6 @@ def plot():
 
         ax.imshow(mel, aspect="auto", origin="lower")
         ax.plot(f0, label=name, color="red")
-        print(name, f0)
         ax.set_yticks(np.arange(0, 128, 10))
         ax.set_yticklabels(np.round(mel_freqs[::10]).astype(int))
         ax.set_ylabel("Frequency (Hz)")

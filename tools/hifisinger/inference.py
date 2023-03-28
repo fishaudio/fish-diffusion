@@ -8,7 +8,6 @@ from mmengine import Config
 
 from fish_diffusion.archs.hifisinger import HiFiSingerLightning
 from fish_diffusion.utils.tensor import repeat_expand
-from tools.diffusion.gradio_ui import launch_gradio
 from tools.diffusion.inference import SVCInference
 
 
@@ -32,6 +31,8 @@ class HiFiSingerSVCInference(SVCInference):
         # Extract and process pitch
         if pitches is None:
             pitches = self.pitch_extractor(audio, sr, pad_to=mel_len).float()
+        else:
+            pitches = repeat_expand(pitches, mel_len)
 
         if (pitches == 0).all():
             return np.zeros((audio.shape[-1],))
@@ -217,6 +218,8 @@ if __name__ == "__main__":
     model = model.to(device)
 
     if args.gradio:
+        from tools.diffusion.gradio_ui import launch_gradio
+
         launch_gradio(
             config,
             model.inference,

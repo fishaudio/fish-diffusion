@@ -21,7 +21,6 @@ from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.utils.audio import separate_vocals, slice_audio
 from fish_diffusion.utils.inference import load_checkpoint
 from fish_diffusion.utils.tensor import repeat_expand
-from tools.diffusion.gradio_ui import launch_gradio
 
 
 class SVCInference(nn.Module):
@@ -74,6 +73,8 @@ class SVCInference(nn.Module):
         # Extract and process pitch
         if pitches is None:
             pitches = self.pitch_extractor(audio, sr, pad_to=mel_len).float()
+        else:
+            pitches = repeat_expand(pitches, mel_len)
 
         if (pitches == 0).all():
             return np.zeros((audio.shape[-1],))
@@ -425,6 +426,8 @@ if __name__ == "__main__":
     model = model.to(device)
 
     if args.gradio:
+        from tools.diffusion.gradio_ui import launch_gradio
+
         launch_gradio(
             config,
             model.inference,
