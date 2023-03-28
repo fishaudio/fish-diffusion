@@ -7,9 +7,9 @@ ENV PATH="/root/.local/bin:${PATH}"
 RUN poetry config virtualenvs.create false
 
 # Install dependencies
-WORKDIR /root
+WORKDIR /app
 
 RUN git clone https://github.com/fishaudio/fish-diffusion.git && cd fish-diffusion && poetry install
 
-WORKDIR /root/fish-diffusion
+WORKDIR /app/fish-diffusion
 RUN python3 tools/download_nsf_hifigan.py --agree-license
