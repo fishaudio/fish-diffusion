@@ -1,11 +1,13 @@
 import torch
 
+# No need to keep optimizer states
 data = torch.load(
-    "logs/HiFiSVC/5cdrm2ww/checkpoints/epoch=138-step=300000-valid_loss=0.85.ckpt",
+    "logs/HiFiSVC/version_None/checkpoints/epoch=122-step=500000-valid_loss=0.86.ckpt",
     map_location="cpu",
-)
+)["state_dict"]
 
-del data["state_dict"]["generator.speaker_encoder.embedding.weight"]
+# Remove speaker embeddings
+del data["generator.speaker_encoder.embedding.weight"]
 
-torch.save(data, "checkpoints/hifisinger-lengyue-pretrained-v1.ckpt")
+torch.save(data, "checkpoints/hifisinger-demo-20230328.ckpt")
 print("Done")
