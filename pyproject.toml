@@ -35,6 +35,7 @@ torch = { version = "^2.0.0", source = "torch-cu118" }
 torchvision = { version = "^0.15.1", source = "torch-cu118" }
 torchaudio = { version = "^2.0.0", source = "torch-cu118" }
 pytorch-lightning = "1.9.4"
+fastapi = "=0.88.0"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.11.4"
