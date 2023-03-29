@@ -1807,6 +1807,29 @@ files = [
 ]
 
 [[package]]
+name = "libf0"
+version = "1.0.2"
+description = "A Python Library for Fundamental Frequency Estimation in Music Recordings"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "libf0-1.0.2-py3-none-any.whl", hash = "sha256:8b2f4fc234eb6f1af5061b01613fcf477976604b865a236a4ac98e966bfd4587"},
+    {file = "libf0-1.0.2.tar.gz", hash = "sha256:a679788d6604db60621ac28979f4024b81bae0752d9bf7d3205e15f37718f800"},
+]
+
+[package.dependencies]
+librosa = ">=0.8.0,<1.0.0"
+numba = ">=0.51.0,<1.0.0"
+numpy = ">=1.17.0,<2.0.0"
+scipy = ">=1.3.0,<2.0.0"
+
+[package.extras]
+dev = ["ipython (>=7.8.0,<8.0.0)", "jupyter (>=1.0.0,<1.1.0)", "matplotlib (>=3.1.0,<4.0.0)", "nbstripout (>=0.4.0,<0.5.0)", "pysoundfile (>=0.9.0,<1.0.0)"]
+docs = ["sphinx (>=4.0.0,<4.1.0)", "sphinx-rtd-theme (>=0.5.0,<0.6.0)"]
+tests = ["pytest (>=6.2.0,<6.3.0)"]
+
+[[package]]
 name = "librosa"
 version = "0.9.1"
 description = "Python module for audio and music processing"
@@ -4555,14 +4578,14 @@ telegram = ["requests"]
 
 [[package]]
 name = "transformers"
-version = "4.27.3"
+version = "4.27.4"
 description = "State-of-the-art Machine Learning for JAX, PyTorch and TensorFlow"
 category = "main"
 optional = false
 python-versions = ">=3.7.0"
 files = [
-    {file = "transformers-4.27.3-py3-none-any.whl", hash = "sha256:d764c351b6d590952ac6104573721abe323b3eabd55e53bae0215c14750d5f13"},
-    {file = "transformers-4.27.3.tar.gz", hash = "sha256:26bff783ad6ed463fe3f0954406e7c30a8313758b6488677827886e48e6bd5a9"},
+    {file = "transformers-4.27.4-py3-none-any.whl", hash = "sha256:ee1979c643093005427a9233af738628cb6f4cd1eaca63a2a4d2228bd5396952"},
+    {file = "transformers-4.27.4.tar.gz", hash = "sha256:5f0f735e6fb081e16db9e412466dbfa32c38231a3edd00def8cdc384c90dde36"},
 ]
 
 [package.dependencies]
@@ -5085,4 +5108,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "950e50fcabf41be618e1064d8d40ed316ca0322e5616dbef227bff94513611c8"
+content-hash = "f152c3ebe9afb39b852cb8e2bde7069377d48e01ffc9816fb9f8def2ef9175b7"

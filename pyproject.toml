@@ -15,7 +15,7 @@ librosa = "^0.9.1"
 numba = "^0.56.4"
 fish-audio-preprocess = "^0.1.9"
 wandb = "^0.13.9"
-transformers = "^4.25.1"
+transformers = "^4.27.4"
 torchcrepe = "^0.0.17"
 mmengine = "^0.4.0"
 loguru = "^0.6.0"
@@ -36,6 +36,7 @@ torchvision = { version = "^0.15.1", source = "torch-cu118" }
 torchaudio = { version = "^2.0.0", source = "torch-cu118" }
 pytorch-lightning = "1.9.4"
 fastapi = "=0.88.0"
+libf0 = "^1.0.2"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.11.4"
