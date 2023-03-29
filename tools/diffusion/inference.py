@@ -378,7 +378,7 @@ def parse_args():
         "--speaker",
         type=str,
         default="0",
-        help="Speaker id or speaker name",
+        help="Speaker id or speaker name (if speaker_mapping is specified) or speaker mix (a:0.5,b:0.5)",
     )
 
     parser.add_argument(
