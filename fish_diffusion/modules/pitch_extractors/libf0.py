@@ -28,24 +28,14 @@ class PyinPitchExtractor(BasePitchExtractor):
                 F_min=self.f0_min,
                 F_max=self.f0_max,
             )
-        
+
         frequencies = pyin_tuple[0]
 
-        #Replace NaN frames with linear regression estimation
+        # Replace NaN frames with zeros
         nan_indices = np.isnan(frequencies)
         if np.any(nan_indices):
-            idx = np.arange(len(frequencies))
-            frequencies[nan_indices] = np.interp(idx[nan_indices], idx[~nan_indices], frequencies[~nan_indices])
-            left = None
-            for i in range(len(frequencies)):
-                if nan_indices[i]:
-                    if left is None:
-                        left = i - 1
-                    elif i == len(frequencies) - 1 or nan_indices[i + 1] == False:
-                        right = min(i + 1, len(frequencies)-1)
-                        slope = (frequencies[right] - frequencies[left]) / (right - left)
-                        frequencies[left:right] = frequencies[left] + slope * (idx[left:right] - left)
-                        left = None
+            frequencies[nan_indices] = 0
+        
 
         f0 = frequencies
 
