@@ -14,9 +14,9 @@
     "upsample_kernel_sizes": [
         16,
         16,
-        8,
-        2,
-        2
+        4,
+        4,
+        4
     ],
     "upsample_initial_channel": 512,
     "resblock_kernel_sizes": [
