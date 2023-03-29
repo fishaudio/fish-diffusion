@@ -96,6 +96,9 @@ class HiFiSinger(nn.Module):
         else:
             speaker_embed = self.speaker_encoder(speakers)
 
+        if speaker_embed.ndim == 2:
+            speaker_embed = speaker_embed[:, None, :]
+
         features += speaker_embed
 
         if pitch_shift is not None and hasattr(self, "pitch_shift_encoder"):
