@@ -84,7 +84,11 @@ class DiffSinger(nn.Module):
                 1 - mel_masks[:, :, None].float()
             )
 
-        speaker_embed = self.speaker_encoder(speakers)
+        if speakers.ndim in [2, 3] and torch.is_floating_point(speakers):
+            speaker_embed = speakers
+        else:
+            speaker_embed = self.speaker_encoder(speakers)
+
         if speaker_embed.ndim == 2:
             speaker_embed = speaker_embed[:, None, :]
 

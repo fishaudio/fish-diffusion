@@ -2,7 +2,7 @@ import argparse
 import json
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import librosa
 import numpy as np
@@ -63,7 +63,7 @@ class SVCInference(nn.Module):
         audio: torch.Tensor,
         sr: int,
         pitch_adjust: int = 0,
-        speaker_id: int = 0,
+        speakers: torch.Tensor = 0,
         sampler_progress: bool = False,
         sampler_interval: Optional[int] = None,
         pitches: Optional[torch.Tensor] = None,
@@ -99,7 +99,7 @@ class SVCInference(nn.Module):
         contents_lens = torch.tensor([mel_len]).to(self.device)
 
         features = self.model.model.forward_features(
-            speakers=torch.tensor([speaker_id]).long().to(self.device),
+            speakers=speakers.to(self.device),
             contents=text_features[None].to(self.device),
             contents_lens=contents_lens,
             contents_max_len=max(contents_lens),
@@ -118,6 +118,60 @@ class SVCInference(nn.Module):
         wav = self.model.vocoder.spec2wav(result[0].T, f0=pitches).cpu().numpy()
 
         return wav
+
+    def _parse_speaker(self, speaker):
+        to_long_tensor = lambda x: torch.tensor([x], dtype=torch.long)
+
+        # Speaker id
+        if isinstance(speaker, int):
+            return to_long_tensor(speaker)
+
+        # Speaker name
+        if (
+            hasattr(self.config, "speaker_mapping")
+            and speaker in self.config.speaker_mapping
+        ):
+            return to_long_tensor(self.config.speaker_mapping[speaker])
+
+        # Speaker id
+        if speaker.isdigit():
+            return to_long_tensor(int(speaker))
+
+        # Speaker mix
+        speaker = speaker.split(",")
+        speaker_mix = []
+
+        for s in speaker:
+            s = s.split(":")
+            speaker_id = self._parse_speaker(s[0])
+
+            if len(s) == 1:
+                speaker_mix.append((speaker_id, 1.0))
+            else:
+                speaker_mix.append((speaker_id, float(s[1])))
+
+        # Normalize speaker mix weights to 1
+        summation = sum([s[1] for s in speaker_mix])
+        speaker_mix = [(s[0], s[1] / summation) for s in speaker_mix]
+
+        logger.info(
+            f"Speaker mix: {speaker} -> {[f'{s[0].item()}:{s[1]}' for s in speaker_mix]}"
+        )
+
+        if hasattr(self.model, "model"):  # DiffSinger
+            weight = self.model.model
+        elif hasattr(self.model, "generator"):  # HiFiSinger
+            weight = self.model.generator
+        else:
+            logger.error("Model does not have generator or model attribute")
+            exit()
+
+        weight = weight.speaker_encoder.embedding.weight
+        mixed_weight = torch.zeros_like(weight[0])[None]
+        for s in speaker_mix:
+            mixed_weight += weight[s[0]] * s[1]
+
+        return mixed_weight.float()
 
     @torch.no_grad()
     def inference(
@@ -140,7 +194,7 @@ class SVCInference(nn.Module):
         Args:
             input_path: input path
             output_path: output path
-            speaker: speaker id or speaker name
+            speaker: speaker id or speaker name or speaker mix (a:0.5,b:0.5)
             pitch_adjust: pitch adjust
             silence_threshold: silence threshold of librosa.effects.split
             max_slice_duration: maximum duration of each slice
@@ -186,11 +240,7 @@ class SVCInference(nn.Module):
             return
 
         # Process speaker
-        try:
-            speaker_id = self.config.speaker_mapping[speaker]
-        except (KeyError, AttributeError):
-            # Parse speaker id
-            speaker_id = int(speaker)
+        speakers = self._parse_speaker(speaker)
 
         # Load audio
         audio, sr = librosa.load(input_path, sr=self.config.sampling_rate, mono=True)
@@ -259,7 +309,7 @@ class SVCInference(nn.Module):
                 segment,
                 sr,
                 pitch_adjust=pitch_adjust,
-                speaker_id=speaker_id,
+                speakers=speakers,
                 sampler_progress=sampler_progress,
                 sampler_interval=sampler_interval,
                 pitches=pitches_segment,

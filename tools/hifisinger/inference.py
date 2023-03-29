@@ -21,7 +21,7 @@ class HiFiSingerSVCInference(SVCInference):
         audio: torch.Tensor,
         sr: int,
         pitch_adjust: int = 0,
-        speaker_id: int = 0,
+        speakers: torch.Tensor = 0,
         sampler_progress: bool = False,
         sampler_interval: Optional[int] = None,
         pitches: Optional[torch.Tensor] = None,
@@ -58,7 +58,7 @@ class HiFiSingerSVCInference(SVCInference):
 
         wav = (
             self.model.generator(
-                speakers=torch.tensor([speaker_id]).long().to(self.device),
+                speakers=speakers.to(self.device),
                 contents=text_features[None].to(self.device),
                 contents_lens=contents_lens,
                 contents_max_len=max(contents_lens),
