@@ -1,7 +1,8 @@
-import numpy as np
 import libf0
+import numpy as np
 
 from .builder import PITCH_EXTRACTORS, BasePitchExtractor
+
 
 @PITCH_EXTRACTORS.register_module()
 class PyinPitchExtractor(BasePitchExtractor):
@@ -22,12 +23,12 @@ class PyinPitchExtractor(BasePitchExtractor):
 
         # Extract pitch using libf0.pyin
         pyin_tuple = libf0.pyin(
-                x[0].cpu().numpy(),
-                Fs=sampling_rate,
-                voicing_prob=0.6,
-                F_min=self.f0_min,
-                F_max=self.f0_max,
-            )
+            x[0].cpu().numpy(),
+            Fs=sampling_rate,
+            voicing_prob=0.6,
+            F_min=self.f0_min,
+            F_max=self.f0_max,
+        )
 
         frequencies = pyin_tuple[0]
 
@@ -35,7 +36,6 @@ class PyinPitchExtractor(BasePitchExtractor):
         nan_indices = np.isnan(frequencies)
         if np.any(nan_indices):
             frequencies[nan_indices] = 0
-        
 
         f0 = frequencies
 
@@ -45,7 +45,8 @@ class PyinPitchExtractor(BasePitchExtractor):
         #     f0 = np.pad(f0, (total_pad // 2, total_pad - total_pad // 2), "constant")
 
         return self.post_process(x, sampling_rate, f0, pad_to)
-    
+
+
 @PITCH_EXTRACTORS.register_module()
 class SaliencePitchExtractor(BasePitchExtractor):
     def __call__(self, x, sampling_rate=44100, pad_to=None):
@@ -66,13 +67,12 @@ class SaliencePitchExtractor(BasePitchExtractor):
 
         # Extract pitch using libf0.salience
         salience_tuple = libf0.salience(
-                x[0].cpu().numpy(),
-                Fs=sampling_rate,
-                F_min=self.f0_min,
-                F_max=self.f0_max,
-            )
-        
+            x[0].cpu().numpy(),
+            Fs=sampling_rate,
+            F_min=self.f0_min,
+            F_max=self.f0_max,
+        )
+
         f0 = salience_tuple[0]
 
         return self.post_process(x, sampling_rate, f0, pad_to)
-    
