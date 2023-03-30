@@ -14,7 +14,7 @@
 <a href="https://discord.gg/wbYSRBrW2E">
 <img alt="Discord" src="https://img.shields.io/discord/1044927142900809739?color=%23738ADB&label=Discord&logo=discord&logoColor=white&style=flat-square">
 </a>
-<a href="https://huggingface.co/spaces/lengyue233/fish-diffusion">
+<a href="https://huggingface.co/spaces/fishaudio/fish-diffusion">
 <img alt="Hugging Face" src="https://img.shields.io/badge/🤗%20Spaces-HiFiSinger-blue.svg?style=flat-square">
 </a>
 </div>

@@ -11,7 +11,7 @@
 <a href="https://hub.docker.com/r/lengyue233/fish-diffusion">
 <img alt="Docker Hub" src="https://img.shields.io/docker/cloud/build/lengyue233/fish-diffusion?style=flat-square&logo=Docker&logoColor=white">
 </a>
-<a href="https://huggingface.co/spaces/lengyue233/fish-diffusion">
+<a href="https://huggingface.co/spaces/fishaudio/fish-diffusion">
 <img alt="Hugging Face" src="https://img.shields.io/badge/🤗%20Spaces-HiFiSinger-blue.svg?style=flat-square">
 </a>
 </div>
