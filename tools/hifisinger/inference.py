@@ -151,20 +151,6 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--sampler_interval",
-        type=int,
-        default=None,
-        required=False,
-        help="Sampler interval, if not specified, will be taken from config",
-    )
-
-    parser.add_argument(
-        "--sampler_progress",
-        action="store_true",
-        help="Show sampler progress",
-    )
-
-    parser.add_argument(
         "--device",
         type=str,
         default=None,
@@ -194,6 +180,14 @@ def parse_args():
         help="Min silence duration in seconds",
     )
 
+    # Pitch extractor
+    parser.add_argument(
+        "--pitch_extractor",
+        type=str,
+        default=None,
+        help="Pitch extractor",
+    )
+
     return parser.parse_args()
 
 
@@ -214,33 +208,20 @@ if __name__ == "__main__":
     if args.speaker_mapping is not None:
         config.speaker_mapping = json.load(open(args.speaker_mapping))
 
+    if args.pitch_extractor is not None:
+        config.preprocessing.pitch_extractor.type = args.pitch_extractor
+
     model = HiFiSingerSVCInference(config, args.checkpoint)
     model = model.to(device)
 
-    if args.gradio:
-        from tools.diffusion.gradio_ui import launch_gradio
-
-        launch_gradio(
-            config,
-            model.inference,
-            speaker=args.speaker,
-            pitch_adjust=args.pitch_adjust,
-            sampler_interval=args.sampler_interval,
-            extract_vocals=args.extract_vocals,
-            share=args.gradio_share,
-        )
-
-    else:
-        model.inference(
-            input_path=args.input,
-            output_path=args.output,
-            speaker=args.speaker,
-            pitch_adjust=args.pitch_adjust,
-            pitches_path=args.pitches_path,
-            extract_vocals=args.extract_vocals,
-            sampler_progress=args.sampler_progress,
-            sampler_interval=args.sampler_interval,
-            silence_threshold=args.silence_threshold,
-            max_slice_duration=args.max_slice_duration,
-            min_silence_duration=args.min_silence_duration,
-        )
+    model.inference(
+        input_path=args.input,
+        output_path=args.output,
+        speaker=args.speaker,
+        pitch_adjust=args.pitch_adjust,
+        pitches_path=args.pitches_path,
+        extract_vocals=args.extract_vocals,
+        silence_threshold=args.silence_threshold,
+        max_slice_duration=args.max_slice_duration,
+        min_silence_duration=args.min_silence_duration,
+    )
