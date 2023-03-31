@@ -63,47 +63,12 @@ class HiFiSingerSVC:
         self.hifisinger_model = HiFiSingerSVCInference(
             self.config, self.checkpoint_path
         )
-        self.spk_tensor = self._parse_speaker(self.spk_id)
         self.device = torch.device(config_flask["device"])
         self.hifisinger_model = self.hifisinger_model.to(self.device)
+        self.spk_tensor = self.hifisinger_model._parse_speaker(self.spk_id)
         self.pad_f0_model = config_flask["pad_f0_model"]
         self.pad_f0 = 0.0
         self.pad_f0_pad = config_flask["pad_f0_pad"]
-
-    def _parse_speaker(self, speaker):
-        to_long_tensor = lambda x: torch.tensor([x], dtype=torch.long)
-        # Speaker id
-        if isinstance(speaker, int):
-            return to_long_tensor(speaker)
-        if (
-            hasattr(self.config, "speaker_mapping")
-            and speaker in self.config.speaker_mapping
-        ):
-            return to_long_tensor(self.config.speaker_mapping[speaker])
-        if speaker.isdigit():
-            return to_long_tensor(int(speaker))
-        # Speaker mix
-        speaker = speaker.split(",")
-        speaker_mix = []
-        for s in speaker:
-            s = s.split(":")
-            speaker_id = self._parse_speaker(s[0])
-            if len(s) == 1:
-                speaker_mix.append((speaker_id, 1.0))
-            else:
-                speaker_mix.append((speaker_id, float(s[1])))
-        # Normalize speaker mix weights to 1
-        summation = sum([s[1] for s in speaker_mix])
-        speaker_mix = [(s[0], s[1] / summation) for s in speaker_mix]
-        logger.info(
-            f"Speaker mix: {speaker} -> {[f'{s[0].item()}:{s[1]}' for s in speaker_mix]}"
-        )
-        weight = self.hifisinger_model.model.generator
-        weight = weight.speaker_encoder.embedding.weight
-        mixed_weight = torch.zeros_like(weight[0])[None]
-        for s in speaker_mix:
-            mixed_weight += weight[s[0]] * s[1]
-        return mixed_weight.float()
 
     def infer(self, wav_path, pitch_change, speak_id, safe_prefix_pad):
         if safe_prefix_pad > self.pad_f0_pad:
@@ -114,7 +79,7 @@ class HiFiSingerSVC:
             speak_tensor = self.spk_tensor.to(self.device)
             logger.info(f"使用了说话人覆盖，实际说话人id是{self.spk_id}")
         else:
-            speak_tensor = self._parse_speaker(speak_id).to(self.device)
+            speak_tensor = self.hifisinger_model._parse_speaker(speak_id).to(self.device)
         # 读音频
         audio, sr = librosa.load(wav_path, sr=None, mono=True)
         logger.info(f"Loaded {wav_path} with sr={sr}")
