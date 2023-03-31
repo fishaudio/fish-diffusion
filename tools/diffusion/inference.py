@@ -2,7 +2,7 @@ import argparse
 import json
 import os
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 import librosa
 import numpy as np
@@ -119,7 +119,7 @@ class SVCInference(nn.Module):
 
         return wav
 
-    def _parse_speaker(self, speaker):
+    def _parse_speaker(self, speaker, recursive=True):
         to_long_tensor = lambda x: torch.tensor([x], dtype=torch.long)
 
         # Speaker id
@@ -137,13 +137,17 @@ class SVCInference(nn.Module):
         if speaker.isdigit():
             return to_long_tensor(int(speaker))
 
+        if recursive is False:
+            logger.error(f"Invalid speaker: {speaker}")
+            return None
+
         # Speaker mix
         speaker = speaker.split(",")
         speaker_mix = []
 
         for s in speaker:
             s = s.split(":")
-            speaker_id = self._parse_speaker(s[0])
+            speaker_id = self._parse_speaker(s[0], recursive=False)
 
             if len(s) == 1:
                 speaker_mix.append((speaker_id, 1.0))
@@ -241,6 +245,8 @@ class SVCInference(nn.Module):
 
         # Process speaker
         speakers = self._parse_speaker(speaker)
+        if speakers is None:
+            return
 
         # Load audio
         audio, sr = librosa.load(input_path, sr=self.config.sampling_rate, mono=True)
@@ -452,6 +458,14 @@ def parse_args():
         help="Min silence duration in seconds",
     )
 
+    # Pitch extractor
+    parser.add_argument(
+        "--pitch_extractor",
+        type=str,
+        default=None,
+        help="Pitch extractor",
+    )
+
     return parser.parse_args()
 
 
@@ -471,6 +485,9 @@ if __name__ == "__main__":
 
     if args.speaker_mapping is not None:
         config.speaker_mapping = json.load(open(args.speaker_mapping))
+
+    if args.pitch_extractor is not None:
+        config.preprocessing.pitch_extractor.type = args.pitch_extractor
 
     model = SVCInference(config, args.checkpoint)
     model = model.to(device)
