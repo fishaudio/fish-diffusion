@@ -37,7 +37,7 @@ def main(
     data = torch.load(checkpoint, map_location="cpu")
     logger.info(f"Loaded checkpoint from {checkpoint}")
 
-    if remove_optimizer_states:
+    if remove_optimizer_states and "state_dict" in data:
         data = data["state_dict"]
 
     if remove_speaker_embeddings:
