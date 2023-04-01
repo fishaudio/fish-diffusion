@@ -137,7 +137,7 @@ def run_model(
     # Call shell instead of python
     with tempfile.NamedTemporaryFile(suffix=".wav") as f:
         command = [
-            "python",
+            "python3",
             "tools/hifisinger/inference.py",
             "--config",
             MODELS[model]["config"],
