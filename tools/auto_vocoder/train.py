@@ -166,7 +166,7 @@ class AutoVocoder(pl.LightningModule):
         loss_aux = 0.5 * loss_stft + loss_mel
 
         # L2 Time Domain Loss
-        # loss_l2 = F.mse_loss(y, y_g_hat) * 100
+        loss_l2 = F.mse_loss(y, y_g_hat)
 
         # Discriminator Loss
         y_df_hat_r, y_df_hat_g, fmap_f_r, fmap_f_g = self.mpd(y, y_g_hat)
@@ -175,7 +175,14 @@ class AutoVocoder(pl.LightningModule):
         loss_fm_s = feature_loss(fmap_s_r, fmap_s_g)
         loss_gen_f, _ = generator_loss(y_df_hat_g)
         loss_gen_s, _ = generator_loss(y_ds_hat_g)
-        loss_gen_all = loss_gen_s + loss_gen_f + loss_fm_s + loss_fm_f + loss_aux * 45
+        loss_gen_all = (
+            loss_gen_s
+            + loss_gen_f
+            + loss_fm_s
+            + loss_fm_f
+            + loss_aux * 45
+            + loss_l2 * 100
+        )
 
         self.manual_backward(loss_gen_all)
         optim_g.step()

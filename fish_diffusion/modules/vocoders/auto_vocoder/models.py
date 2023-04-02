@@ -12,24 +12,25 @@ def get_padding(kernel_size, dilation=1):
 class ResBlock(torch.nn.Module):
     def __init__(self, in_ch, out_ch):
         super().__init__()
-        self.convs = nn.ModuleList(
-            [
-                Conv2d(in_ch, out_ch, kernel_size=3, padding=1),
-                BatchNorm2d(out_ch),
-                nn.SiLU(),
-            ]
+
+        self.convs = nn.Sequential(
+            Conv2d(in_ch, out_ch, kernel_size=3, padding=1),
+            BatchNorm2d(out_ch),
+            nn.SiLU(),
+            Conv2d(out_ch, out_ch, kernel_size=3, padding=1),
+            BatchNorm2d(out_ch),
         )
         self.out_ch = out_ch
         self.in_ch = in_ch
 
     def forward(self, x):
-        for c in self.convs:
-            res = c(x)
-            if self.out_ch == self.in_ch:
-                x = res + x
-            else:
-                x = res
-        return x
+        identity = x
+        x = self.convs(x)
+
+        if self.out_ch == self.in_ch:
+            x = identity + x
+
+        return F.silu(x)
 
 
 class Encoder(torch.nn.Module):
