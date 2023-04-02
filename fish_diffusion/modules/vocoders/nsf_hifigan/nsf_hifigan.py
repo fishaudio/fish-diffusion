@@ -82,10 +82,6 @@ class NsfHifiGAN(pl.LightningModule):
 
         return y
 
-    @property
-    def device(self):
-        return next(self.model.parameters()).device
-
     def wav2spec(self, wav_torch, sr=None, key_shift=0, speed=1.0):
         if sr is None:
             sr = self.h.sampling_rate

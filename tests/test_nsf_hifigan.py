@@ -6,7 +6,7 @@ from fish_diffusion.modules.vocoders import NsfHifiGAN
 
 source = "dataset/valid/opencpop/TruE-干音_0000/0002.wav"
 
-gan = NsfHifiGAN("checkpoints/model", "checkpoints/nsf_hifigan/config.json")
+gan = NsfHifiGAN()
 
 audio, sr = torchaudio.load(source)
 

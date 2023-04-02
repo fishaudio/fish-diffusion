@@ -200,3 +200,39 @@ class NaiveSVSDataset(NaiveDataset):
             keys=[("pitches", -1), ("time_stretch", -1), ("key_shift", -1)],
         ),
     ]
+
+
+@DATASETS.register_module()
+class NaiveAudioDataset(NaiveDataset):
+    processing_pipeline = [
+        dict(type="PickKeys", keys=["audio"]),
+        dict(type="UnSqueeze", keys=[("audio", 0)]),  # (T) -> (1, T)
+    ]
+
+    collating_pipeline = [
+        dict(type="ListToDict"),
+        dict(type="PadStack", keys=[("audio", -1)]),
+    ]
+
+    def __init__(
+        self, path="dataset", segment_size=16384, hop_size=512, sampling_rate=44100
+    ):
+        super().__init__(path)
+
+        self.segment_size = segment_size
+        self.hop_size = hop_size
+        self.sampling_rate = sampling_rate
+
+    def __getitem__(self, idx):
+        x = super().__getitem__(idx)
+
+        # Randomly crop the audio and mel
+        if (
+            self.segment_size is not None
+            and self.segment_size > 0
+            and x["audio"].shape[1] > self.segment_size
+        ):
+            start = np.random.randint(0, x["audio"].shape[1] - self.segment_size + 1)
+            x["audio"] = x["audio"][:, start : start + self.segment_size]
+
+        return x
