@@ -1,6 +1,4 @@
 import argparse
-import multiprocessing as mp
-import os
 import random
 from concurrent.futures import ProcessPoolExecutor
 from copy import deepcopy
@@ -10,6 +8,7 @@ from typing import Optional
 import librosa
 import numpy as np
 import torch
+import torch.multiprocessing as mp
 import torchcrepe
 from fish_audio_preprocess.utils.file import list_files
 from loguru import logger
@@ -44,7 +43,6 @@ def init(
 
     if torch.cuda.is_available():
         gpu_id = rank % torch.cuda.device_count()
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
         device = torch.device(f"cuda:{gpu_id}")
 
     logger.info(f"Rank {rank} uses device {device}")
