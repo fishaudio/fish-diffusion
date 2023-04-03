@@ -40,7 +40,7 @@
 基于 DiffSinger 实现歌声音色转换。相较于原 diffsvc 仓库，本仓库优缺点如下
 + 支持多说话人
 + 本仓库代码结构更简单易懂, 模块全部解耦
-+ 声码器同样使用 [441khz Diff Singer 社区声码器](https://openvpi.github.io/vocoders/)
++ 声码器同样使用 [44.1khz Diff Singer 社区声码器](https://openvpi.github.io/vocoders/)
 + 支持多机多卡训练, 支持半精度训练, 拯救你的训练速度和显存
 
 ## 环境准备

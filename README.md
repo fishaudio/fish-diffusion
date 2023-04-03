@@ -33,7 +33,7 @@ An easy to understand TTS / SVS / SVC training framework.
 Using Diffusion Model to solve different voice generating tasks. Compared with the original diffsvc repository, the advantages and disadvantages of this repository are as follows:
 + Support multi-speaker
 + The code structure of this repository is simpler and easier to understand, and all modules are decoupled
-+ Support [441khz Diff Singer community vocoder](https://openvpi.github.io/vocoders/)
++ Support [44.1khz Diff Singer community vocoder](https://openvpi.github.io/vocoders/)
 + Support multi-machine multi-devices training, support half-precision training, save your training speed and memory
 
 ## Preparing the environment
