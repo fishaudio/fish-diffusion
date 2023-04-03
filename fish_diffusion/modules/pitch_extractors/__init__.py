@@ -1,6 +1,6 @@
 from .builder import PITCH_EXTRACTORS
 from .crepe import CrepePitchExtractor
-from .libf0 import PyinPitchExtractor, SaliencePitchExtractor
+from .pyin import PyinPitchExtractor
 from .parsel_mouth import ParselMouthPitchExtractor
 from .world import DioPitchExtractor, HarvestPitchExtractor
 
@@ -11,5 +11,4 @@ __all__ = [
     "DioPitchExtractor",
     "ParselMouthPitchExtractor",
     "PyinPitchExtractor",
-    "SaliencePitchExtractor",
 ]
