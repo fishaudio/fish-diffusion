@@ -1,14 +1,13 @@
 import soundfile as sf
 import torchaudio
 
-from fish_diffusion.modules.vocoders.auto_vocoder.auto_vocoder import AutoVocoder
+from fish_diffusion.modules.vocoders import AutoVocoder
 
 vocoder = AutoVocoder(
-    "logs/AutoVocoder/version_None/checkpoints/epoch=152-step=160000-valid_loss=0.29.ckpt"
+    "logs/AutoVocoder/version_None/checkpoints/epoch=258-step=270000-valid_loss=0.25.ckpt"
 )
 
-
-source = "dataset/valid/opencpop/TruE-干音_0000/0002.wav"
+source = "raw/炉心溶解/蹈火-混合.flac"
 audio, sr = torchaudio.load(source)
 
 spec = vocoder.wav2spec(audio)
