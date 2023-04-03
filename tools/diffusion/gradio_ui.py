@@ -16,7 +16,7 @@ def run_inference(
     audio, sr = inference_fn(
         input_path=input_path,
         output_path=None,
-        speaker=int(speaker),
+        speaker=speaker,
         pitch_adjust=pitch_adjust,
         sampler_interval=sampler_interval,
         extract_vocals=extract_vocals,
