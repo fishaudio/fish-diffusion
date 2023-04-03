@@ -42,11 +42,4 @@ class PyinPitchExtractor(BasePitchExtractor):
         if np.any(nan_indices):
             frequencies[nan_indices] = 0
 
-        f0 = frequencies
-
-        # Pad zeros to the end
-        # if pad_to is not None and f0.shape[0] < pad_to:
-        #     total_pad = pad_to - f0.shape[0]
-        #     f0 = np.pad(f0, (total_pad // 2, total_pad - total_pad // 2), "constant")
-
-        return self.post_process(x, sampling_rate, f0, pad_to)
+        return self.post_process(x, sampling_rate, frequencies, pad_to)
