@@ -1,5 +1,3 @@
-import itertools
-import json
 from argparse import ArgumentParser
 
 import pytorch_lightning as pl
