@@ -15,6 +15,13 @@ from loguru import logger
     default=False,
 )
 @click.option(
+    "--remove-speaker-by-id",
+    "-r",
+    type=int,
+    help="Remove speaker embeddings by id",
+    multiple=True,
+)
+@click.option(
     "--remove-optimizer-states",
     is_flag=True,
     help="Remove optimizer states",
@@ -30,6 +37,7 @@ def main(
     checkpoint: str,
     output: str,
     remove_speaker_embeddings: bool,
+    remove_speaker_by_id: tuple[int],
     remove_optimizer_states: bool,
     remove_discriminator: bool,
     remove_generator: bool,
@@ -40,8 +48,21 @@ def main(
     if remove_optimizer_states and "state_dict" in data:
         data = data["state_dict"]
 
+    if remove_speaker_embeddings and len(remove_speaker_by_id) != 0:
+        logger.error("Cannot remove both speaker embeddings and speaker by id")
+        return
+
     if remove_speaker_embeddings:
         del data["generator.speaker_encoder.embedding.weight"]
+        logger.info("Removed speaker embeddings")
+
+    if len(remove_speaker_by_id) != 0:
+        for id in remove_speaker_by_id:
+            data["generator.speaker_encoder.embedding.weight"][id] = 0.0
+            logger.info(f"Removed speaker with id {id}")
+            logger.info(
+                f"Speaker embedding: {data['generator.speaker_encoder.embedding.weight'][id, :8]}..."
+            )
 
     if remove_discriminator:
         data = {
