@@ -125,7 +125,8 @@ def process(
 
     # Obtain mel spectrogram
     if vocoder is not None:
-        mel = vocoder.wav2spec(audio, sr, key_shift=key_shift)
+        with torch.no_grad():
+            mel = vocoder.wav2spec(audio, sr, key_shift=key_shift)
         mel_length = mel.shape[-1]
         sample["mel"] = mel.cpu().numpy()
     else:
