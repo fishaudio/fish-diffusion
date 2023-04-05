@@ -50,7 +50,7 @@ dataset = dict(
     train=dict(
         type="NaiveAudioDataset",
         path="/mnt/nvme1/vocoder-dataset/train",
-        segment_size=16384,
+        segment_size=32768,
     ),
     valid=dict(
         type="NaiveAudioDataset",
