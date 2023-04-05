@@ -4,17 +4,18 @@ from argparse import ArgumentParser
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
+import torchaudio
 import wandb
 from loguru import logger
 from mmengine import Config
 from mmengine.optim import OPTIMIZERS
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
+from scipy.signal import butter
 from torch.nn import functional as F
 
 from fish_diffusion.datasets.utils import build_loader_from_config
-from fish_diffusion.modules.vocoders.auto_vocoder.models import (
-    Decoder,
-    Encoder,
+from fish_diffusion.modules.vocoders.auto_vocoder.models import Decoder, Encoder
+from fish_diffusion.modules.vocoders.nsf_hifigan.models import (
     MultiPeriodDiscriminator,
     MultiScaleDiscriminator,
     discriminator_loss,
@@ -106,7 +107,8 @@ class AutoVocoder(pl.LightningModule):
 
         y = batch["audio"].float()
 
-        y_g_hat = self.decoder(self.encoder(y[:, 0]))[:, None]
+        # Do reconstruction
+        y_g_hat = self.decoder(self.encoder(y))
         optim_d.zero_grad()
 
         # MPD
@@ -165,9 +167,6 @@ class AutoVocoder(pl.LightningModule):
 
         loss_aux = 0.5 * loss_stft + loss_mel
 
-        # L2 Time Domain Loss
-        loss_l2 = F.mse_loss(y, y_g_hat)
-
         # Discriminator Loss
         y_df_hat_r, y_df_hat_g, fmap_f_r, fmap_f_g = self.mpd(y, y_g_hat)
         y_ds_hat_r, y_ds_hat_g, fmap_s_r, fmap_s_g = self.msd(y, y_g_hat)
@@ -181,7 +180,6 @@ class AutoVocoder(pl.LightningModule):
             + loss_fm_s
             + loss_fm_f
             + loss_aux * 45
-            + loss_l2 * 100
         )
 
         self.manual_backward(loss_gen_all)
@@ -218,7 +216,7 @@ class AutoVocoder(pl.LightningModule):
         audios = batch["audio"].float()
 
         mels = self.get_mels(audios)
-        y_g_hat = self.decoder(self.encoder(audios[:, 0]))[:, None]
+        y_g_hat = self.decoder(self.encoder(audios))
         y_g_hat_mel = self.get_mels(y_g_hat)[:, :, : mels.shape[2]]
 
         # L1 Mel-Spectrogram Loss

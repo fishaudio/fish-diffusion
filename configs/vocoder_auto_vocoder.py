@@ -1,10 +1,3 @@
-from functools import partial
-
-from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
-from pytorch_lightning.strategies import DDPStrategy
-
-from fish_diffusion.utils.pitch import pitch_to_scale
-
 _base_ = [
     "./_base_/trainers/base.py",
     "./_base_/schedulers/exponential.py",
@@ -19,19 +12,20 @@ win_length = 2048
 model = dict(
     type="AutoVocoder",
     encoder=dict(
-        n_blocks=11,
-        latent_dim=256,
-        latent_dropout=0.1,
-        filter_length=n_fft,
-        hop_length=hop_length,
-        win_length=win_length,
+        resblock_kernel_sizes=[3, 7, 11],
+        resblock_dilation_sizes=[(1, 3, 5), (1, 3, 5), (1, 3, 5)],
+        downsample_rates=[2, 4, 8, 8],
+        downsample_kernel_sizes=[4, 8, 16, 16],
+        downsample_initial_channel=16,
+        hidden_size=128,
     ),
     decoder=dict(
-        n_blocks=11,
-        latent_dim=256,
-        filter_length=n_fft,
-        hop_length=hop_length,
-        win_length=win_length,
+        resblock_kernel_sizes=[3, 7, 11],
+        resblock_dilation_sizes=[(1, 3, 5), (1, 3, 5), (1, 3, 5)],
+        upsample_rates=[8, 8, 4, 2],
+        upsample_kernel_sizes=[16, 16, 8, 4],
+        upsample_initial_channel=512,
+        hidden_size=128,
     ),
     discriminator_periods=[3, 5, 7, 11, 17, 23, 37],
     # Params used for training
@@ -93,5 +87,4 @@ trainer = dict(
     # Disable gradient clipping, which is not supported by custom optimization
     gradient_clip_val=None,
     max_steps=1000000,
-    precision=32,  # Many iSTFTs are used in the model, so 16-bit precision is not enough
 )

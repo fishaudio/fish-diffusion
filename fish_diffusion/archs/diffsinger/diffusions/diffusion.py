@@ -56,6 +56,7 @@ class GaussianDiffusion(nn.Module):
         spec_stats_path="dataset/stats.json",
         spec_min=None,
         spec_max=None,
+        use_spec_norm=True,
     ):
         super().__init__()
 
@@ -82,24 +83,26 @@ class GaussianDiffusion(nn.Module):
             "sqrt_one_minus_alphas_cumprod", to_torch(np.sqrt(1.0 - alphas_cumprod))
         )
 
-        assert (spec_min is None and spec_max is None) or (
-            spec_min is not None and spec_max is not None
-        ), "spec_min and spec_max must be both None or both not None"
+        self.use_spec_norm = use_spec_norm
+        if use_spec_norm:
+            assert (spec_min is None and spec_max is None) or (
+                spec_min is not None and spec_max is not None
+            ), "spec_min and spec_max must be both None or both not None"
 
-        if spec_min is None:
-            with open(spec_stats_path) as f:
-                stats = json.load(f)
+            if spec_min is None:
+                with open(spec_stats_path) as f:
+                    stats = json.load(f)
 
-            spec_min = stats["spec_min"]
-            spec_max = stats["spec_max"]
+                spec_min = stats["spec_min"]
+                spec_max = stats["spec_max"]
 
-        assert (
-            len(spec_min) == len(spec_max) == mel_channels
-            or len(spec_min) == len(spec_max) == 1
-        ), "spec_min and spec_max must be either of length 1 or mel_channels"
+            assert (
+                len(spec_min) == len(spec_max) == mel_channels
+                or len(spec_min) == len(spec_max) == 1
+            ), "spec_min and spec_max must be either of length 1 or mel_channels"
 
-        self.register_buffer("spec_min", torch.FloatTensor(spec_min).view(1, 1, -1))
-        self.register_buffer("spec_max", torch.FloatTensor(spec_max).view(1, 1, -1))
+            self.register_buffer("spec_min", torch.FloatTensor(spec_min).view(1, 1, -1))
+            self.register_buffer("spec_max", torch.FloatTensor(spec_max).view(1, 1, -1))
 
         self.sampler_interval = sampler_interval
 
@@ -164,7 +167,11 @@ class GaussianDiffusion(nn.Module):
 
         # 计算损失
         t = torch.randint(0, self.num_timesteps, (b,), device=device).long()
-        x = self.norm_spec(mel).transpose(1, 2)  # [B, M, T]
+
+        if self.use_spec_norm:
+            mel = self.norm_spec(mel)
+
+        x = mel.transpose(1, 2)  # [B, M, T]
 
         noised_mels, epsilon, loss = self.p_losses(x, t, features, mask=mel_mask)
 
@@ -202,7 +209,12 @@ class GaussianDiffusion(nn.Module):
                 noise = self.denoise_fn(x, t, features)
                 x = self.naive_noise_predictor(x=x, t=t, noise=noise)
 
-            return self.denorm_spec(x.transpose(1, 2))
+            x = x.transpose(1, 2)
+
+            if self.use_spec_norm:
+                x = self.denorm_spec(x)
+
+            return x
 
         # Hard part: PLMS sampling
         # Credit: OpenVPI's implementation
@@ -243,7 +255,12 @@ class GaussianDiffusion(nn.Module):
 
             x = self.plms_noise_predictor(x, noise_pred_prime, t, t_prev)
 
-        return self.denorm_spec(x.transpose(1, 2))
+        x = x.transpose(1, 2)
+
+        if self.use_spec_norm:
+            x = self.denorm_spec(x)
+
+        return x
 
     def norm_spec(self, x):
         return (x - self.spec_min) / (self.spec_max - self.spec_min) * 2 - 1

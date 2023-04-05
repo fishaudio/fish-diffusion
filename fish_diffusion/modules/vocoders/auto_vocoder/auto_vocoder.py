@@ -20,21 +20,22 @@ class AutoVocoder(pl.LightningModule):
 
         if encoder is None:
             encoder = dict(
-                n_blocks=11,
-                latent_dim=256,
-                latent_dropout=0.1,
-                filter_length=2048,
-                hop_length=512,
-                win_length=2048,
+                resblock_kernel_sizes=[3, 7, 11],
+                resblock_dilation_sizes=[(1, 3, 5), (1, 3, 5), (1, 3, 5)],
+                downsample_rates=[2, 4, 8, 8],
+                downsample_kernel_sizes=[4, 8, 16, 16],
+                downsample_initial_channel=16,
+                hidden_size=128,
             )
 
         if decoder is None:
             decoder = dict(
-                n_blocks=11,
-                latent_dim=256,
-                filter_length=2048,
-                hop_length=512,
-                win_length=2048,
+                resblock_kernel_sizes=[3, 7, 11],
+                resblock_dilation_sizes=[(1, 3, 5), (1, 3, 5), (1, 3, 5)],
+                upsample_rates=[8, 8, 4, 2],
+                upsample_kernel_sizes=[16, 16, 8, 4],
+                upsample_initial_channel=512,
+                hidden_size=128,
             )
 
         self.encoder = Encoder(**encoder)
