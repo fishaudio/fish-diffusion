@@ -108,7 +108,9 @@ class AutoVocoder(pl.LightningModule):
         y = batch["audio"].float()
 
         # Do reconstruction
-        y_g_hat = self.decoder(self.encoder(y))
+        mu, sigma = self.encoder(y)
+        z = self.encoder.sample(mu, sigma)
+        y_g_hat = self.decoder(z)
         optim_d.zero_grad()
 
         # MPD
@@ -167,6 +169,9 @@ class AutoVocoder(pl.LightningModule):
 
         loss_aux = 0.5 * loss_stft + loss_mel
 
+        # KL Loss for VAE
+        loss_kl = (sigma**2 + mu**2 - torch.log(sigma) - 1 / 2).mean()
+
         # Discriminator Loss
         y_df_hat_r, y_df_hat_g, fmap_f_r, fmap_f_g = self.mpd(y, y_g_hat)
         y_ds_hat_r, y_ds_hat_g, fmap_s_r, fmap_s_g = self.msd(y, y_g_hat)
@@ -175,11 +180,7 @@ class AutoVocoder(pl.LightningModule):
         loss_gen_f, _ = generator_loss(y_df_hat_g)
         loss_gen_s, _ = generator_loss(y_ds_hat_g)
         loss_gen_all = (
-            loss_gen_s
-            + loss_gen_f
-            + loss_fm_s
-            + loss_fm_f
-            + loss_aux * 45
+            loss_gen_s + loss_gen_f + loss_fm_s + loss_fm_f + loss_aux * 45 + loss_kl
         )
 
         self.manual_backward(loss_gen_all)
@@ -191,6 +192,28 @@ class AutoVocoder(pl.LightningModule):
             on_step=True,
             on_epoch=True,
             prog_bar=True,
+            logger=True,
+            sync_dist=True,
+            batch_size=batch["audio"].shape[0],
+        )
+
+        self.log(
+            f"train_loss_aux",
+            loss_aux,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=False,
+            logger=True,
+            sync_dist=True,
+            batch_size=batch["audio"].shape[0],
+        )
+
+        self.log(
+            f"train_loss_kl",
+            loss_kl,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=False,
             logger=True,
             sync_dist=True,
             batch_size=batch["audio"].shape[0],
@@ -216,7 +239,9 @@ class AutoVocoder(pl.LightningModule):
         audios = batch["audio"].float()
 
         mels = self.get_mels(audios)
-        y_g_hat = self.decoder(self.encoder(audios))
+        mu, sigma = self.encoder(audios)
+        z = self.encoder.sample(mu, sigma)
+        y_g_hat = self.decoder(z)
         y_g_hat_mel = self.get_mels(y_g_hat)[:, :, : mels.shape[2]]
 
         # L1 Mel-Spectrogram Loss

@@ -78,7 +78,8 @@ class Encoder(torch.nn.Module):
             for k, d in zip(resblock_kernel_sizes, resblock_dilation_sizes):
                 self.resblocks.append(ResBlock(ch, k, d))
 
-        self.conv_post = Conv1d(ch, hidden_size, 7, 1, padding=3)
+        self.conv_post_mu = Conv1d(ch, hidden_size, 7, 1, padding=3)
+        self.conv_post_sigma = Conv1d(ch, hidden_size, 7, 1, padding=3)
 
     def forward(self, x):
         x = self.conv_pre(x)
@@ -96,9 +97,14 @@ class Encoder(torch.nn.Module):
             x = xs / self.num_kernels
 
         x = F.silu(x)
-        x = self.conv_post(x)
 
-        return x
+        mu = self.conv_post_mu(x)
+        sigma = torch.exp(self.conv_post_sigma(x))
+
+        return mu, sigma
+
+    def sample(self, mu, sigma):
+        return mu + sigma * torch.randn_like(mu)
 
 
 class Decoder(torch.nn.Module):
