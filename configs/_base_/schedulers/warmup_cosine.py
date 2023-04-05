@@ -15,7 +15,7 @@ optimizer = dict(
     lr=1.0,
     weight_decay=1e-2,
     betas=(0.9, 0.98),
-    eps=1e-9,
+    eps=1e-3,
 )
 
 scheduler = dict(
