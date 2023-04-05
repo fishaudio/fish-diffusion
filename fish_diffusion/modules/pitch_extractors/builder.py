@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from mmengine import Registry
 
-from fish_diffusion.utils.tensor import repeat_expand
+from fish_diffusion.utils.tensor import interpolate, repeat_expand
 
 PITCH_EXTRACTORS = Registry("pitch_extractors")
 
@@ -44,11 +44,11 @@ class BasePitchExtractor:
         if self.keep_zeros:
             return f0
 
-        # 去掉0频率, 并线性插值
+        # Remove zero frequencies and linearly interpolate
         nzindex = torch.nonzero(f0).squeeze()
-        f0 = torch.index_select(f0, dim=0, index=nzindex).cpu().numpy()
-        time_org = self.hop_length / sampling_rate * nzindex.cpu().numpy()
-        time_frame = np.arange(pad_to) * self.hop_length / sampling_rate
+        f0 = torch.index_select(f0, dim=0, index=nzindex)
+        time_org = self.hop_length / sampling_rate * nzindex
+        time_frame = torch.arange(pad_to) * self.hop_length / sampling_rate
 
         if f0.shape[0] <= 0:
             return torch.zeros(pad_to, dtype=torch.float, device=x.device)
@@ -56,7 +56,4 @@ class BasePitchExtractor:
         if f0.shape[0] == 1:
             return torch.ones(pad_to, dtype=torch.float, device=x.device) * f0[0]
 
-        # 大概可以用 torch 重写?
-        f0 = np.interp(time_frame, time_org, f0, left=f0[0], right=f0[-1])
-
-        return torch.from_numpy(f0).to(x.device)
+        return interpolate(time_frame, time_org, f0, left=f0[0], right=f0[-1])
