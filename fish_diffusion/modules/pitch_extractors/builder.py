@@ -49,6 +49,7 @@ class BasePitchExtractor:
         f0 = torch.index_select(f0, dim=0, index=nzindex)
         time_org = self.hop_length / sampling_rate * nzindex
         time_frame = torch.arange(pad_to) * self.hop_length / sampling_rate
+        time_frame = time_frame.to(x.device)
 
         if f0.shape[0] <= 0:
             return torch.zeros(pad_to, dtype=torch.float, device=x.device)
