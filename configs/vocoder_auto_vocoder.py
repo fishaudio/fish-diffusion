@@ -11,21 +11,31 @@ win_length = 2048
 
 model = dict(
     type="AutoVocoder",
-    encoder=dict(
-        resblock_kernel_sizes=[3, 7, 11],
-        resblock_dilation_sizes=[(1, 3, 5), (1, 3, 5), (1, 3, 5)],
-        downsample_rates=[2, 4, 8, 8],
-        downsample_kernel_sizes=[4, 8, 16, 16],
-        downsample_initial_channel=16,
+    vae=dict(
+        encoder=dict(
+            # resblock_kernel_sizes=[3, 7, 11],
+            # resblock_dilation_sizes=[(1, 3, 5), (1, 3, 5), (1, 3, 5)],
+            # downsample_rates=[8, 8, 4, 2],
+            # downsample_kernel_sizes=[16, 16, 8, 4],
+            # downsample_initial_channel=16,
+            # hidden_size=128,
+            dimension=256,
+            norm="time_group_norm",
+            causal=False,
+        ),
+        decoder=dict(
+            # resblock_kernel_sizes=[3, 7, 11],
+            # resblock_dilation_sizes=[(1, 3, 5), (1, 3, 5), (1, 3, 5)],
+            # upsample_rates=[8, 8, 2, 2, 2],
+            # upsample_kernel_sizes=[16, 16, 4, 4, 4],
+            # upsample_initial_channel=512,
+            # hidden_size=128,
+            dimension=128,
+            norm="time_group_norm",
+            causal=False,
+        ),
         hidden_size=128,
-    ),
-    decoder=dict(
-        resblock_kernel_sizes=[3, 7, 11],
-        resblock_dilation_sizes=[(1, 3, 5), (1, 3, 5), (1, 3, 5)],
-        upsample_rates=[8, 8, 4, 2],
-        upsample_kernel_sizes=[16, 16, 8, 4],
-        upsample_initial_channel=512,
-        hidden_size=128,
+        embedding_size=128,
     ),
     discriminator_periods=[3, 5, 7, 11, 17, 23, 37],
     # Params used for training
@@ -50,7 +60,7 @@ dataset = dict(
     train=dict(
         type="NaiveAudioDataset",
         path="/mnt/nvme1/vocoder-dataset/train",
-        segment_size=32768,
+        segment_size=32000,
     ),
     valid=dict(
         type="NaiveAudioDataset",

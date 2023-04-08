@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn import Conv1d, ConvTranspose1d
+from torch.nn import Conv1d, ConvTranspose1d, BatchNorm1d
 
 from fish_diffusion.modules.vocoders.nsf_hifigan.models import get_padding
-
+from encodec.modules.seanet import SEANetEncoder, SEANetDecoder
 
 class ResBlock(torch.nn.Module):
     def __init__(self, channels, kernel_size=3, dilation=(1, 3, 5)):
@@ -13,7 +13,6 @@ class ResBlock(torch.nn.Module):
         self.m = nn.ModuleList(
             [
                 nn.Sequential(
-                    nn.SiLU(),
                     Conv1d(
                         channels,
                         channels,
@@ -22,6 +21,7 @@ class ResBlock(torch.nn.Module):
                         dilation=dilation[i],
                         padding=get_padding(kernel_size, dilation[i]),
                     ),
+                    nn.BatchNorm1d(channels),
                     nn.SiLU(),
                     Conv1d(
                         channels,
@@ -39,11 +39,12 @@ class ResBlock(torch.nn.Module):
     def forward(self, x):
         for m in self.m:
             x = m(x) + x
+            x = F.silu(x)
 
         return x
 
 
-class Encoder(torch.nn.Module):
+class Encoder(nn.Module):
     def __init__(
         self,
         *,
@@ -53,6 +54,7 @@ class Encoder(torch.nn.Module):
         downsample_kernel_sizes,
         downsample_initial_channel,
         hidden_size,
+        double_z=True,
     ):
         super(Encoder, self).__init__()
 
@@ -78,8 +80,11 @@ class Encoder(torch.nn.Module):
             for k, d in zip(resblock_kernel_sizes, resblock_dilation_sizes):
                 self.resblocks.append(ResBlock(ch, k, d))
 
-        self.conv_post_mu = Conv1d(ch, hidden_size, 7, 1, padding=3)
-        self.conv_post_sigma = Conv1d(ch, hidden_size, 7, 1, padding=3)
+        # self.conv_post = nn.Sequential(
+        #     nn.SiLU(),
+        #     Conv1d(ch, hidden_size * 2 if double_z else hidden_size, 7, 1, padding=3),
+        # )
+        self.conv_post = Conv1d(ch, hidden_size, 7, 1, padding=3)
 
     def forward(self, x):
         x = self.conv_pre(x)
@@ -95,19 +100,13 @@ class Encoder(torch.nn.Module):
                     xs += self.resblocks[i * self.num_kernels + j](x)
 
             x = xs / self.num_kernels
-
+        
         x = F.silu(x)
 
-        mu = self.conv_post_mu(x)
-        sigma = torch.exp(self.conv_post_sigma(x))
-
-        return mu, sigma
-
-    def sample(self, mu, sigma):
-        return mu + sigma * torch.randn_like(mu)
+        return self.conv_post(x)
 
 
-class Decoder(torch.nn.Module):
+class Decoder(nn.Module):
     def __init__(
         self,
         *,
@@ -166,40 +165,48 @@ class Decoder(torch.nn.Module):
         return x
 
 
-if __name__ == "__main__":
+class AutoEncoderKL(nn.Module):
+    def __init__(self, *, encoder=None, decoder=None, hidden_size, embedding_size):
+        super(AutoEncoderKL, self).__init__()
 
-    def count_parameters(model):
-        x = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        self.encoder = SEANetEncoder(**encoder)
+        self.decoder = SEANetDecoder(**decoder)
 
-        return f"{x / 1e6:.2f}M"
+        self.quant_conv = nn.Conv1d(hidden_size * 2, embedding_size * 2, 1)
+        self.post_quant_conv = nn.Conv1d(embedding_size, hidden_size, 1)
 
-    decoder = Decoder(
-        resblock_kernel_sizes=[3, 7, 11],
-        resblock_dilation_sizes=[(1, 3, 5), (1, 3, 5), (1, 3, 5)],
-        upsample_rates=[8, 8, 4, 2],
-        upsample_kernel_sizes=[16, 16, 8, 4],
-        upsample_initial_channel=512,
-        hidden_size=128,
-    )
+    def encode(self, x):
+        x = self.encoder(x)
+        x = self.quant_conv(x)
 
-    print(count_parameters(decoder))
+        mean, logvar = torch.chunk(x, 2, dim=1)
+        logvar = torch.clamp(logvar, min=-30.0, max=20.0)
 
-    encoder = Encoder(
-        resblock_kernel_sizes=[3, 7, 11],
-        resblock_dilation_sizes=[(1, 3, 5), (1, 3, 5), (1, 3, 5)],
-        downsample_rates=[2, 4, 8, 8],
-        downsample_kernel_sizes=[4, 8, 16, 16],
-        downsample_initial_channel=16,
-        hidden_size=128,
-    )
+        return mean, logvar
 
-    print(count_parameters(encoder))
+    def decode(self, x):
+        x = self.post_quant_conv(x)
+        x = self.decoder(x)
 
-    x = torch.randn(1, 1, 16384 * 5)
-    y = encoder(x)
-    print(y.shape)
+        return x
 
-    z = decoder(y)
-    print(z.shape)
+    def forward(self, x, with_loss=True, deterministic=False):
+        mean, logvar = self.encode(x)
 
-    assert z.shape == x.shape
+        std = torch.exp(0.5 * logvar)
+        var = torch.exp(logvar)
+
+        if deterministic is False:
+            z = mean + std * torch.randn_like(mean)
+        else:
+            z = mean
+
+        x = self.decode(z)
+
+        if with_loss is False:
+            return x
+
+        # Only sum on channel dimension
+        loss = 0.5 * torch.sum(mean**2 + var - 1.0 - logvar, dim=[1]).mean()
+
+        return x, loss

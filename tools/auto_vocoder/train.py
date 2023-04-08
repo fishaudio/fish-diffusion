@@ -2,9 +2,9 @@ import itertools
 from argparse import ArgumentParser
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pytorch_lightning as pl
 import torch
-import torchaudio
 import wandb
 from loguru import logger
 from mmengine import Config
@@ -14,7 +14,7 @@ from scipy.signal import butter
 from torch.nn import functional as F
 
 from fish_diffusion.datasets.utils import build_loader_from_config
-from fish_diffusion.modules.vocoders.auto_vocoder.models import Decoder, Encoder
+from fish_diffusion.modules.vocoders.auto_vocoder.models import AutoEncoderKL
 from fish_diffusion.modules.vocoders.nsf_hifigan.models import (
     MultiPeriodDiscriminator,
     MultiScaleDiscriminator,
@@ -36,8 +36,7 @@ class AutoVocoder(pl.LightningModule):
 
         self.config = config
 
-        self.encoder = Encoder(**config.model.encoder)
-        self.decoder = Decoder(**config.model.decoder)
+        self.vae = AutoEncoderKL(**config.model.vae)
 
         self.mpd = MultiPeriodDiscriminator(config.model.discriminator_periods)
         self.msd = MultiScaleDiscriminator()
@@ -74,9 +73,7 @@ class AutoVocoder(pl.LightningModule):
     def configure_optimizers(self):
         optim_g = OPTIMIZERS.build(
             {
-                "params": itertools.chain(
-                    self.encoder.parameters(), self.decoder.parameters()
-                ),
+                "params": self.vae.parameters(),
                 **self.config.optimizer,
             }
         )
@@ -107,10 +104,7 @@ class AutoVocoder(pl.LightningModule):
 
         y = batch["audio"].float()
 
-        # Do reconstruction
-        mu, sigma = self.encoder(y)
-        z = self.encoder.sample(mu, sigma)
-        y_g_hat = self.decoder(z)
+        y_g_hat, loss_kl = self.vae(y)
         optim_d.zero_grad()
 
         # MPD
@@ -168,9 +162,10 @@ class AutoVocoder(pl.LightningModule):
         loss_mel /= len(self.multi_scale_mels)
 
         loss_aux = 0.5 * loss_stft + loss_mel
+        loss_wav = F.l1_loss(y, y_g_hat)
 
-        # KL Loss for VAE
-        loss_kl = (sigma**2 + mu**2 - torch.log(sigma) - 1 / 2).mean()
+        # Customized cosine KL schedule
+        kl_weight = -np.cos(np.pi * (self.global_step % 5000) / 5000) / 2 + 0.5
 
         # Discriminator Loss
         y_df_hat_r, y_df_hat_g, fmap_f_r, fmap_f_g = self.mpd(y, y_g_hat)
@@ -180,7 +175,13 @@ class AutoVocoder(pl.LightningModule):
         loss_gen_f, _ = generator_loss(y_df_hat_g)
         loss_gen_s, _ = generator_loss(y_ds_hat_g)
         loss_gen_all = (
-            loss_gen_s + loss_gen_f + loss_fm_s + loss_fm_f + loss_aux * 45 + loss_kl
+            loss_gen_s
+            + loss_gen_f
+            + loss_fm_s * 2
+            + loss_fm_f * 2
+            + loss_aux * 45
+            + loss_wav
+            + loss_kl * kl_weight
         )
 
         self.manual_backward(loss_gen_all)
@@ -219,6 +220,17 @@ class AutoVocoder(pl.LightningModule):
             batch_size=batch["audio"].shape[0],
         )
 
+        self.log(
+            f"train_loss_kl_weight",
+            kl_weight,
+            on_step=True,
+            on_epoch=False,
+            prog_bar=False,
+            logger=True,
+            sync_dist=True,
+            batch_size=batch["audio"].shape[0],
+        )
+
         # Manual LR Scheduler
         scheduler_g, scheduler_d = self.lr_schedulers()
 
@@ -239,9 +251,7 @@ class AutoVocoder(pl.LightningModule):
         audios = batch["audio"].float()
 
         mels = self.get_mels(audios)
-        mu, sigma = self.encoder(audios)
-        z = self.encoder.sample(mu, sigma)
-        y_g_hat = self.decoder(z)
+        y_g_hat = self.vae(audios, with_loss=False, deterministic=True)
         y_g_hat_mel = self.get_mels(y_g_hat)[:, :, : mels.shape[2]]
 
         # L1 Mel-Spectrogram Loss
@@ -358,6 +368,9 @@ if __name__ == "__main__":
             id=args.resume_id,
         )
     )
+
+    # Call this function to set up logger
+    logger.experiment
 
     trainer = pl.Trainer(
         logger=logger,
