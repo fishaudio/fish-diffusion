@@ -263,8 +263,8 @@ class SVCInference(nn.Module):
 
             audio, _ = separate_vocals(audio, sr, self.device)
 
-        # Normalize loudness
-        audio = loudness_norm.loudness_norm(audio, sr)
+        # Normalize loudness (disabled)
+        # audio = loudness_norm.loudness_norm(audio, sr)
 
         # Restore pitches if *.pitch.npy exists
         pitches = None
