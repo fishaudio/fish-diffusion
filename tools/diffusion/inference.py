@@ -263,8 +263,8 @@ class SVCInference(nn.Module):
 
             audio, _ = separate_vocals(audio, sr, self.device)
 
-        # Normalize loudness (disabled)
-        # audio = loudness_norm.loudness_norm(audio, sr)
+        # Normalize loudness
+        audio = loudness_norm.loudness_norm(audio, sr)
 
         # Restore pitches if *.pitch.npy exists
         pitches = None
@@ -323,8 +323,8 @@ class SVCInference(nn.Module):
             max_wav_len = generated_audio.shape[-1] - start
             generated_audio[start : start + wav.shape[-1]] = wav[:max_wav_len]
 
-        # Loudness normalization
-        generated_audio = loudness_norm.loudness_norm(generated_audio, sr)
+        # Loudness normalization (disabled)
+        # generated_audio = loudness_norm.loudness_norm(generated_audio, sr)
 
         logger.info("Done")
 
