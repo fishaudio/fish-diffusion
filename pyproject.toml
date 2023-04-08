@@ -10,6 +10,7 @@ packages = [{ include = "fish_diffusion" }]
 [tool.poetry.dependencies]
 python = "^3.10"
 praat-parselmouth = "^0.4.3"
+cchardet = "^2.1.7"
 soundfile = "^0.11.0"
 librosa = "^0.9.1"
 numba = "^0.56.4"
