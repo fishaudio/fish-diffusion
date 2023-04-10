@@ -1,3 +1,4 @@
+import argparse
 import subprocess as sp
 import tempfile
 
@@ -6,8 +7,14 @@ import librosa
 import yaml
 from mmengine import Config
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--config", type=str, default="config.yaml")
+parser.add_argument("--port", type=int, default=7860)
+parser.add_argument("--share", action="store_true", default=False)
+args = parser.parse_args()
+
 # Parse MODELS.yaml
-with open("config.yaml") as f:
+with open(args.config, "r") as f:
     GLOBAL_CONFIG = yaml.safe_load(f)
 
 README = GLOBAL_CONFIG["readme"]
@@ -271,4 +278,7 @@ def main():
 demo = main().queue()
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(
+        server_port=args.port,
+        share=args.share,
+    )
