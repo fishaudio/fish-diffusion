@@ -505,8 +505,12 @@ class DiscriminatorP(torch.nn.Module):
         for l in self.convs:
             x = l(x)
             x = F.leaky_relu(x, LRELU_SLOPE)
+            x = torch.nan_to_num(x)
+
             fmap.append(x)
+
         x = self.conv_post(x)
+        x = torch.nan_to_num(x)
         fmap.append(x)
         x = torch.flatten(x, 1, -1)
 
@@ -526,6 +530,7 @@ class MultiPeriodDiscriminator(torch.nn.Module):
         y_d_gs = []
         fmap_rs = []
         fmap_gs = []
+
         for i, d in enumerate(self.discriminators):
             y_d_r, fmap_r = d(y)
             y_d_g, fmap_g = d(y_hat)
@@ -559,8 +564,11 @@ class DiscriminatorS(torch.nn.Module):
         for l in self.convs:
             x = l(x)
             x = F.leaky_relu(x, LRELU_SLOPE)
+            x = torch.nan_to_num(x)
             fmap.append(x)
+
         x = self.conv_post(x)
+        x = torch.nan_to_num(x)
         fmap.append(x)
         x = torch.flatten(x, 1, -1)
 

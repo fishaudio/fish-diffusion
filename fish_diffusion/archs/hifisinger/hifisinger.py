@@ -316,6 +316,17 @@ class HiFiSingerLightning(pl.LightningModule):
             batch_size=batch["contents"].shape[0],
         )
 
+        self.log(
+            f"train_loss_aux",
+            loss_aux,
+            on_step=True,
+            on_epoch=False,
+            prog_bar=False,
+            logger=True,
+            sync_dist=True,
+            batch_size=batch["contents"].shape[0],
+        )
+
         # Manual LR Scheduler
         scheduler_g, scheduler_d = self.lr_schedulers()
 
