@@ -19,6 +19,9 @@
 <a target="_blank" href="https://colab.research.google.com/github/fishaudio/fish-diffusion/blob/main/notebooks/train.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
+<a target="_blank" href="https://colab.research.google.com/github/fishaudio/fish-diffusion/blob/notebooks-support/notebooks/fish-audio_sample.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
 </div>
 
 </div>
