@@ -44,8 +44,8 @@ def main(input: Path, output: Path, num: int, seed: int):
 
     for i in tqdm(range(num)):
         path = all_files[i]
-        new_path = output / path.name
-        new_path.parent.mkdir(parents=True)
+        new_path = output / path.relative_to(input)
+        new_path.parent.mkdir(parents=True, exist_ok=True)
         path.rename(new_path)
 
     logger.info("Done")
