@@ -26,6 +26,9 @@
 <a href="https://colab.research.google.com/drive/1GPNq1FWH5LE2f79M4QV2UbdWWazfgrpt">
 <img alt="Colab" src="https://img.shields.io/badge/Colab-Notebook-F9AB00?logo=Google%20Colab&style=flat-square&logoColor=white">
 </a>
+<a target="_blank" href="https://colab.research.google.com/github/fishaudio/fish-diffusion/blob/notebooks-support/notebooks/fish-audio_sample.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
 </div>
 
 </div>
@@ -35,6 +38,18 @@
 一个简单易懂的 TTS / SVS / SVC 框架.
 
 > 从阅读 [Wiki](https://fishaudio.github.io/fish-diffusion/) 开始! 
+
+## Fish Diffusion 使用条款
+1. 获取授权和知识产权侵权：用户应自行负责获取其培训过程中所使用的任何数据集的必要授权，并对因使用输入源而产生的任何侵权问题承担全部责任。Fish Diffusion 及其开发者不承担因使用未授权数据集而可能产生的任何问题的责任。
+
+2. BSD-3-Clause-Clear 许可证：Fish Diffusion 在 BSD-3-Clause-Clear 许可证下分发，该许可证授予用户将其用于任何目的的权利，包括商业应用。有关更多详细信息，请参阅 LICENSE 文件。
+
+3. 适当归属：任何基于 Fish Diffusion 的衍生作品都必须明确表示项目及其许可证。在分发 Fish Diffusion 的代码或发布由该项目生成的结果时，用户必须注明原始作者和源代码（Fish Diffusion）。
+
+4. 音频视觉内容及 AI 生成披露：使用 Fish Diffusion 创建的所有衍生作品，包括音频或视频素材，必须明确表示使用了 Fish Diffusion 项目，并声明内容是 AI 生成的。如果使用第三方发布的视频或音频，必须提供原始链接。
+
+6. 同意条款：通过继续使用 Fish Diffusion，用户明确同意本文档中所述的条款和条件。Fish Diffusion 及其开发者不对可能出现的任何后续问题承担责任。
+
 
 ## 简介
 基于 DiffSinger 实现歌声音色转换。相较于原 diffsvc 仓库，本仓库优缺点如下
