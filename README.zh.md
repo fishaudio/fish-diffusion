@@ -26,7 +26,7 @@
 <a href="https://colab.research.google.com/drive/1GPNq1FWH5LE2f79M4QV2UbdWWazfgrpt">
 <img alt="Colab" src="https://img.shields.io/badge/Colab-Notebook-F9AB00?logo=Google%20Colab&style=flat-square&logoColor=white">
 </a>
-<a target="_blank" href="https://colab.research.google.com/github/fishaudio/fish-diffusion/blob/notebooks-support/notebooks/fish-audio_sample.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/fishaudio/fish-diffusion/blob/main/notebooks/train.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 </div>
