@@ -2,6 +2,7 @@ import random
 from pathlib import Path
 
 import click
+from fish_audio_preprocess.utils.file import list_files
 from loguru import logger
 from tqdm import tqdm
 
@@ -30,7 +31,7 @@ def main(input: Path, output: Path, num: int, seed: int):
     logger.info(f"Output folder: {output}")
     logger.info(f"Number of random moves: {num}")
 
-    all_files = list([path for path in input.iterdir() if path.is_file()])
+    all_files = list_files(input, recursive=True, sort=False)
     logger.info(f"Movable files: {len(all_files)}")
 
     if num > len(all_files):
@@ -41,12 +42,10 @@ def main(input: Path, output: Path, num: int, seed: int):
 
     random.shuffle(all_files)
 
-    if output.exists() is False:
-        output.mkdir(parents=True)
-
     for i in tqdm(range(num)):
         path = all_files[i]
         new_path = output / path.name
+        new_path.mkdir(parents=True)
         path.rename(new_path)
 
     logger.info("Done")
