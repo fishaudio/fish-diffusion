@@ -1,7 +1,9 @@
 # Quick FishSVC Guide
 
-> Updated: March 03 2023 (Lengyue)
+> Updated: March 03 2023 (Lengyue)  
 > Made & Updated: Kangarroar (Feb 01 2023)
+
+> You may want to check the [colab notebook](https://colab.research.google.com/github/fishaudio/fish-diffusion/blob/main/notebooks/train.ipynb) to get started
 
 First you need to install conda on your PC, I recommend installing Miniconda if you don't want it to eat a lot of your disk space.
 
