@@ -13,6 +13,7 @@ class NaiveProjectionEncoder(nn.Module):
         use_neck: bool = False,
         neck_size: int = 8,
         preprocessing=None,
+        postprocessing=None,
     ):
         """Naive projection encoder.
 
@@ -23,6 +24,7 @@ class NaiveProjectionEncoder(nn.Module):
             use_neck (bool, optional): Use bottleneck. Defaults to False.
             neck_size (int, optional): Hidden size. Defaults to 8. Only used when use_bottleneck is True.
             preprocessing (function, optional): Preprocessing function. Defaults to None.
+            postprocessing (function, optional): Postprocessing function. Defaults to None.
         """
 
         super().__init__()
@@ -31,6 +33,7 @@ class NaiveProjectionEncoder(nn.Module):
         self.input_size = input_size
         self.output_size = output_size
         self.preprocessing = preprocessing
+        self.postprocessing = postprocessing
 
         if use_embedding:
             self.embedding = nn.Embedding(input_size, output_size)
@@ -57,4 +60,9 @@ class NaiveProjectionEncoder(nn.Module):
         if self.preprocessing is not None:
             x = self.preprocessing(x)
 
-        return self.embedding(x) if self.use_embedding else self.projection(x)
+        x = self.embedding(x) if self.use_embedding else self.projection(x)
+
+        if self.postprocessing is not None:
+            x = self.postprocessing(x)
+
+        return x

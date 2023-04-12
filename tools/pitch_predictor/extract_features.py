@@ -1,7 +1,6 @@
 import argparse
 import random
 from concurrent.futures import ProcessPoolExecutor
-from copy import deepcopy
 from pathlib import Path
 from typing import Optional
 
@@ -16,18 +15,12 @@ from loguru import logger
 from mmengine import Config
 from tqdm import tqdm
 
-from fish_diffusion.modules.energy_extractors import ENERGY_EXTRACTORS
 from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
 from fish_diffusion.modules.feature_extractors.base import BaseFeatureExtractor
-from fish_diffusion.modules.feature_extractors.opencpop_transcription import (
-    OpenCpopTranscriptionToPhonemesDuration,
-)
 from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.modules.pitch_extractors.builder import BasePitchExtractor
-from fish_diffusion.modules.vocoders import VOCODERS
 from fish_diffusion.modules.vocoders.nsf_hifigan.nsf_hifigan import NsfHifiGAN
-from fish_diffusion.utils.pitch import get_mel_min_max, pitch_to_mel_scale
-from fish_diffusion.utils.tensor import repeat_expand
+from fish_diffusion.utils.pitch import pitch_to_mel
 
 model_caches = None
 
@@ -119,14 +112,10 @@ def process(
 
     # Extract pitches
     predicted_pitches = pitch_extractor(audio, sr, pad_to=mel_length)
-
-    f0_mel_min, f0_mel_max = get_mel_min_max(
-        pitch_extractor.f0_min, pitch_extractor.f0_max
+    mel_scale = pitch_to_mel(
+        predicted_pitches, config.f0_mel_min, config.f0_mel_max, config.mel_bins
     )
-    mel_scale = pitch_to_mel_scale(predicted_pitches, f0_mel_min, f0_mel_max, 128)
 
-    # To one-hot
-    mel_scale = torch.nn.functional.one_hot(mel_scale.long(), 128).float()
     # Remove zeros
     mel_scale[predicted_pitches == 0] = 0
     # Apply gaussian blur (will perform better on CenterNet, but not sure for diffuision)
@@ -204,6 +193,7 @@ if __name__ == "__main__":
                 total_samples += i
             else:
                 failed += 1
+                exit()
     else:
         with ProcessPoolExecutor(
             max_workers=args.num_workers,

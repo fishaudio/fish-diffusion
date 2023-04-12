@@ -43,6 +43,13 @@ def pitch_to_mel_scale(
     return f0_mel
 
 
+def pitch_to_mel(f0, f0_mel_min=_f0_mel_min, f0_mel_max=_f0_mel_max, f0_bin=_f0_bin):
+    mel_scale = pitch_to_mel_scale(f0, f0_mel_min, f0_mel_max, f0_bin).long()
+    mel = torch.nn.functional.one_hot(mel_scale, f0_bin).float().to(f0.device)
+
+    return mel
+
+
 def mel_scale_to_pitch(
     f0_mel, f0_mel_min=_f0_mel_min, f0_mel_max=_f0_mel_max, f0_bin=_f0_bin
 ):
