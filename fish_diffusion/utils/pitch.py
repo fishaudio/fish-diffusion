@@ -4,8 +4,16 @@ import torch
 _f0_bin = 256
 _f0_max = 1100.0
 _f0_min = 50.0
-_f0_mel_min = 1127 * np.log(1 + _f0_min / 700)
-_f0_mel_max = 1127 * np.log(1 + _f0_max / 700)
+
+
+def get_mel_min_max(f0_min, f0_max):
+    f0_mel_min = 1127 * np.log(1 + f0_min / 700)
+    f0_mel_max = 1127 * np.log(1 + f0_max / 700)
+
+    return f0_mel_min, f0_mel_max
+
+
+_f0_mel_min, _f0_mel_max = get_mel_min_max(_f0_min, _f0_max)
 
 
 def pitch_to_scale(f0, f0_min=_f0_min, f0_max=_f0_max):
@@ -33,6 +41,21 @@ def pitch_to_mel_scale(
     f0_mel[f0_mel > f0_bin - 1] = f0_bin - 1
 
     return f0_mel
+
+
+def mel_scale_to_pitch(
+    f0_mel, f0_mel_min=_f0_mel_min, f0_mel_max=_f0_mel_max, f0_bin=_f0_bin
+):
+    # Clip f0_mel values to the range [1, f0_bin - 1]
+    f0_mel = torch.clip(f0_mel, 1, f0_bin - 1)
+
+    # Reverse the mel scaling
+    f0_mel = (f0_mel - 1) * (f0_mel_max - f0_mel_min) / (f0_bin - 2) + f0_mel_min
+
+    # Convert mel frequency back to Hz
+    f0 = 700 * (torch.exp(f0_mel / 1127) - 1)
+
+    return f0
 
 
 def pitch_to_coarse(f0, f0_mel_min=_f0_mel_min, f0_mel_max=_f0_mel_max, f0_bin=_f0_bin):
