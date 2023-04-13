@@ -1,3 +1,4 @@
+import librosa
 import numpy as np
 import torch
 
@@ -88,3 +89,22 @@ def pitch_to_log(f0):
         x = x.unsqueeze(-1)
 
     return x
+
+
+def viterbi_decode(probs):
+    xx, yy = np.meshgrid(range(128), range(128))
+    transition = np.maximum(4 - abs(xx - yy), 0)
+    transition = transition / transition.sum(axis=1, keepdims=True)
+
+    use_torch = False
+    sequences = probs
+    if isinstance(sequences, torch.Tensor):
+        use_torch = True
+        sequences = sequences.detach().cpu().numpy()
+
+    decoded = librosa.sequence.viterbi(sequences, transition).astype(np.int64)
+
+    if use_torch:
+        decoded = torch.from_numpy(decoded).to(probs.device)
+
+    return decoded

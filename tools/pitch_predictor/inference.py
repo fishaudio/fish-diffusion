@@ -10,12 +10,14 @@ from mmengine import Config
 
 from fish_diffusion.archs.diffsinger.diffsinger import DiffSingerLightning
 from fish_diffusion.modules.pitch_extractors.builder import BasePitchExtractor
+from fish_diffusion.modules.pitch_extractors.crepe import MaskedAvgPool1d
 from fish_diffusion.utils.dictionary import load_dictionary
 from fish_diffusion.utils.inference import load_checkpoint
 from fish_diffusion.utils.pitch import (
     get_mel_min_max,
     mel_scale_to_pitch,
     pitch_to_mel_scale,
+    viterbi_decode,
 )
 from fish_diffusion.utils.tensor import repeat_expand
 
@@ -28,9 +30,10 @@ from fish_diffusion.utils.tensor import repeat_expand
 
 device = "cuda"
 config = Config.fromfile("configs/pitch_predictor.py")
+config.model.diffusion.sampler_interval = 1
 model = load_checkpoint(
     config,
-    "logs/PitchPredictor/version_None/checkpoints/epoch=2340-step=110000-valid_loss=0.08.ckpt",
+    "logs/PitchPredictor/cz2h9rhv/checkpoints/epoch=744-step=60000-valid_loss=0.08.ckpt",
     device="cpu",
     model_cls=DiffSingerLightning,
 )
@@ -117,8 +120,8 @@ for segment in data:
     phones_seq = segment["ph_seq"].split(" ")
     phones_dur_seq = list(map(float, segment["ph_dur"].split(" ")))
 
-    assert len(note_seq) == len(note_dur_seq)
-    assert note_dur_seq == phones_dur_seq
+    # assert len(note_seq) == len(note_dur_seq)
+    # assert note_dur_seq == phones_dur_seq
 
     # Conver from extention phonemes to normal phonemes
     words_seq, words_dur_seq = convert_extension_phones_to_words(
@@ -129,7 +132,6 @@ for segment in data:
     assert len(phones_seq) == len(phones_dur_seq)
 
     mel_len = len(f0_seq)
-    print(mel_len, len(f0_seq), len(note_dur_seq))
 
     cumsum_durations = np.cumsum(phones_dur_seq)
     alignment_factor = mel_len / cumsum_durations[-1]
@@ -147,10 +149,6 @@ for segment in data:
         current_idx = int(sum_duration * alignment_factor)
         previous_idx = int(cumsum_durations[i - 1] * alignment_factor) if i > 0 else 0
         phones2mel[previous_idx:current_idx] = i
-
-    print(
-        f"text_features.shape: {text_features.shape}, phones2mel.shape: {phones2mel.shape}"
-    )
 
     f0s = []
     for note in note_seq:
@@ -177,12 +175,15 @@ for segment in data:
         notes2mel[previous_idx:current_idx] = i
 
     pitches = torch.gather(f0, 0, notes2mel)
+    # pitches *= 2 ** (12 / 12)
 
     # Predict pitch
     pitch_shift = torch.zeros((1, 1), device=device)
     speakers = torch.zeros((1, 1), device=device)
     contents_lens = torch.tensor([text_features.shape[0]], device=device)
     mel_lens = torch.tensor([mel_len], device=device)
+    # print(pitch_shift, speakers, contents_lens, mel_lens)
+    # exit()
 
     with torch.no_grad():
         features = model.model.forward_features(
@@ -193,6 +194,7 @@ for segment in data:
             mel_lens=mel_lens,
             mel_max_len=max(mel_lens),
             pitches=pitches[None].to(device),
+            # pitches=torch.tensor([f0_seq], dtype=torch.float, device=device),
             pitch_shift=pitch_shift,
             phones2mel=phones2mel[None].to(device),
         )
@@ -201,38 +203,18 @@ for segment in data:
 
     # Save result
     weights = (result * 10).softmax(axis=1)
-    argmax = weights.argmax(axis=1)
-    weights = weights[torch.arange(result.shape[0]), argmax]
-    f0_mel_min, f0_mel_max = get_mel_min_max(
-        config.preprocessing.pitch_extractor.f0_min,
-        config.preprocessing.pitch_extractor.f0_max,
-    )
-    from matplotlib import pyplot as plt
-
-    plt.cla()
-    plt.imshow(result.cpu().detach().numpy().T, aspect="auto", origin="lower")
-    print(
-        result.shape,
-        torch.tensor(f0_seq).shape,
-        pitch_to_mel_scale(torch.tensor(f0_seq), f0_mel_min, f0_mel_max, 128).shape,
-    )
-    # downsample_f0 = repeat_expand(torch.tensor(f0_seq), result.shape[0])
-    plt.plot(
-        pitch_to_mel_scale(torch.tensor(f0_seq), f0_mel_min, f0_mel_max, 128),
-        color="red",
-    )
-    print(f0_seq, pitches)
-    xx = pitch_to_mel_scale(torch.tensor(f0_seq), f0_mel_min, f0_mel_max, 128)
-    rv = mel_scale_to_pitch(xx, f0_mel_min, f0_mel_max, 128)
-    print(
-        torch.min(torch.abs(rv - torch.tensor(f0_seq))),
-        torch.max(torch.abs(rv - torch.tensor(f0_seq))),
-    )
-    plt.plot(pitch_to_mel_scale(pitches, f0_mel_min, f0_mel_max, 128), color="green")
-    plt.savefig("mel.png")
+    decoded = viterbi_decode(weights.T)
+    # argmax = weights.argmax(axis=1)
+    weights = weights[torch.arange(result.shape[0]), decoded]
 
     # Mel to pitch
-    f0 = mel_scale_to_pitch(argmax, f0_mel_min, f0_mel_max, 128)
+    f0_mel_min, f0_mel_max = config.f0_mel_min, config.f0_mel_max
+    f0 = mel_scale_to_pitch(decoded, f0_mel_min, f0_mel_max, 128)
+    f0[weights < 0.1] = torch.nan
+
+    filter_kernal = 9
+    mean_filter = MaskedAvgPool1d(filter_kernal, 1, padding=filter_kernal // 2)
+    f0 = mean_filter(f0[None])[0]
     f0[weights < 0.1] = 0
 
     # Interpolate
@@ -242,18 +224,49 @@ for segment in data:
         keep_zeros=False,
     )
     raw_f0_len = len(f0_seq)
-    f0 = extractor.post_process(f0, 44100, f0, raw_f0_len).cpu().detach().numpy() - 100
+    # if raw_f0_len == len(f0):
+    #     print("No interpolation needed")
+    # else:
+    f0 = extractor.post_process(f0, 512, f0, raw_f0_len)
+
+    # f0 *= 2 ** (-6 / 12)
+    f0 = f0.cpu().detach().numpy()
+
+    from matplotlib import pyplot as plt
+
+    plt.cla()
+    plt.imshow(
+        (result * 10).softmax(axis=1).cpu().detach().numpy().T,
+        aspect="auto",
+        origin="lower",
+    )
+    # downsample_f0 = repeat_expand(torch.tensor(f0_seq), result.shape[0])
+    plt.plot(
+        pitch_to_mel_scale(torch.tensor(f0_seq), f0_mel_min, f0_mel_max, 128),
+        color="red",
+        alpha=0.5,
+    )
+    # xx = pitch_to_mel_scale(torch.tensor(f0_seq), f0_mel_min, f0_mel_max, 128)
+    # rv = mel_scale_to_pitch(xx, f0_mel_min, f0_mel_max, 128)
+    plt.plot(
+        pitch_to_mel_scale(torch.from_numpy(f0), f0_mel_min, f0_mel_max, 128),
+        color="green",
+        alpha=0.5,
+    )
+    plt.plot(pitch_to_mel_scale(pitches, f0_mel_min, f0_mel_max, 128), color="green")
+    plt.savefig("mel.png")
 
     plt.figure()
     plt.plot(f0_seq)
     plt.plot(f0)
+    plt.ylim(40, 1600)
     plt.savefig("f0.png")
 
     new_segment = deepcopy(segment)
     new_segment["f0_seq"] = " ".join([f"{i:.1f}" for i in f0])
     new_segments.append(new_segment)
 
-    # input()
+    # input("Press enter to continue...")
 
 with open("test.ds", "w") as f:
     json.dump(new_segments, f)
