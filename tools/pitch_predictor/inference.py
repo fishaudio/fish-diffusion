@@ -30,10 +30,10 @@ from fish_diffusion.utils.tensor import repeat_expand
 
 device = "cuda"
 config = Config.fromfile("configs/pitch_predictor.py")
-config.model.diffusion.sampler_interval = 1
+# config.model.diffusion.sampler_interval = 1
 model = load_checkpoint(
     config,
-    "logs/PitchPredictor/cz2h9rhv/checkpoints/epoch=744-step=60000-valid_loss=0.08.ckpt",
+    "logs/PitchPredictor/version_None/checkpoints/epoch=4680-step=220000-valid_loss=0.08.ckpt",
     device="cpu",
     model_cls=DiffSingerLightning,
 )
@@ -124,10 +124,10 @@ for segment in data:
     # assert note_dur_seq == phones_dur_seq
 
     # Conver from extention phonemes to normal phonemes
-    words_seq, words_dur_seq = convert_extension_phones_to_words(
-        phones_seq, phones_dur_seq
-    )
-    phones_seq, phones_dur_seq = convert_words_to_normal(words_seq, words_dur_seq)
+    # words_seq, words_dur_seq = convert_extension_phones_to_words(
+    #     phones_seq, phones_dur_seq
+    # )
+    # phones_seq, phones_dur_seq = convert_words_to_normal(words_seq, words_dur_seq)
 
     assert len(phones_seq) == len(phones_dur_seq)
 
@@ -212,9 +212,9 @@ for segment in data:
     f0 = mel_scale_to_pitch(decoded, f0_mel_min, f0_mel_max, 128)
     f0[weights < 0.1] = torch.nan
 
-    filter_kernal = 9
-    mean_filter = MaskedAvgPool1d(filter_kernal, 1, padding=filter_kernal // 2)
-    f0 = mean_filter(f0[None])[0]
+    # filter_kernal = 5
+    # mean_filter = MaskedAvgPool1d(filter_kernal, 1, padding=filter_kernal // 2)
+    # f0 = mean_filter(f0[None])[0]
     f0[weights < 0.1] = 0
 
     # Interpolate

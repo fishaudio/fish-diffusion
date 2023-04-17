@@ -98,28 +98,46 @@ def process(
     audio = torch.from_numpy(audio).unsqueeze(0).to(device)
 
     # Calculate mel length from audio length
-    mel_length = int(audio.shape[-1] / 512) + 1
+    mel_length = int(audio.shape[-1] / config.hop_length) + 1
 
     # Extract text features
     contents, phones2mel = text_features_extractor(audio_path, mel_length)
 
     sample["phones2mel"] = phones2mel.cpu().numpy()
     sample["contents"] = contents.cpu().numpy()
-
+    
     f0 = text_features_extractor.notes_f0(audio_path).to(device)
     f0 = torch.gather(f0, 0, phones2mel.to(device))
     sample["pitches"] = f0.cpu().numpy()
 
     # Extract pitches
     predicted_pitches = pitch_extractor(audio, sr, pad_to=mel_length)
-    mel_scale = pitch_to_mel(
-        predicted_pitches, config.f0_mel_min, config.f0_mel_max, config.mel_bins
-    )
+    f0_mel = predicted_pitches.log2() - f0.log2()
+    f0_mel[predicted_pitches == 0] = 0
+    f0_mel = torch.nan_to_num(f0_mel, nan=0)
+    f0_mel = torch.clamp(f0_mel, -0.2 + 1e-6, 0.2 - 1e-6)
+
+    # to 128 bins
+    f0_mel = torch.floor((f0_mel + 0.2) / 0.4 * 128)
+    mel_scale = torch.nn.functional.one_hot(f0_mel.long(), 128).float()
+    mel_scale = torchvision.transforms.functional.gaussian_blur(mel_scale[None], 3)[0]
+
+    # f0_mel[f0_mel > 0] = (f0_mel[f0_mel > 0] - f0_mel_min) * (f0_bin - 2) / (
+    #     f0_mel_max - f0_mel_min
+    # ) + 1
+    # print(f0_mel.cpu().numpy().shape)
+    # from matplotlib import pyplot as plt
+    # plt.imshow(mel_scale.cpu().numpy().T)
+    # plt.savefig("pitches.png")
+    # exit()
+    # mel_scale = pitch_to_mel(
+    #     predicted_pitches, config.f0_mel_min, config.f0_mel_max, config.mel_bins
+    # )
 
     # Remove zeros
-    mel_scale[predicted_pitches == 0] = 0
+    # mel_scale[predicted_pitches == 0] = 0
     # Apply gaussian blur (will perform better on CenterNet, but not sure for diffuision)
-    mel_scale = torchvision.transforms.functional.gaussian_blur(mel_scale[None], 3)[0]
+    # mel_scale = torchvision.transforms.functional.gaussian_blur(mel_scale[None], 3)[0]
 
     # print(mel_scale.shape)
     sample["mel"] = mel_scale.cpu().numpy().T
