@@ -7,16 +7,19 @@ import gradio as gr
 def run_inference(
     inference_fn,
     input_path: str,
-    speaker: Union[int, str],
+    speaker: Union[int, str, float],
     pitch_adjust: int,
     sampler_interval: int,
     extract_vocals: bool,
     progress=gr.Progress(),
 ):
+    if isinstance(speaker, float):
+        speaker = int(speaker)
+
     audio, sr = inference_fn(
         input_path=input_path,
         output_path=None,
-        speaker=str(speaker),
+        speaker=speaker,
         pitch_adjust=pitch_adjust,
         sampler_interval=sampler_interval,
         extract_vocals=extract_vocals,

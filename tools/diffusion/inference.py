@@ -139,7 +139,7 @@ class SVCInference(nn.Module):
 
         if recursive is False:
             logger.error(f"Invalid speaker: {speaker}")
-            return None
+            exit()
 
         # Speaker mix
         speaker = speaker.split(",")
