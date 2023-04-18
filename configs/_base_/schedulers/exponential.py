@@ -6,3 +6,4 @@ optimizer = dict(
 )
 
 scheduler = dict(type="ExponentialLR", gamma=0.999)  # lr_decay
+scheduler_interval = "epoch"

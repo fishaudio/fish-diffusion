@@ -181,7 +181,12 @@ class DiffSingerLightning(pl.LightningModule):
             }
         )
 
-        return [optimizer], dict(scheduler=scheduler, interval="step")
+        return [optimizer], dict(
+            scheduler=scheduler,
+            interval=self.config.scheduler_interval
+            if hasattr(self.config, "scheduler_interval")
+            else "step",
+        )
 
     def _step(self, batch, batch_idx, mode):
         assert batch["pitches"].shape[1] == batch["mel"].shape[1]
