@@ -33,12 +33,19 @@ model = dict(
         hidden_size=256,
     ),
     diffusion=dict(
-        # timesteps=100,
-        # denoiser=dict(
-        #     residual_channels=384,
-        # ),
         spec_min=[0],
         spec_max=[1],
+        denoiser=dict(
+            _delete_=True,
+            type="UNetDenoiser",
+            image_channels=1,
+            d_encoder=256,
+            mel_channels=mel_bins,
+            n_channels=32,
+            ch_mults=(1, 2, 2, 2),
+            is_attn=(False, False, False, True),
+            n_blocks=2,
+        ),
     ),
     pitch_encoder=dict(
         preprocessing=pitch_to_log,
@@ -88,7 +95,7 @@ preprocessing = dict(
 
 dataloader = dict(
     train=dict(
-        batch_size=40,
-        num_workers=4,
+        batch_size=10,
+        num_workers=2,
     ),
 )
