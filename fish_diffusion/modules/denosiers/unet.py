@@ -3,11 +3,12 @@ Copied from https://github.com/labmlai/annotated_deep_learning_paper_implementat
 """
 
 import math
-from typing import Optional, Tuple, Union, List
+from typing import List, Optional, Tuple, Union
 
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
+
 from .builder import DENOISERS
 
 
