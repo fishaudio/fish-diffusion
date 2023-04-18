@@ -7,7 +7,9 @@ from typing import Optional, Tuple, Union, List
 
 import torch
 from torch import nn
+import torch.nn.functional as F
 from .builder import DENOISERS
+
 
 class TimeEmbedding(nn.Module):
     """
@@ -59,8 +61,14 @@ class ResidualBlock(nn.Module):
     Each resolution is processed with two residual blocks.
     """
 
-    def __init__(self, in_channels: int, out_channels: int, time_channels: int,
-                 n_groups: int = 32, dropout: float = 0.1):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        time_channels: int,
+        n_groups: int = 32,
+        dropout: float = 0.1,
+    ):
         """
         * `in_channels` is the number of input channels
         * `out_channels` is the number of input channels
@@ -72,12 +80,16 @@ class ResidualBlock(nn.Module):
         # Group normalization and the first convolution layer
         self.norm1 = nn.GroupNorm(n_groups, in_channels)
         self.act1 = nn.SiLU()
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=(3, 3), padding=(1, 1))
+        self.conv1 = nn.Conv2d(
+            in_channels, out_channels, kernel_size=(3, 3), padding=(1, 1)
+        )
 
         # Group normalization and the second convolution layer
         self.norm2 = nn.GroupNorm(n_groups, out_channels)
         self.act2 = nn.SiLU()
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=(3, 3), padding=(1, 1))
+        self.conv2 = nn.Conv2d(
+            out_channels, out_channels, kernel_size=(3, 3), padding=(1, 1)
+        )
 
         # If the number of input channels is not equal to the number of output channels we have to
         # project the shortcut connection
@@ -115,7 +127,9 @@ class AttentionBlock(nn.Module):
     This is similar to [transformer multi-head attention](../../transformers/mha.html).
     """
 
-    def __init__(self, n_channels: int, n_heads: int = 1, d_k: int = None, n_groups: int = 32):
+    def __init__(
+        self, n_channels: int, n_heads: int = 1, d_k: int = None, n_groups: int = 32
+    ):
         """
         * `n_channels` is the number of channels in the input
         * `n_heads` is the number of heads in multi-head attention
@@ -134,7 +148,7 @@ class AttentionBlock(nn.Module):
         # Linear layer for final transformation
         self.output = nn.Linear(n_heads * d_k, n_channels)
         # Scale for dot-product attention
-        self.scale = d_k ** -0.5
+        self.scale = d_k**-0.5
         #
         self.n_heads = n_heads
         self.d_k = d_k
@@ -156,11 +170,11 @@ class AttentionBlock(nn.Module):
         # Split query, key, and values. Each of them will have shape `[batch_size, seq, n_heads, d_k]`
         q, k, v = torch.chunk(qkv, 3, dim=-1)
         # Calculate scaled dot-product $\frac{Q K^\top}{\sqrt{d_k}}$
-        attn = torch.einsum('bihd,bjhd->bijh', q, k) * self.scale
+        attn = torch.einsum("bihd,bjhd->bijh", q, k) * self.scale
         # Softmax along the sequence dimension $\underset{seq}{softmax}\Bigg(\frac{Q K^\top}{\sqrt{d_k}}\Bigg)$
         attn = attn.softmax(dim=2)
         # Multiply by values
-        res = torch.einsum('bijh,bjhd->bihd', attn, v)
+        res = torch.einsum("bijh,bjhd->bihd", attn, v)
         # Reshape to `[batch_size, seq, n_heads * d_k]`
         res = res.view(batch_size, -1, self.n_heads * self.d_k)
         # Transform to `[batch_size, seq, n_channels]`
@@ -183,7 +197,9 @@ class DownBlock(nn.Module):
     This combines `ResidualBlock` and `AttentionBlock`. These are used in the first half of U-Net at each resolution.
     """
 
-    def __init__(self, in_channels: int, out_channels: int, time_channels: int, has_attn: bool):
+    def __init__(
+        self, in_channels: int, out_channels: int, time_channels: int, has_attn: bool
+    ):
         super().__init__()
         self.res = ResidualBlock(in_channels, out_channels, time_channels)
         if has_attn:
@@ -204,11 +220,15 @@ class UpBlock(nn.Module):
     This combines `ResidualBlock` and `AttentionBlock`. These are used in the second half of U-Net at each resolution.
     """
 
-    def __init__(self, in_channels: int, out_channels: int, time_channels: int, has_attn: bool):
+    def __init__(
+        self, in_channels: int, out_channels: int, time_channels: int, has_attn: bool
+    ):
         super().__init__()
         # The input has `in_channels + out_channels` because we concatenate the output of the same resolution
         # from the first half of the U-Net
-        self.res = ResidualBlock(in_channels + out_channels, out_channels, time_channels)
+        self.res = ResidualBlock(
+            in_channels + out_channels, out_channels, time_channels
+        )
         if has_attn:
             self.attn = AttentionBlock(out_channels)
         else:
@@ -272,18 +292,27 @@ class Downsample(nn.Module):
         _ = t
         return self.conv(x)
 
+
 @DENOISERS.register_module()
 class UNetDenoiser(nn.Module):
     """
     ## U-Net
     """
 
-    def __init__(self, image_channels: int = 3, n_channels: int = 64,
-                 ch_mults: Union[Tuple[int, ...], List[int]] = (1, 2, 2, 4),
-                 is_attn: Union[Tuple[bool, ...], List[int]] = (False, False, True, True),
-                 n_blocks: int = 2):
+    def __init__(
+        self,
+        image_channels: int = 1,
+        mel_channels: int = 128,
+        d_encoder: int = 256,
+        n_channels: int = 64,
+        ch_mults: Union[Tuple[int, ...], List[int]] = (1, 2, 2, 4),
+        is_attn: Union[Tuple[bool, ...], List[int]] = (False, False, True, True),
+        n_blocks: int = 2,
+    ):
         """
-        * `image_channels` is the number of channels in the image. $3$ for RGB.
+        * `image_channels` is the number of channels in the image.
+        * `mel_channels` is the number of mel bins.
+        * `d_encoder` is the number of channels in the encoder output.
         * `n_channels` is number of channels in the initial feature map that we transform the image into
         * `ch_mults` is the list of channel numbers at each resolution. The number of channels is `ch_mults[i] * n_channels`
         * `is_attn` is a list of booleans that indicate whether to use attention at each resolution
@@ -295,7 +324,9 @@ class UNetDenoiser(nn.Module):
         n_resolutions = len(ch_mults)
 
         # Project image into feature map
-        self.image_proj = nn.Conv2d(image_channels * 2, n_channels, kernel_size=(3, 3), padding=(1, 1))
+        self.image_proj = nn.Conv2d(
+            image_channels * 2, n_channels, kernel_size=(3, 3), padding=(1, 1)
+        )
 
         # Time embedding layer. Time embedding has `n_channels * 4` channels
         self.time_emb = TimeEmbedding(n_channels * 4)
@@ -310,7 +341,9 @@ class UNetDenoiser(nn.Module):
             out_channels = in_channels * ch_mults[i]
             # Add `n_blocks`
             for _ in range(n_blocks):
-                down.append(DownBlock(in_channels, out_channels, n_channels * 4, is_attn[i]))
+                down.append(
+                    DownBlock(in_channels, out_channels, n_channels * 4, is_attn[i])
+                )
                 in_channels = out_channels
             # Down sample at all resolutions except the last
             if i < n_resolutions - 1:
@@ -320,7 +353,10 @@ class UNetDenoiser(nn.Module):
         self.down = nn.ModuleList(down)
 
         # Middle block
-        self.middle = MiddleBlock(out_channels, n_channels * 4, )
+        self.middle = MiddleBlock(
+            out_channels,
+            n_channels * 4,
+        )
 
         # #### Second half of U-Net - increasing resolution
         up = []
@@ -331,7 +367,9 @@ class UNetDenoiser(nn.Module):
             # `n_blocks` at the same resolution
             out_channels = in_channels
             for _ in range(n_blocks):
-                up.append(UpBlock(in_channels, out_channels, n_channels * 4, is_attn[i]))
+                up.append(
+                    UpBlock(in_channels, out_channels, n_channels * 4, is_attn[i])
+                )
             # Final block to reduce the number of channels
             out_channels = in_channels // ch_mults[i]
             up.append(UpBlock(in_channels, out_channels, n_channels * 4, is_attn[i]))
@@ -346,10 +384,17 @@ class UNetDenoiser(nn.Module):
         # Final normalization and convolution layer
         self.norm = nn.GroupNorm(8, n_channels)
         self.act = nn.SiLU()
-        self.final = nn.Conv2d(in_channels, image_channels, kernel_size=(3, 3), padding=(1, 1))
+        self.final = nn.Conv2d(
+            in_channels, image_channels, kernel_size=(3, 3), padding=(1, 1)
+        )
+
+        # Handle the encoder condition (Project [B, 1, d_encoder, W] to [B, n_channels, W])
+        self.encoder_proj = nn.Conv1d(d_encoder, mel_channels, kernel_size=1)
 
     # def forward(self, x: torch.Tensor, t: torch.Tensor):
-    def forward(self, x: torch.Tensor, diffusion_step: torch.Tensor, conditioner: torch.Tensor):
+    def forward(
+        self, x: torch.Tensor, diffusion_step: torch.Tensor, conditioner: torch.Tensor
+    ):
         """
         * `x` has shape `[batch_size, in_channels, height, width]`
         * `diffusion_step` has shape `[batch_size]`
@@ -366,6 +411,13 @@ class UNetDenoiser(nn.Module):
         t = self.time_emb(diffusion_step)
 
         # Get image projection
+        conditioner = self.encoder_proj(conditioner[:, 0])[:, None]
+        last_dim_before_pad = conditioner.shape[-1]
+
+        # Auto pad width of conditioner and x to factor of 2
+        conditioner = F.pad(conditioner, (0, 64 - last_dim_before_pad % 64))
+        x = F.pad(x, (0, 64 - x.shape[-1] % 64))
+        # print("conditioner.shape", conditioner.shape, "x.shape", x.shape, "last_dim_before_pad", last_dim_before_pad)
         x = self.image_proj(torch.cat((x, conditioner), dim=1))
 
         # `h` will store outputs at each resolution for skip connection
@@ -391,24 +443,32 @@ class UNetDenoiser(nn.Module):
 
         # Final normalization and convolution
         x = self.final(self.act(self.norm(x)))
+        x = x[:, :, :, :last_dim_before_pad]
 
         if from_3d:
             x = x[:, 0, ...]
-        
+
         return x
 
 
 if __name__ == "__main__":
     n = 5
     # Create a random batch of images
-    x = torch.rand(n, 1, int(1024*1.5), 128).cuda()
+    x = torch.rand(n, 1, 128, int(1024 * 1.5)).cuda()
     # Create a random batch of time-steps
     t = torch.randint(0, 100, (n,)).cuda()
     # Create a random batch of conditioners
-    c = torch.randn_like(x).cuda()
+    c = torch.rand(n, 1, 256, int(1024 * 1.5)).cuda()
 
     # Create the model
-    model = UNet(image_channels=1, n_channels=32, ch_mults=(1, 2, 2, 4), is_attn=(False, False, False, True), n_blocks=2).cuda()
+    model = UNetDenoiser(
+        image_channels=1,
+        d_encoder=256,
+        n_channels=32,
+        ch_mults=(1, 2, 2, 4),
+        is_attn=(False, False, False, True),
+        n_blocks=2,
+    ).cuda()
     # Forward pass
     y = model(x, t, c)
     # Print the shape of the output
