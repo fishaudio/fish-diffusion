@@ -139,7 +139,7 @@ class SVCInference(nn.Module):
 
         if recursive is False:
             logger.error(f"Invalid speaker: {speaker}")
-            return None
+            exit()
 
         # Speaker mix
         speaker = speaker.split(",")
@@ -323,8 +323,8 @@ class SVCInference(nn.Module):
             max_wav_len = generated_audio.shape[-1] - start
             generated_audio[start : start + wav.shape[-1]] = wav[:max_wav_len]
 
-        # Loudness normalization
-        generated_audio = loudness_norm.loudness_norm(generated_audio, sr)
+        # Loudness normalization (disabled)
+        # generated_audio = loudness_norm.loudness_norm(generated_audio, sr)
 
         logger.info("Done")
 
