@@ -105,7 +105,7 @@ def process(
 
     sample["phones2mel"] = phones2mel.cpu().numpy()
     sample["contents"] = contents.cpu().numpy()
-    
+
     f0 = text_features_extractor.notes_f0(audio_path).to(device)
     f0 = torch.gather(f0, 0, phones2mel.to(device))
     sample["pitches"] = f0.cpu().numpy()

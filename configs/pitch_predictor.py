@@ -3,12 +3,12 @@
 from functools import partial
 
 from fish_diffusion.utils.dictionary import load_dictionary
-from fish_diffusion.utils.pitch import get_mel_min_max, pitch_to_mel, pitch_to_log
+from fish_diffusion.utils.pitch import get_mel_min_max, pitch_to_log, pitch_to_mel
 
 _base_ = [
     "./_base_/archs/diff_svc_v2.py",
     "./_base_/trainers/base.py",
-    "./_base_/schedulers/warmup_cosine.py",
+    "./_base_/schedulers/exponential.py",
     "./_base_/datasets/naive_svc.py",
 ]
 
@@ -88,7 +88,7 @@ preprocessing = dict(
         keep_zeros=True,
         f0_min=f0_min,
         f0_max=f0_max,
-        hop_length=hop_length
+        hop_length=hop_length,
     ),
 )
 
@@ -98,4 +98,9 @@ dataloader = dict(
         batch_size=10,
         num_workers=2,
     ),
+)
+
+trainer = dict(
+    precision="bf16",
+    max_steps=1000000,
 )
