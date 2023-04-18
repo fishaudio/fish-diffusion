@@ -7,7 +7,9 @@ import torch.nn.functional as F
 from torch import nn
 from tqdm import tqdm
 
-from .builder import DENOISERS, DIFFUSIONS
+from fish_diffusion.modules.denosiers.builder import DENOISERS
+
+from .builder import DIFFUSIONS
 from .noise_predictor import NaiveNoisePredictor, PLMSNoisePredictor
 
 
