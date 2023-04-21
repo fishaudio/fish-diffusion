@@ -28,12 +28,12 @@ from fish_diffusion.utils.tensor import repeat_expand
 # plt.savefig("pitches.png")
 # exit()
 
-device = "cuda"
+device = "cuda:1"
 config = Config.fromfile("configs/pitch_predictor.py")
 # config.model.diffusion.sampler_interval = 1
 model = load_checkpoint(
     config,
-    "logs/PitchPredictor/version_None/checkpoints/epoch=4680-step=220000-valid_loss=0.08.ckpt",
+    "logs/PitchPredictor/version_None/checkpoints/epoch=851-step=40000-valid_loss=0.08.ckpt",
     device="cpu",
     model_cls=DiffSingerLightning,
 )
@@ -210,12 +210,12 @@ for segment in data:
     # Mel to pitch
     f0_mel_min, f0_mel_max = config.f0_mel_min, config.f0_mel_max
     f0 = mel_scale_to_pitch(decoded, f0_mel_min, f0_mel_max, 128)
-    f0[weights < 0.1] = torch.nan
+    # f0[weights < 0.1] = torch.nan
 
-    # filter_kernal = 5
-    # mean_filter = MaskedAvgPool1d(filter_kernal, 1, padding=filter_kernal // 2)
-    # f0 = mean_filter(f0[None])[0]
-    f0[weights < 0.1] = 0
+    filter_kernal = 5
+    mean_filter = MaskedAvgPool1d(filter_kernal, 1, padding=filter_kernal // 2)
+    f0 = mean_filter(f0[None])[0]
+    # f0[weights < 0.1] = 0
 
     # Interpolate
     extractor = BasePitchExtractor(
@@ -244,21 +244,22 @@ for segment in data:
     plt.plot(
         pitch_to_mel_scale(torch.tensor(f0_seq), f0_mel_min, f0_mel_max, 128),
         color="red",
-        alpha=0.5,
+        alpha=1,
     )
     # xx = pitch_to_mel_scale(torch.tensor(f0_seq), f0_mel_min, f0_mel_max, 128)
     # rv = mel_scale_to_pitch(xx, f0_mel_min, f0_mel_max, 128)
     plt.plot(
         pitch_to_mel_scale(torch.from_numpy(f0), f0_mel_min, f0_mel_max, 128),
-        color="green",
-        alpha=0.5,
+        color="yellow",
+        alpha=1,
     )
     plt.plot(pitch_to_mel_scale(pitches, f0_mel_min, f0_mel_max, 128), color="green")
     plt.savefig("mel.png")
 
     plt.figure()
-    plt.plot(f0_seq)
+    # plt.plot(f0_seq)
     plt.plot(f0)
+    # plt.plot(pitches.cpu().detach().numpy())
     plt.ylim(40, 1600)
     plt.savefig("f0.png")
 

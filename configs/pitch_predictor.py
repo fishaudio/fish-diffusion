@@ -8,9 +8,18 @@ from fish_diffusion.utils.pitch import get_mel_min_max, pitch_to_log, pitch_to_m
 _base_ = [
     "./_base_/archs/diff_svc_v2.py",
     "./_base_/trainers/base.py",
-    "./_base_/schedulers/exponential.py",
+    # "./_base_/schedulers/exponential.py",
     "./_base_/datasets/naive_svc.py",
 ]
+
+optimizer = dict(
+    type="AdamW",
+    lr=0.0001,
+    eps=1e-9,
+)
+
+scheduler = dict(type="ExponentialLR", gamma=0.99999)  # lr_decay
+scheduler_interval = "epoch"
 
 speaker_mapping = {
     "opencpop": 0,
@@ -21,7 +30,7 @@ dictionary, phonemes = load_dictionary("dictionaries/opencpop-extension.txt")
 f0_min = 40.0
 f0_max = 2000.0
 mel_bins = 128
-hop_length = 256
+hop_length = 512
 f0_mel_min, f0_mel_max = get_mel_min_max(f0_min, f0_max)
 
 model = dict(
@@ -41,26 +50,26 @@ model = dict(
             image_channels=1,
             d_encoder=256,
             mel_channels=mel_bins,
-            n_channels=32,
+            n_channels=64,
             ch_mults=(1, 2, 2, 2),
             is_attn=(False, False, False, True),
             n_blocks=2,
         ),
     ),
-    pitch_encoder=dict(
-        preprocessing=pitch_to_log,
-    ),
     # pitch_encoder=dict(
-    #     _delete_=True,
-    #     type="NaiveProjectionEncoder",
-    #     input_size=128,
-    #     output_size=256,
-    #     use_embedding=False,
-    #     preprocessing=partial(
-    #         pitch_to_mel, f0_mel_min=f0_mel_min, f0_mel_max=f0_mel_max, f0_bin=mel_bins
-    #     ),
-    #     postprocessing=lambda x: x.squeeze(-2),
+    #     preprocessing=pitch_to_log,
     # ),
+    pitch_encoder=dict(
+        _delete_=True,
+        type="NaiveProjectionEncoder",
+        input_size=128,
+        output_size=256,
+        use_embedding=False,
+        preprocessing=partial(
+            pitch_to_mel, f0_mel_min=f0_mel_min, f0_mel_max=f0_mel_max, f0_bin=mel_bins
+        ),
+        postprocessing=lambda x: x.squeeze(-2),
+    ),
 )
 
 dataset = dict(
@@ -100,7 +109,4 @@ dataloader = dict(
     ),
 )
 
-trainer = dict(
-    precision="bf16",
-    max_steps=1000000,
-)
+trainer = dict(precision="bf16", max_steps=1000000, accumulate_grad_batches=4)

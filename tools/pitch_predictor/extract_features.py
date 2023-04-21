@@ -112,27 +112,21 @@ def process(
 
     # Extract pitches
     predicted_pitches = pitch_extractor(audio, sr, pad_to=mel_length)
-    f0_mel = predicted_pitches.log2() - f0.log2()
-    f0_mel[predicted_pitches == 0] = 0
-    f0_mel = torch.nan_to_num(f0_mel, nan=0)
-    f0_mel = torch.clamp(f0_mel, -0.2 + 1e-6, 0.2 - 1e-6)
 
-    # to 128 bins
-    f0_mel = torch.floor((f0_mel + 0.2) / 0.4 * 128)
-    mel_scale = torch.nn.functional.one_hot(f0_mel.long(), 128).float()
+    mel_scale = pitch_to_mel(
+        predicted_pitches, config.f0_mel_min, config.f0_mel_max, config.mel_bins
+    )
+    mel_scale[predicted_pitches == 0] = 0
+
+    # f0_mel = predicted_pitches.log2() - f0.log2()
+    # f0_mel[predicted_pitches == 0] = 0
+    # f0_mel = torch.nan_to_num(f0_mel, nan=0)
+    # f0_mel = torch.clamp(f0_mel, -0.2 + 1e-6, 0.2 - 1e-6)
+
+    # # to 128 bins
+    # f0_mel = torch.floor((f0_mel + 0.2) / 0.4 * 128)
+    # mel_scale = torch.nn.functional.one_hot(f0_mel.long(), 128).float()
     mel_scale = torchvision.transforms.functional.gaussian_blur(mel_scale[None], 3)[0]
-
-    # f0_mel[f0_mel > 0] = (f0_mel[f0_mel > 0] - f0_mel_min) * (f0_bin - 2) / (
-    #     f0_mel_max - f0_mel_min
-    # ) + 1
-    # print(f0_mel.cpu().numpy().shape)
-    # from matplotlib import pyplot as plt
-    # plt.imshow(mel_scale.cpu().numpy().T)
-    # plt.savefig("pitches.png")
-    # exit()
-    # mel_scale = pitch_to_mel(
-    #     predicted_pitches, config.f0_mel_min, config.f0_mel_max, config.mel_bins
-    # )
 
     # Remove zeros
     # mel_scale[predicted_pitches == 0] = 0
