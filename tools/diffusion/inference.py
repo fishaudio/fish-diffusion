@@ -8,7 +8,7 @@ import librosa
 import numpy as np
 import soundfile as sf
 import torch
-from fish_audio_preprocess.utils import loudness_norm
+from fish_audio_preprocess.utils import loudness_norm, separate_audio
 from loguru import logger
 from mmengine import Config
 from natsort import natsorted
@@ -52,6 +52,7 @@ class SVCInference(nn.Module):
         self.model = load_checkpoint(
             config, checkpoint, device="cpu", model_cls=model_cls
         )
+        self.separate_model = None
 
     @property
     def device(self):
@@ -260,8 +261,9 @@ class SVCInference(nn.Module):
 
             if gradio_progress is not None:
                 gradio_progress(0, "Extracting vocals...")
-
-            audio, _ = separate_vocals(audio, sr, self.device)
+            if self.separate_model is None:
+                self.separate_model = separate_audio.init_model("htdemucs", device=self.device)
+            audio, _ = separate_vocals(audio, sr, self.device, self.separate_model)
 
         # Normalize loudness
         audio = loudness_norm.loudness_norm(audio, sr)
