@@ -262,7 +262,9 @@ class SVCInference(nn.Module):
             if gradio_progress is not None:
                 gradio_progress(0, "Extracting vocals...")
             if self.separate_model is None:
-                self.separate_model = separate_audio.init_model("htdemucs", device=self.device)
+                self.separate_model = separate_audio.init_model(
+                    "htdemucs", device=self.device
+                )
             audio, _ = separate_vocals(audio, sr, self.device, self.separate_model)
 
         # Normalize loudness

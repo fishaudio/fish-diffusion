@@ -78,10 +78,10 @@ preprocessing = dict(
     augmentations=[
         dict(
             type="RandomPitchShifting",
-            key_shifts=[-5., 5.],
+            key_shifts=[-5.0, 5.0],
             probability=1.5,
         ),
-    ]
+    ],
 )
 
 # The following trainer val and save checkpoints every 1000 steps

@@ -9,11 +9,11 @@ import librosa
 import numpy as np
 import soundfile as sf
 import torch
+from fish_audio_preprocess.utils import separate_audio
 from flask import Flask, request, send_file
 from flask_cors import CORS
 from loguru import logger
 from mmengine import Config
-from fish_audio_preprocess.utils import separate_audio
 
 from fish_diffusion.utils.audio import separate_vocals
 from fish_diffusion.utils.tensor import repeat_expand
@@ -90,7 +90,9 @@ class HiFiSingerSVC:
         if self.extract_vocals:  # 提取人声
             logger.info("Extracting vocals...")
             if self.separate_model is None:
-                self.separate_model = separate_audio.init_model("htdemucs", device=self.device)
+                self.separate_model = separate_audio.init_model(
+                    "htdemucs", device=self.device
+                )
             audio, _ = separate_vocals(audio, sr, self.device, self.separate_model)
         # audio = loudness_norm.loudness_norm(audio, sr)  # 响度归一化，实时中效果存疑
 
