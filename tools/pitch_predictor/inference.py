@@ -28,19 +28,19 @@ from fish_diffusion.utils.tensor import repeat_expand
 # plt.savefig("pitches.png")
 # exit()
 
-device = "cuda:1"
+device = "cuda:0"
 config = Config.fromfile("configs/pitch_predictor.py")
 # config.model.diffusion.sampler_interval = 1
 model = load_checkpoint(
     config,
-    "logs/PitchPredictor/version_None/checkpoints/epoch=851-step=40000-valid_loss=0.08.ckpt",
+    "logs/PitchPredictor/tz858zrj/checkpoints/epoch=1489-step=70000-valid_loss=0.08.ckpt",
     device="cpu",
     model_cls=DiffSingerLightning,
 )
 model.eval()
 model.to(device)
 
-ds_file = "自动音高测试.ds"
+ds_file = "世末歌者 by白烁-00.ds"
 data = json.load(open(ds_file))
 
 dictionary, phonemes = load_dictionary("dictionaries/opencpop.txt")
@@ -175,7 +175,6 @@ for segment in data:
         notes2mel[previous_idx:current_idx] = i
 
     pitches = torch.gather(f0, 0, notes2mel)
-    # pitches *= 2 ** (12 / 12)
 
     # Predict pitch
     pitch_shift = torch.zeros((1, 1), device=device)

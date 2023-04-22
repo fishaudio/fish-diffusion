@@ -194,19 +194,20 @@ class DiffSingerLightning(pl.LightningModule):
         pitches = batch["pitches"].clone()
         batch_size = batch["speaker"].shape[0]
 
-        output = self.model(
-            speakers=batch["speaker"],
-            contents=batch["contents"],
-            contents_lens=batch["contents_lens"],
-            contents_max_len=batch["contents_max_len"],
-            mel=batch["mel"],
-            mel_lens=batch["mel_lens"],
-            mel_max_len=batch["mel_max_len"],
-            pitches=batch["pitches"],
-            pitch_shift=batch.get("key_shift", None),
-            phones2mel=batch.get("phones2mel", None),
-            energy=batch.get("energy", None),
-        )
+        with torch.backends.cuda.sdp_kernel(enable_flash=False) as disable:
+            output = self.model(
+                speakers=batch["speaker"],
+                contents=batch["contents"],
+                contents_lens=batch["contents_lens"],
+                contents_max_len=batch["contents_max_len"],
+                mel=batch["mel"],
+                mel_lens=batch["mel_lens"],
+                mel_max_len=batch["mel_max_len"],
+                pitches=batch["pitches"],
+                pitch_shift=batch.get("key_shift", None),
+                phones2mel=batch.get("phones2mel", None),
+                energy=batch.get("energy", None),
+            )
 
         self.log(f"{mode}_loss", output["loss"], batch_size=batch_size, sync_dist=True)
 
