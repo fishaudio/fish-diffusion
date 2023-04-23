@@ -168,9 +168,15 @@ def slice_audio(
 
 
 def separate_vocals(
-    audio: np.ndarray, sr: int, device: Union[str, torch.device] = "cpu"
+    audio: np.ndarray,
+    sr: int,
+    device: Union[str, torch.device] = "cpu",
+    separate_model: torch.nn.Module = None,
 ):
-    model = separate_audio.init_model("htdemucs", device=device)
+    if separate_model is None:
+        model = separate_model.to(device)
+    else:
+        model = separate_audio.init_model("htdemucs", device=device)
     audio = librosa.resample(audio, orig_sr=sr, target_sr=model.samplerate)[None]
 
     # To two channels

@@ -9,6 +9,7 @@ import librosa
 import numpy as np
 import soundfile as sf
 import torch
+from fish_audio_preprocess.utils import separate_audio
 from flask import Flask, request, send_file
 from flask_cors import CORS
 from loguru import logger
@@ -69,6 +70,7 @@ class HiFiSingerSVC:
         self.pad_f0_model = config_flask["pad_f0_model"]
         self.pad_f0 = 0.0
         self.pad_f0_pad = config_flask["pad_f0_pad"]
+        self.separate_model = None
 
     def infer(self, wav_path, pitch_change, speak_id, safe_prefix_pad):
         if safe_prefix_pad > self.pad_f0_pad:
@@ -87,7 +89,11 @@ class HiFiSingerSVC:
         logger.info(f"Loaded {wav_path} with sr={sr}")
         if self.extract_vocals:  # 提取人声
             logger.info("Extracting vocals...")
-            audio, _ = separate_vocals(audio, sr, self.device)
+            if self.separate_model is None:
+                self.separate_model = separate_audio.init_model(
+                    "htdemucs", device=self.device
+                )
+            audio, _ = separate_vocals(audio, sr, self.device, self.separate_model)
         # audio = loudness_norm.loudness_norm(audio, sr)  # 响度归一化，实时中效果存疑
 
         generated_audio = np.zeros_like(audio)
