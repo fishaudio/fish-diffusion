@@ -41,11 +41,11 @@ class HiFiSVCDataset(NaiveDataset):
         ),  # (N, T) -> (N, T, 1)
     ]
 
-    def __init__(self, path="dataset", speaker_id=0, segment_size=-1, hop_size=512):
+    def __init__(self, path="dataset", speaker_id=0, segment_size=-1, hop_length=512):
         super().__init__(path, speaker_id)
 
         self.segment_size = segment_size
-        self.hop_size = hop_size
+        self.hop_length = hop_length
 
     def __getitem__(self, idx):
         x = super().__getitem__(idx)
@@ -54,10 +54,13 @@ class HiFiSVCDataset(NaiveDataset):
         if (
             self.segment_size is not None
             and self.segment_size > 0
-            and x["contents"].shape[1] > self.segment_size // self.hop_size
+            and x["contents"].shape[1] > self.segment_size // self.hop_length
+            and x["audio"].shape[1] > self.segment_size
         ):
             mel_crop = lambda x: x[
-                start // self.hop_size : (start + self.segment_size) // self.hop_size
+                start
+                // self.hop_length : (start + self.segment_size)
+                // self.hop_length
             ]
             start = np.random.randint(0, x["audio"].shape[1] - self.segment_size + 1)
             x["audio"] = x["audio"][:, start : start + self.segment_size]
