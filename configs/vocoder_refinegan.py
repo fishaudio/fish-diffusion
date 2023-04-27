@@ -1,5 +1,3 @@
-from functools import partial
-
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.strategies import DDPStrategy
 
