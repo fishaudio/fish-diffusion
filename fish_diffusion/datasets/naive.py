@@ -1,7 +1,9 @@
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import torch
+import torchaudio
 from fish_audio_preprocess.utils.file import list_files
 from torch.utils.data import Dataset
 
@@ -121,43 +123,78 @@ class NaiveSVCPowerDataset(NaiveDataset):
 @DATASETS.register_module()
 class NaiveVOCODERDataset(NaiveDataset):
     processing_pipeline = [
-        dict(type="PickKeys", keys=["path", "audio", "mel", "pitches"]),
+        dict(type="PickKeys", keys=["path", "audio", "pitches", "sampling_rate"]),
         dict(type="UnSqueeze", keys=[("audio", 0)]),  # (T) -> (1, T)
     ]
 
     collating_pipeline = [
         dict(type="ListToDict"),
-        dict(type="PadStack", keys=[("audio", -1), ("mel", -1), ("pitches", -1)]),
+        dict(type="PadStack", keys=[("audio", -1), ("pitches", -1)]),
     ]
 
     def __init__(
-        self, path="dataset", segment_size=16384, hop_length=512, sampling_rate=44100
+        self,
+        path="dataset",
+        segment_size: Optional[int] = 16384,
+        hop_length: int = 512,
+        sampling_rate: int = 44100,
+        pitch_shift: Optional[list[int]] = None,
+        loudness_shift: Optional[list[int]] = None,
     ):
         super().__init__(path)
 
-        self.segment_size = segment_size
+        self.segment_length = segment_size
         self.hop_length = hop_length
         self.sampling_rate = sampling_rate
+        self.pitch_shift = pitch_shift
+        self.loudness_shift = loudness_shift
 
     def __getitem__(self, idx):
         x = super().__getitem__(idx)
+        assert x["sampling_rate"] == self.sampling_rate
 
-        # Randomly crop the audio and mel
-        if (
-            self.segment_size is not None
-            and self.segment_size > 0
-            and x["mel"].shape[1] > self.segment_size // self.hop_size
-        ):
-            start = np.random.randint(0, x["audio"].shape[1] - self.segment_size + 1)
-            x["audio"] = x["audio"][:, start : start + self.segment_size]
-            x["mel"] = x["mel"][
-                :, start // self.hop_size : (start + self.segment_size) // self.hop_size
-            ]
-            x["pitches"] = x["pitches"][
-                start // self.hop_size : (start + self.segment_size) // self.hop_size
-            ]
+        y = x["audio"]
+        pitches = x["pitches"]
 
-        return x
+        if self.pitch_shift is not None:
+            shift = (
+                np.random.random() * (self.pitch_shift[1] - self.pitch_shift[0])
+                + self.pitch_shift[0]
+            )
+            duration_shift = 2 ** (shift / 12)
+            orig_sr = round(self.sampling_rate * duration_shift)
+            orig_sr = orig_sr - (orig_sr % 100)
+
+            y = torchaudio.functional.resample(
+                torch.from_numpy(y).float(),
+                orig_freq=orig_sr,
+                new_freq=self.sampling_rate,
+            ).numpy()
+
+            # Adjust pitch
+            pitches *= 2 ** (shift / 12)
+
+        pitches = np.interp(
+            np.linspace(0, 1, y.shape[-1]), np.linspace(0, 1, len(pitches)), pitches
+        )
+
+        if self.segment_length is not None and y.shape[-1] > self.segment_length:
+            start = np.random.randint(0, y.shape[-1] - self.segment_length + 1)
+            y = y[start : start + self.segment_length]
+            pitches = pitches[start : start + self.segment_length]
+
+        if self.loudness_shift is not None:
+            new_amplitude = (
+                np.random.random() * (self.loudness_shift[1] - self.loudness_shift[0])
+                + self.loudness_shift[0]
+            )
+            max_amplitude = np.max(np.abs(y))
+            y = y / (max_amplitude + 1e-8) * new_amplitude
+
+        return {
+            "audio": y,
+            "pitches": pitches,
+        }
 
 
 @DATASETS.register_module()
