@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import numpy as np
+import proces
 import torch
 from fish_audio_preprocess.utils.file import list_files
 from torch.utils.data import Dataset
@@ -38,7 +39,7 @@ class NaiveDataset(Dataset):
 
 
 @DATASETS.register_module()
-class NaiveSVCDataset(NaiveDataset):
+class NaiveTTSDataset(NaiveDataset):
     processing_pipeline = [
         dict(
             type="PickKeys",
@@ -63,6 +64,39 @@ class NaiveSVCDataset(NaiveDataset):
             keys=[
                 ("time_stretch", torch.float32),
                 ("key_shift", torch.float32),
+                ("speaker", torch.int64),
+            ],
+        ),
+        dict(
+            type="UnSqueeze",
+            keys=[("pitches", -1), ("time_stretch", -1), ("key_shift", -1)],
+        ),  # (N, T) -> (N, T, 1)
+    ]
+
+@DATASETS.register_module()
+class NaiveSVCDataset(NaiveDataset):
+    processing_pipeline = [
+        dict(
+            type="PickKeys",
+            keys=[
+                "path",
+                "time_stretch",
+                "mel",
+                "contents",
+                "pitches",
+                "speaker",
+            ],
+        ),
+        dict(type="Transpose", keys=[("mel", 1, 0), ("contents", 1, 0)]),
+    ]
+
+    collating_pipeline = [
+        dict(type="ListToDict"),
+        dict(type="PadStack", keys=[("mel", -2), ("contents", -2), ("pitches", -1)]),
+        dict(
+            type="ToTensor",
+            keys=[
+                ("time_stretch", torch.float32),
                 ("speaker", torch.int64),
             ],
         ),
