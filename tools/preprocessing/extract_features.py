@@ -130,7 +130,7 @@ def process(
         sample["mel"] = mel.cpu().numpy()
     else:
         # Calculate mel length from audio length
-        hop_length = getattr(config, "hop_length", 256)
+        hop_length = getattr(config, "hop_length", 512)
         mel_length = int(audio.shape[-1] / hop_length) + 1
 
     # Extract text features
