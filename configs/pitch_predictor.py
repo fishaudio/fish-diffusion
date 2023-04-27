@@ -44,37 +44,16 @@ model = dict(
     diffusion=dict(
         spec_min=[0],
         spec_max=[1],
-        # denoiser=dict(
-        #     _delete_=True,
-        #     type="UNetDenoiser",
-        #     image_channels=1,
-        #     d_encoder=256,
-        #     mel_channels=mel_bins,
-        #     n_channels=64,
-        #     ch_mults=(1, 2, 2, 2),
-        #     is_attn=(False, False, False, True),
-        #     n_blocks=2,
-        # ),
         denoiser=dict(
             _delete_=True,
-            type="UNetDenoiserV2",
-            in_channels=1,
-            out_channels=1,
-            down_block_types=(
-                "DownBlock2D",
-                "DownBlock2D",
-                "DownBlock2D",
-                "CrossAttnDownBlock2D",
-            ),
-            up_block_types=(
-                "CrossAttnUpBlock2D",
-                "UpBlock2D",
-                "UpBlock2D",
-                "UpBlock2D",
-            ),
-            encoder_hid_dim=256,
-            block_out_channels=(32, 64, 128, 512),
-            attention_head_dim=4,
+            type="UNetDenoiser",
+            image_channels=1,
+            d_encoder=256,
+            mel_channels=mel_bins,
+            n_channels=64,
+            ch_mults=(1, 2, 2, 2),
+            is_attn=(False, False, False, True),
+            n_blocks=2,
         ),
     ),
     # pitch_encoder=dict(
@@ -109,9 +88,9 @@ dataset = dict(
 
 preprocessing = dict(
     text_features_extractor=dict(
-        type="OpenCpopTranscriptionToPhonemesDuration",
+        type="PhoneToWord",
         phonemes=phonemes,
-        transcription_path="dataset/pitch-predictor/transcriptions-strict-revise-vc.txt",
+        transcription_path="dataset/transcriptions-ph2word.csv",
     ),
     pitch_extractor=dict(
         type="ParselMouthPitchExtractor",
@@ -125,9 +104,9 @@ preprocessing = dict(
 
 dataloader = dict(
     train=dict(
-        batch_size=10,
-        num_workers=2,
+        batch_size=20,
+        num_workers=4,
     ),
 )
 
-trainer = dict(precision="bf16", max_steps=1000000, accumulate_grad_batches=4)
+trainer = dict(precision="bf16", max_steps=1000000)
