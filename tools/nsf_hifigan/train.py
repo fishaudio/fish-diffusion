@@ -97,13 +97,12 @@ class HSFHifiGAN(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         optim_g, optim_d = self.optimizers()
 
-        mels, pitches, y = (
-            batch["mel"].float(),
+        pitches, y = (
             batch["pitches"].float(),
             batch["audio"].float(),
         )
-
-        y_g_hat = self.generator(mels, pitches)
+        gt_mels = self.get_mels(y)
+        y_g_hat = self.generator(gt_mels, pitches)
         optim_d.zero_grad()
 
         # MPD
@@ -127,7 +126,6 @@ class HSFHifiGAN(pl.LightningModule):
             prog_bar=True,
             logger=True,
             sync_dist=True,
-            batch_size=batch["mel"].shape[0],
         )
 
         # Generator
@@ -187,7 +185,6 @@ class HSFHifiGAN(pl.LightningModule):
             prog_bar=True,
             logger=True,
             sync_dist=True,
-            batch_size=batch["mel"].shape[0],
         )
 
         # Manual LR Scheduler
@@ -207,17 +204,18 @@ class HSFHifiGAN(pl.LightningModule):
         return dynamic_range_compression(x)
 
     def validation_step(self, batch, batch_idx):
-        mels, pitches, audios = (
-            batch["mel"].float(),
+        pitches, audios = (
             batch["pitches"].float(),
             batch["audio"].float(),
         )
+        mels = self.get_mels(audios)
 
         y_g_hat = self.generator(mels, pitches)
         y_g_hat_mel = self.get_mels(y_g_hat)[:, :, : mels.shape[2]]
 
         # L1 Mel-Spectrogram Loss
-        mel_lens = batch["mel_lens"]
+        mel_lens = batch["audio_lens"] // self.config["hop_length"]
+
         # create mask
         mask = (
             torch.arange(mels.shape[2], device=mels.device)[None, :] < mel_lens[:, None]
@@ -233,7 +231,6 @@ class HSFHifiGAN(pl.LightningModule):
             prog_bar=True,
             logger=True,
             sync_dist=True,
-            batch_size=batch["mel"].shape[0],
         )
 
         for idx, (mel, gen_mel, audio, gen_audio, mel_len, audio_len) in enumerate(
@@ -242,7 +239,7 @@ class HSFHifiGAN(pl.LightningModule):
                 y_g_hat_mel.cpu().numpy(),
                 audios.cpu().type(torch.float32).numpy(),
                 y_g_hat.type(torch.float32).cpu().numpy(),
-                batch["mel_lens"].cpu().numpy(),
+                mel_lens.cpu().numpy(),
                 batch["audio_lens"].cpu().numpy(),
             )
         ):
