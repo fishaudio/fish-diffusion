@@ -34,7 +34,7 @@ natsort = "^8.3.1"
 torch = { version = "^2.0.0", source = "torch-cu118" }
 torchvision = { version = "^0.15.1", source = "torch-cu118" }
 torchaudio = { version = "^2.0.0", source = "torch-cu118" }
-pytorch-lightning = "1.9.4"
+pytorch-lightning = "^2.0.2"
 fastapi = "=0.88.0"
 
 [tool.poetry.group.dev.dependencies]

@@ -131,12 +131,12 @@ class NaiveVOCODERDataset(NaiveDataset):
     ]
 
     def __init__(
-        self, path="dataset", segment_size=16384, hop_size=512, sampling_rate=44100
+        self, path="dataset", segment_size=16384, hop_length=512, sampling_rate=44100
     ):
         super().__init__(path)
 
         self.segment_size = segment_size
-        self.hop_size = hop_size
+        self.hop_length = hop_length
         self.sampling_rate = sampling_rate
 
     def __getitem__(self, idx):
