@@ -1,5 +1,4 @@
 import itertools
-import json
 from argparse import ArgumentParser
 
 import matplotlib.pyplot as plt
@@ -17,6 +16,7 @@ from fish_diffusion.datasets.utils import build_loader_from_config
 from fish_diffusion.modules.vocoders.refinegan.generator import RefineGANGenerator
 from fish_diffusion.modules.vocoders.refinegan.mpd import MultiPeriodDiscriminator
 from fish_diffusion.modules.vocoders.refinegan.mrd import MultiResolutionDiscriminator
+from fish_diffusion.schedulers import LR_SCHEUDLERS
 from fish_diffusion.utils.audio import dynamic_range_compression, get_mel_transform
 from fish_diffusion.utils.viz import plot_mel
 
@@ -29,7 +29,7 @@ class RefineGAN(pl.LightningModule):
         self.save_hyperparameters()
         self.config = config
 
-        self.encoder = RefineGANGenerator(**config.model.encoder)
+        self.generator = RefineGANGenerator(**config.model.generator)
         self.mpd = MultiPeriodDiscriminator(**config.model.mpd)
         self.mrd = MultiResolutionDiscriminator(**config.model.mrd)
 
@@ -249,7 +249,7 @@ class RefineGAN(pl.LightningModule):
         )
         mels = self.get_mels(audios)
 
-        y_g_hat = self.generator(pitches, mels)
+        y_g_hat = self.generator(mels, pitches)
         y_g_hat_mel = self.get_mels(y_g_hat)[:, :, : mels.shape[2]]
 
         # L1 Mel-Spectrogram Loss

@@ -124,7 +124,6 @@ class NaiveSVCPowerDataset(NaiveDataset):
 class NaiveVOCODERDataset(NaiveDataset):
     processing_pipeline = [
         dict(type="PickKeys", keys=["path", "audio", "pitches", "sampling_rate"]),
-        dict(type="UnSqueeze", keys=[("audio", 0)]),  # (T) -> (1, T)
     ]
 
     collating_pipeline = [
@@ -192,8 +191,8 @@ class NaiveVOCODERDataset(NaiveDataset):
             y = y / (max_amplitude + 1e-8) * new_amplitude
 
         return {
-            "audio": y,
-            "pitches": pitches,
+            "audio": y[None],
+            "pitches": pitches[None],
         }
 
 
