@@ -1,6 +1,10 @@
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.strategies import DDPStrategy
 
+_base_ = [
+    "./_base_/schedulers/exponential.py",
+]
+
 sampling_rate = 44100
 num_mels = 128
 n_fft = 2048
@@ -27,7 +31,7 @@ trainer = dict(
 
 model = dict(
     type="RefineGAN",
-    encoder=dict(
+    generator=dict(
         sampling_rate=sampling_rate,
         hop_length=hop_length,
         downsample_rates=[2, 2, 8, 8],
