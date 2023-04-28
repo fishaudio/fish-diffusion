@@ -26,7 +26,6 @@ torch.set_float32_matmul_precision("medium")
 class RefineGAN(pl.LightningModule):
     def __init__(self, config):
         super().__init__()
-        self.save_hyperparameters()
         self.config = config
 
         self.generator = RefineGANGenerator(**config.model.generator)
@@ -332,7 +331,7 @@ class RefineGAN(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    pl.seed_everything(42, workers=True)
+    pl.seed_everything(594461, workers=True)
 
     parser = ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
