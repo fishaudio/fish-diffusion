@@ -9,9 +9,7 @@ import torch
 from pyannote.audio import Inference, Model
 from tqdm import tqdm
 
-model = Model.from_pretrained(
-    "pyannote/embedding"
-)
+model = Model.from_pretrained("pyannote/embedding")
 
 inference = Inference(model, window="whole")
 
