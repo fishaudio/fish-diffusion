@@ -38,7 +38,6 @@ class RefineGAN(pl.LightningModule):
 
         if "state_dict" not in cp_dict:
             self.model.load_state_dict(cp_dict["generator"])
-            print(cp_dict["generator"].keys())
         else:
             self.model.load_state_dict(
                 {
@@ -84,11 +83,15 @@ class RefineGAN(pl.LightningModule):
 
         if sr != self.config["sampling_rate"]:
             _wav_torch = librosa.resample(
-                wav_torch.cpu().numpy(), orig_sr=sr, target_sr=self.config["sampling_rate"]
+                wav_torch.cpu().numpy(),
+                orig_sr=sr,
+                target_sr=self.config["sampling_rate"],
             )
             wav_torch = torch.from_numpy(_wav_torch).to(wav_torch.device)
 
-        mel_torch = self.mel_transform(wav_torch, key_shift=key_shift, speed=speed)[0]
+        mel_torch = self.mel_transform(wav_torch)[
+            0
+        ]  # , key_shift=key_shift, speed=speed)[0]
         mel_torch = dynamic_range_compression(mel_torch)
 
         if self.use_natural_log is False:
