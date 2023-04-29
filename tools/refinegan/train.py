@@ -38,8 +38,8 @@ class RefineGAN(pl.LightningModule):
             n_fft=config.n_fft,
             hop_length=config.hop_length,
             win_length=config.win_length,
-            f_min=config.f_min,
-            f_max=config.f_max,
+            f_min=config.model.f_min,
+            f_max=config.model.f_max,
             n_mels=config.num_mels,
         )
 
