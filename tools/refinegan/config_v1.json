@@ -3,8 +3,8 @@
     "n_fft": 2048,
     "hop_length": 256,
     "win_length": 2048,
-    "f_min": 0,
-    "f_max": 22050,
+    "f_min": 40,
+    "f_max": 16000,
     "num_mels": 128,
     "generator": {
         "sampling_rate": 44100,

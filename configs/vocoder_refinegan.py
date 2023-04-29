@@ -31,6 +31,8 @@ trainer = dict(
 
 model = dict(
     type="RefineGAN",
+    f_min=40.0,
+    f_max=16000.0,
     generator=dict(
         sampling_rate=sampling_rate,
         hop_length=hop_length,
