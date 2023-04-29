@@ -34,7 +34,7 @@ for mixin_dataset in sorted(base_path.iterdir()):
                 type="HiFiSVCDataset",
                 path=str(sub_path),
                 speaker_id=speaker_mapping[speaker_name],
-                segment_size=16384,
+                segment_size=32768,
                 hop_length=256,
             )
         )
@@ -47,7 +47,7 @@ dataset = dict(
             "HiFiSVCDataset",
             "dataset/train",
             speaker_mapping,
-            segment_size=16384,
+            segment_size=32768,
             hop_length=256,
         )
         + mixin_datasets,
@@ -64,6 +64,12 @@ dataset = dict(
             hop_length=256,
         ),
         collate_fn=HiFiSVCDataset.collate_fn,
+    ),
+)
+
+dataloader = dict(
+    train=dict(
+        batch_size=10,
     ),
 )
 

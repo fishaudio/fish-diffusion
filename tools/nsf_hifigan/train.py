@@ -31,7 +31,6 @@ torch.set_float32_matmul_precision("medium")
 class HSFHifiGAN(pl.LightningModule):
     def __init__(self, config):
         super().__init__()
-        self.save_hyperparameters()
 
         with open(config.model.config) as f:
             data = f.read()

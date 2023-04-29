@@ -27,7 +27,6 @@ from .core import HiFiSinger
 class HiFiSingerV1Lightning(pl.LightningModule):
     def __init__(self, config):
         super().__init__()
-        self.save_hyperparameters()
 
         self.h = AttrDict(config.model.encoder)
         self.config = config
