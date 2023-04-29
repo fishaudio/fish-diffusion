@@ -26,7 +26,8 @@ class HiFiSingerSVCInference(SVCInference):
         sampler_interval: Optional[int] = None,
         pitches: Optional[torch.Tensor] = None,
     ):
-        mel_len = audio.shape[-1] // 512
+        mel_len = audio.shape[-1] // getattr(self.config, "hop_length", 512)
+        amplitude = audio.abs().max()
 
         # Extract and process pitch
         if pitches is None:
@@ -56,8 +57,7 @@ class HiFiSingerSVCInference(SVCInference):
         # Predict
         contents_lens = torch.tensor([mel_len]).to(self.device)
 
-        wav = (
-            self.model.generator(
+        wav = self.model.generator(
                 speakers=speakers.to(self.device),
                 contents=text_features[None].to(self.device),
                 contents_lens=contents_lens,
@@ -66,11 +66,11 @@ class HiFiSingerSVCInference(SVCInference):
                 pitch_shift=pitch_shift,
                 energy=energy,
             )
-            .cpu()
-            .numpy()[0]
-        )
 
-        return wav
+        wav_amplitude = wav.abs().max()
+        wav *= amplitude / wav_amplitude
+
+        return wav.cpu().numpy()[0]
 
 
 def parse_args():
