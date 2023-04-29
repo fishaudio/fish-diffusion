@@ -6,14 +6,23 @@ import numpy as np
 import torch
 from mmengine import Config
 
-from fish_diffusion.archs.hifisinger import HiFiSingerLightning
+from fish_diffusion.archs.hifisinger import HiFiSingerV1Lightning, HiFiSingerV2Lightning
 from fish_diffusion.utils.tensor import repeat_expand
 from tools.diffusion.inference import SVCInference
 
 
 class HiFiSingerSVCInference(SVCInference):
     def __init__(self, config, checkpoint):
-        super().__init__(config, checkpoint, model_cls=HiFiSingerLightning)
+        if config.model.encoder.type.lower() == "RefineGAN".lower():
+            model_cls = HiFiSingerV2Lightning
+        elif config.model.encoder.type.lower() == "HiFiGAN".lower():
+            model_cls = HiFiSingerV1Lightning
+        else:
+            raise NotImplementedError(
+                f"Unknown encoder type: {config.model.encoder.type}"
+            )
+
+        super().__init__(config, checkpoint, model_cls=model_cls)
 
     @torch.no_grad()
     def forward(

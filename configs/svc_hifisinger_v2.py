@@ -11,14 +11,14 @@ _base_ = [
 ]
 
 speaker_mapping = {
-    "CDF1": 0,
-    "CDM1": 1,
-    "IDF1": 2,
-    "IDM1": 3,
+    "aria": 0,
+    "opencpop": 1,
+    "lengyue": 2,
 }
 
 mixin_datasets = []
 
+# For pretraining
 base_path = Path("dataset/svc-mixin-dataset")
 for mixin_dataset in sorted(base_path.iterdir()):
     for sub_path in mixin_dataset.iterdir():
@@ -45,7 +45,7 @@ dataset = dict(
         type="ConcatDataset",
         datasets=get_datasets_from_subfolder(
             "HiFiSVCDataset",
-            "dataset/svcc/train",
+            "dataset/train",
             speaker_mapping,
             segment_size=16384,
             hop_length=256,
@@ -58,7 +58,7 @@ dataset = dict(
         type="ConcatDataset",
         datasets=get_datasets_from_subfolder(
             "HiFiSVCDataset",
-            "dataset/svcc/valid",
+            "dataset/valid",
             speaker_mapping,
             segment_size=-1,
             hop_length=256,
@@ -91,11 +91,11 @@ preprocessing = dict(
         type="RMSEnergyExtractor",
     ),
     augmentations=[
-        # dict(
-        #     type="FixedPitchShifting",
-        #     key_shifts=[-5.0, 5.0],
-        #     probability=0.75,
-        # ),
+        dict(
+            type="FixedPitchShifting",
+            key_shifts=[-5.0, 5.0],
+            probability=0.75,
+        ),
     ],
 )
 
@@ -104,5 +104,4 @@ trainer = dict(
     gradient_clip_val=None,
     max_steps=1000000,
     precision="32-true",
-    val_check_interval=2000,
 )

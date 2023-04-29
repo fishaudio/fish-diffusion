@@ -1,6 +1,6 @@
 from fish_diffusion.utils.pitch import pitch_to_log
 
-sampling_rate = 24000
+sampling_rate = 44100
 hidden_size = 256
 num_mels = 128
 n_fft = 2048
@@ -10,6 +10,8 @@ win_length = 2048
 model = dict(
     type="HiFiSVC",
     hidden_size=hidden_size,
+    f_min=40.0,
+    f_max=16000.0,
     text_encoder=dict(
         type="NaiveProjectionEncoder",
         input_size=768,
