@@ -58,14 +58,14 @@ class HiFiSingerSVCInference(SVCInference):
         contents_lens = torch.tensor([mel_len]).to(self.device)
 
         wav = self.model.generator(
-                speakers=speakers.to(self.device),
-                contents=text_features[None].to(self.device),
-                contents_lens=contents_lens,
-                contents_max_len=max(contents_lens),
-                pitches=pitches[None, :, None].to(self.device),
-                pitch_shift=pitch_shift,
-                energy=energy,
-            )
+            speakers=speakers.to(self.device),
+            contents=text_features[None].to(self.device),
+            contents_lens=contents_lens,
+            contents_max_len=max(contents_lens),
+            pitches=pitches[None, :, None].to(self.device),
+            pitch_shift=pitch_shift,
+            energy=energy,
+        )
 
         wav_amplitude = wav.abs().max()
         wav *= amplitude / wav_amplitude
