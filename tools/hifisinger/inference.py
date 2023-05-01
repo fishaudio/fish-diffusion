@@ -6,14 +6,23 @@ import numpy as np
 import torch
 from mmengine import Config
 
-from fish_diffusion.archs.hifisinger import HiFiSingerLightning
+from fish_diffusion.archs.hifisinger import HiFiSingerV1Lightning, HiFiSingerV2Lightning
 from fish_diffusion.utils.tensor import repeat_expand
 from tools.diffusion.inference import SVCInference
 
 
 class HiFiSingerSVCInference(SVCInference):
     def __init__(self, config, checkpoint):
-        super().__init__(config, checkpoint, model_cls=HiFiSingerLightning)
+        if config.model.encoder.type.lower() == "RefineGAN".lower():
+            model_cls = HiFiSingerV2Lightning
+        elif config.model.encoder.type.lower() == "HiFiGAN".lower():
+            model_cls = HiFiSingerV1Lightning
+        else:
+            raise NotImplementedError(
+                f"Unknown encoder type: {config.model.encoder.type}"
+            )
+
+        super().__init__(config, checkpoint, model_cls=model_cls)
 
     @torch.no_grad()
     def forward(
@@ -26,7 +35,8 @@ class HiFiSingerSVCInference(SVCInference):
         sampler_interval: Optional[int] = None,
         pitches: Optional[torch.Tensor] = None,
     ):
-        mel_len = audio.shape[-1] // 512
+        mel_len = audio.shape[-1] // getattr(self.config, "hop_length", 512)
+        amplitude = audio.abs().max()
 
         # Extract and process pitch
         if pitches is None:
@@ -56,21 +66,20 @@ class HiFiSingerSVCInference(SVCInference):
         # Predict
         contents_lens = torch.tensor([mel_len]).to(self.device)
 
-        wav = (
-            self.model.generator(
-                speakers=speakers.to(self.device),
-                contents=text_features[None].to(self.device),
-                contents_lens=contents_lens,
-                contents_max_len=max(contents_lens),
-                pitches=pitches[None, :, None].to(self.device),
-                pitch_shift=pitch_shift,
-                energy=energy,
-            )
-            .cpu()
-            .numpy()[0]
+        wav = self.model.generator(
+            speakers=speakers.to(self.device),
+            contents=text_features[None].to(self.device),
+            contents_lens=contents_lens,
+            contents_max_len=max(contents_lens),
+            pitches=pitches[None, :, None].to(self.device),
+            pitch_shift=pitch_shift,
+            energy=energy,
         )
 
-        return wav
+        wav_amplitude = wav.abs().max()
+        wav *= amplitude / wav_amplitude
+
+        return wav.cpu().numpy()[0]
 
 
 def parse_args():

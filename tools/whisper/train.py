@@ -98,7 +98,6 @@ class WhisperDataset(Dataset):
 class WhisperModel(LightningModule):
     def __init__(self):
         super().__init__()
-        self.save_hyperparameters()
 
         self.model = AlignedWhisper.load("medium", len(phonemes), n_outputs=256)
 

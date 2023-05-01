@@ -1,0 +1,18 @@
+{
+    "sampling_rate": 44100,
+    "n_fft": 2048,
+    "hop_length": 256,
+    "win_length": 2048,
+    "f_min": 40,
+    "f_max": 16000,
+    "num_mels": 128,
+    "generator": {
+        "sampling_rate": 44100,
+        "hop_length": 256,
+        "downsample_rates": [2, 2, 8, 8],
+        "upsample_rates": [8, 8, 2, 2],
+        "leaky_relu_slope": 0.2,
+        "num_mels": 128,
+        "start_channels": 16
+    }
+}
