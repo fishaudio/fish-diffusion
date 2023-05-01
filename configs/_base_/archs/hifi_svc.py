@@ -4,6 +4,7 @@ sampling_rate = 44100
 hidden_size = 256
 
 vocoder_config = {
+    "type": "HiFiGAN",
     "sampling_rate": sampling_rate,
     # Model config
     "resblock": "1",

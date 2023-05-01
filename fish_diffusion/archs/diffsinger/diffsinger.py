@@ -157,7 +157,6 @@ class DiffSinger(nn.Module):
 class DiffSingerLightning(pl.LightningModule):
     def __init__(self, config):
         super().__init__()
-        self.save_hyperparameters()
 
         self.model = DiffSinger(config.model)
         self.config = config

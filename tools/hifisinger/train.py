@@ -6,14 +6,14 @@ from loguru import logger
 from mmengine import Config
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 
-from fish_diffusion.archs.hifisinger.hifisinger import HiFiSingerLightning
+from fish_diffusion.archs.hifisinger import HiFiSingerV1Lightning, HiFiSingerV2Lightning
 from fish_diffusion.datasets.utils import build_loader_from_config
 
 torch.set_float32_matmul_precision("medium")
 
 
 if __name__ == "__main__":
-    pl.seed_everything(42, workers=True)
+    pl.seed_everything(594461, workers=True)
 
     parser = ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
@@ -35,7 +35,12 @@ if __name__ == "__main__":
 
     cfg = Config.fromfile(args.config)
 
-    model = HiFiSingerLightning(cfg)
+    if cfg.model.encoder.type.lower() == "RefineGAN".lower():
+        model = HiFiSingerV2Lightning(cfg)
+    elif cfg.model.encoder.type.lower() == "HiFiGAN".lower():
+        model = HiFiSingerV1Lightning(cfg)
+    else:
+        raise NotImplementedError(f"Unknown encoder type: {cfg.model.encoder.type}")
 
     # We only load the state_dict of the model, not the optimizer.
     if args.pretrained:
