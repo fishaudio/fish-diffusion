@@ -100,9 +100,11 @@ class HSFHifiGAN(pl.LightningModule):
             batch["pitches"].float(),
             batch["audio"].float(),
         )
-        gt_mels = self.get_mels(y)
-        y_g_hat = self.generator(gt_mels, pitches)
-        optim_d.zero_grad()
+
+        mel_lens = batch["audio_lens"] // self.config["hop_length"]
+        mels = self.get_mels(y)[:, :, : mel_lens.max()]
+        y_g_hat = self.generator(mels, pitches)
+        y_g_hat_mel = self.get_mels(y_g_hat)[:, :, : mel_lens.max()]
 
         # MPD
         y_df_hat_r, y_df_hat_g, _, _ = self.mpd(y, y_g_hat.detach())
@@ -207,13 +209,14 @@ class HSFHifiGAN(pl.LightningModule):
             batch["pitches"].float(),
             batch["audio"].float(),
         )
-        mels = self.get_mels(audios)
-        y_g_hat = self.generator(mels, pitches)
-        y_g_hat_mel = self.get_mels(y_g_hat)[:, :, : mels.shape[2]]
 
-        # L1 Mel-Spectrogram Loss
         mel_lens = batch["audio_lens"] // self.config["hop_length"]
 
+        mels = self.get_mels(audios)[:, :, : mel_lens.max()]
+        y_g_hat = self.generator(mels, pitches)
+        y_g_hat_mel = self.get_mels(y_g_hat)[:, :, : mel_lens.max()]
+
+        # L1 Mel-Spectrogram Loss
         # create mask
         mask = (
             torch.arange(mels.shape[2], device=mels.device)[None, :] < mel_lens[:, None]
