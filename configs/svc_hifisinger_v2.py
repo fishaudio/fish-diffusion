@@ -49,8 +49,8 @@ dataset = dict(
             speaker_mapping,
             segment_size=32768,
             hop_length=256,
-        )
-        + mixin_datasets,
+        ),
+        # + mixin_datasets,
         collate_fn=HiFiSVCDataset.collate_fn,
     ),
     valid=dict(

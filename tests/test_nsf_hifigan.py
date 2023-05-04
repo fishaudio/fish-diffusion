@@ -4,9 +4,9 @@ import torchaudio
 from fish_diffusion.modules.pitch_extractors import ParselMouthPitchExtractor
 from fish_diffusion.modules.vocoders import NsfHifiGAN
 
-source = "dataset/valid/opencpop/TruE-干音_0000/0002.wav"
+source = "raw/2008-1.wav"
 
-gan = NsfHifiGAN("checkpoints/model", "checkpoints/nsf_hifigan/config.json")
+gan = NsfHifiGAN("checkpoints/nsf_hifigan/model", "checkpoints/nsf_hifigan/config.json")
 
 audio, sr = torchaudio.load(source)
 
