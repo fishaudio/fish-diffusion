@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import Optional
+from loguru import logger
 
 import librosa
 import pytorch_lightning as pl
@@ -12,9 +13,16 @@ from fish_diffusion.utils.pitch_adjustable_mel import PitchAdjustableMelSpectrog
 from ..builder import VOCODERS
 from .models import AttrDict, Generator
 
+from hydra.utils import get_original_cwd
+from pathlib import Path
 
-@VOCODERS.register_module()
+
+# @VOCODERS.register_module()
 class NsfHifiGAN(pl.LightningModule):
+    checkpoint_path: str
+    config_file: Optional[str]
+    use_natural_log: bool
+
     def __init__(
         self,
         checkpoint_path: str = "checkpoints/nsf_hifigan/model",
@@ -24,8 +32,13 @@ class NsfHifiGAN(pl.LightningModule):
     ):
         super().__init__()
 
+        project_root = get_original_cwd()
+        checkpoint_path = Path(project_root) / checkpoint_path
+        logger.info(f"Loading NSF-HiFi-GAN from {checkpoint_path}")
+
         if config_file is None:
             config_file = Path(checkpoint_path).parent / "config.json"
+        logger.info(f"Loading config from {config_file}")
 
         with open(config_file) as f:
             data = f.read()
@@ -65,8 +78,12 @@ class NsfHifiGAN(pl.LightningModule):
         if "mel_channels" in kwargs:
             kwargs["num_mels"] = kwargs.pop("mel_channels")
 
+        # for k, v in kwargs.items():
+        # if getattr(self.h, k, None) != v:
+        #     logger.debug(f"Testing {self.h} {k} {v}")
+        #     raise ValueError(f"Incorrect value for {k}: {v}")
         for k, v in kwargs.items():
-            if getattr(self.h, k, None) != v:
+            if k != "type" and getattr(self.h, k, None) != v:
                 raise ValueError(f"Incorrect value for {k}: {v}")
 
     @torch.no_grad()

@@ -154,33 +154,44 @@ class DiffSinger(nn.Module):
         return output_dict
 
 
+from omegaconf import DictConfig
+from hydra.utils import instantiate
+
+
 class DiffSingerLightning(pl.LightningModule):
-    def __init__(self, config):
+    def __init__(self, config: DictConfig):
         super().__init__()
 
         self.model = DiffSinger(config.model)
         self.config = config
 
         # 音频编码器, 将梅尔谱转换为音频
-        self.vocoder = VOCODERS.build(config.model.vocoder)
+        self.vocoder = instantiate(config.model.vocoder)
         self.vocoder.freeze()
 
     def configure_optimizers(self):
-        optimizer = OPTIMIZERS.build(
-            {
-                "params": self.parameters(),
-                **self.config.optimizer,
-            }
-        )
+        # Instantiate the optimizer
+        optimizer = instantiate(self.config.optimizer, params=self.parameters())
 
-        scheduler = LR_SCHEUDLERS.build(
-            {
-                "optimizer": optimizer,
-                **self.config.scheduler,
-            }
-        )
+        # Instantiate the scheduler
+        scheduler = instantiate(self.config.scheduler, optimizer=optimizer)
 
         return [optimizer], dict(scheduler=scheduler, interval="step")
+        # optimizer = OPTIMIZERS.build(
+        #     {
+        #         "params": self.parameters(),
+        #         **self.config.optimizer,
+        #     }
+        # )
+
+        # scheduler = LR_SCHEUDLERS.build(
+        #     {
+        #         "optimizer": optimizer,
+        #         **self.config.scheduler,
+        #     }
+        # )
+
+        # return [optimizer], dict(scheduler=scheduler, interval="step")
 
     def _step(self, batch, batch_idx, mode):
         assert batch["pitches"].shape[1] == batch["mel"].shape[1]

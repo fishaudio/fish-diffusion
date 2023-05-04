@@ -234,7 +234,8 @@ if __name__ == "__main__":
         logger.info("Done!")
 
     config = Config.fromfile(args.config)
-    files = list_files(args.path, AUDIO_EXTENSIONS, recursive=True, sort=False)
+    # files = list_files(args.path, AUDIO_EXTENSIONS, recursive=True, sort=False)
+    files = list(Path(args.path).glob("*/**/*.wav"))
     logger.info(f"Found {len(files)} files, processing...")
 
     # Shuffle files will balance the workload of workers

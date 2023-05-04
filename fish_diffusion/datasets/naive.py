@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
-import proces
 import torch
 import torchaudio
 from fish_audio_preprocess.utils.file import list_files
@@ -10,16 +9,17 @@ from torch.utils.data import Dataset
 
 from fish_diffusion.datasets.utils import transform_pipeline
 
-from .builder import DATASETS
+from hydra.utils import get_original_cwd
 
 
-@DATASETS.register_module()
 class NaiveDataset(Dataset):
     processing_pipeline = []
 
     collating_pipeline = []
 
     def __init__(self, path="dataset", speaker_id=0):
+        project_root = get_original_cwd()
+        path = Path(project_root) / path
         self.paths = list_files(path, {".npy"}, recursive=True, sort=True)
         self.dataset_path = Path(path)
         self.speaker_id = speaker_id
@@ -40,7 +40,6 @@ class NaiveDataset(Dataset):
         return transform_pipeline(cls.collating_pipeline, data)
 
 
-@DATASETS.register_module()
 class NaiveTTSDataset(NaiveDataset):
     processing_pipeline = [
         dict(
@@ -75,7 +74,7 @@ class NaiveTTSDataset(NaiveDataset):
         ),  # (N, T) -> (N, T, 1)
     ]
 
-@DATASETS.register_module()
+
 class NaiveSVCDataset(NaiveDataset):
     processing_pipeline = [
         dict(
@@ -109,7 +108,6 @@ class NaiveSVCDataset(NaiveDataset):
     ]
 
 
-@DATASETS.register_module()
 class NaiveSVCPowerDataset(NaiveDataset):
     processing_pipeline = [
         dict(
@@ -154,7 +152,6 @@ class NaiveSVCPowerDataset(NaiveDataset):
     ]
 
 
-@DATASETS.register_module()
 class NaiveVOCODERDataset(NaiveDataset):
     processing_pipeline = [
         dict(type="PickKeys", keys=["path", "audio", "pitches", "sampling_rate"]),
@@ -230,7 +227,6 @@ class NaiveVOCODERDataset(NaiveDataset):
         }
 
 
-@DATASETS.register_module()
 class NaiveSVSDataset(NaiveDataset):
     processing_pipeline = [
         dict(

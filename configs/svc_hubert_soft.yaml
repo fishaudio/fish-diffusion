@@ -1,0 +1,22 @@
+defaults:
+  - model: diff_svc_v2
+  - trainer: base
+  - scheduler: warmup_cosine
+  - optimizer: warmup_cosine
+  - dataset: naive_svc
+  - dataloader: naive_svc
+
+preprocessing:
+  text_features_extractor:
+    type: HubertSoft
+  pitch_extractor:
+    type: ParselMouthPitchExtractor
+    keep_zeros: false
+
+pretrained: null
+resume: null
+tensorboard: false
+resume_id: null
+entity: null
+name: null
+only_train_speaker_embeddings: falsex 

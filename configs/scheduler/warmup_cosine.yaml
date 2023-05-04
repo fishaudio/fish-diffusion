@@ -1,0 +1,2 @@
+_target_: torch.optim.lr_scheduler.LambdaLR
+lr_lambda: ${create_lr_lambda:}
