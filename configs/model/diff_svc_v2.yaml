@@ -3,9 +3,9 @@
 # hidden_size: 256
 
 type: DiffSVC
-_target_: fish_diffusion.modules.diffusion.DiffusionSVC
 diffusion:
-  type: GaussianDiffusion
+  # type: GaussianDiffusion
+  # _target_: fish_diffusion.archs.diffsinger.diffusions.diffusion.GaussianDiffusion
   mel_channels: ${mel_channels:}
   noise_schedule: linear
   timesteps: 1000
@@ -13,7 +13,8 @@ diffusion:
   s: 0.008
   noise_loss: smoothed-l1
   denoiser:
-    type: WaveNetDenoiser
+    # type: WaveNetDenoiser
+    _target_: fish_diffusion.modules.wavenet.WaveNet
     mel_channels: ${mel_channels:}
     d_encoder: ${hidden_size:}
     residual_channels: 512
@@ -26,16 +27,19 @@ diffusion:
   spec_max:
     - 0
 text_encoder:
-  type: NaiveProjectionEncoder
+  _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
+  # type: NaiveProjectionEncoder
   input_size: 256
   output_size: ${hidden_size:}
 speaker_encoder:
-  type: NaiveProjectionEncoder
+  _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
+  # type: NaiveProjectionEncoder
   input_size: 10
   output_size: ${hidden_size:}
   use_embedding: true
 pitch_encoder:
-  type: NaiveProjectionEncoder
+  _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
+  # type: NaiveProjectionEncoder
   input_size: 1
   output_size: ${hidden_size:}
   use_embedding: false

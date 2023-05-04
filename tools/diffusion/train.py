@@ -78,9 +78,7 @@ def main(cfg: DictConfig) -> None:
     if cfg.trainer.strategy is None:
         del cfg.trainer.strategy
     callbacks = [instantiate(cb) for cb in cfg.trainer.callbacks]
-    print(cfg.trainer.callbacks)
     del cfg.trainer.callbacks
-    print(callbacks)
     trainer = pl.Trainer(
         logger=logger,
         callbacks=callbacks,

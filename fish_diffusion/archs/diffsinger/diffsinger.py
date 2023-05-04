@@ -15,6 +15,10 @@ from fish_diffusion.utils.viz import viz_synth_sample
 
 from .diffusions import DIFFUSIONS
 
+from hydra.utils import instantiate
+
+from omegaconf import DictConfig
+
 
 class DiffSinger(nn.Module):
     """DiffSinger"""
@@ -22,16 +26,16 @@ class DiffSinger(nn.Module):
     def __init__(self, model_config):
         super(DiffSinger, self).__init__()
 
-        self.text_encoder = ENCODERS.build(model_config.text_encoder)
-        self.diffusion = DIFFUSIONS.build(model_config.diffusion)
-        self.speaker_encoder = ENCODERS.build(model_config.speaker_encoder)
-        self.pitch_encoder = ENCODERS.build(model_config.pitch_encoder)
+        self.text_encoder = instantiate(model_config.text_encoder)
+        self.diffusion = instantiate(model_config.diffusion)
+        self.speaker_encoder = instantiate(model_config.speaker_encoder)
+        self.pitch_encoder = instantiate(model_config.pitch_encoder)
 
         if "pitch_shift_encoder" in model_config:
-            self.pitch_shift_encoder = ENCODERS.build(model_config.pitch_shift_encoder)
+            self.pitch_shift_encoder = instantiate(model_config.pitch_shift_encoder)
 
         if "energy_encoder" in model_config:
-            self.energy_encoder = ENCODERS.build(model_config.energy_encoder)
+            self.energy_encoder = instantiate(model_config.energy_encoder)
 
     @staticmethod
     def get_mask_from_lengths(lengths, max_len=None):
@@ -152,10 +156,6 @@ class DiffSinger(nn.Module):
         output_dict["features"] = features["features"]
 
         return output_dict
-
-
-from omegaconf import DictConfig
-from hydra.utils import instantiate
 
 
 class DiffSingerLightning(pl.LightningModule):

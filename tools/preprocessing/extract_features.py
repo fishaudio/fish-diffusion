@@ -15,14 +15,22 @@ from loguru import logger
 from mmengine import Config
 from tqdm import tqdm
 
-from fish_diffusion.modules.energy_extractors import ENERGY_EXTRACTORS
-from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
+# from fish_diffusion.modules.energy_extractors import ENERGY_EXTRACTORS
+# from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
 from fish_diffusion.modules.feature_extractors.base import BaseFeatureExtractor
-from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
+
+# from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.modules.pitch_extractors.builder import BasePitchExtractor
-from fish_diffusion.modules.vocoders import VOCODERS
+
+# from fish_diffusion.modules.vocoders import VOCODERS
 from fish_diffusion.modules.vocoders.nsf_hifigan.nsf_hifigan import NsfHifiGAN
 from fish_diffusion.utils.tensor import repeat_expand
+
+from box import Box
+from omegaconf import OmegaConf, DictConfig
+import hydra
+from tools.diffusion import resolvers
+from hydra.utils import instantiate
 
 model_caches = None
 
@@ -49,7 +57,7 @@ def init(
 
     text_features_extractor = None
     if hasattr(config.preprocessing, "text_features_extractor"):
-        text_features_extractor = FEATURE_EXTRACTORS.build(
+        text_features_extractor = instantiate(
             config.preprocessing.text_features_extractor
         )
         text_features_extractor.to(device)
@@ -60,19 +68,17 @@ def init(
         if config.preprocessing.pitch_extractor.type == "CrepePitchExtractor":
             torchcrepe.load.model(device, "full")
 
-        pitch_extractor = PITCH_EXTRACTORS.build(config.preprocessing.pitch_extractor)
+        pitch_extractor = instantiate(config.preprocessing.pitch_extractor)
 
     energy_extractor = None
     if hasattr(config.preprocessing, "energy_extractor"):
-        energy_extractor = ENERGY_EXTRACTORS.build(
-            config.preprocessing.energy_extractor
-        )
+        energy_extractor = instantiate(config.preprocessing.energy_extractor)
         energy_extractor.to(device)
         energy_extractor.eval()
 
     vocoder = None
     if hasattr(config.model, "vocoder"):
-        vocoder = VOCODERS.build(config.model.vocoder)
+        vocoder = instantiate(config.model.vocoder)
         vocoder.to(device)
         vocoder.eval()
 
