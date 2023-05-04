@@ -208,7 +208,6 @@ class HSFHifiGAN(pl.LightningModule):
             batch["audio"].float(),
         )
         mels = self.get_mels(audios)
-
         y_g_hat = self.generator(mels, pitches)
         y_g_hat_mel = self.get_mels(y_g_hat)[:, :, : mels.shape[2]]
 

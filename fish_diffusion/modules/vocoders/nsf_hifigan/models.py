@@ -405,7 +405,9 @@ class Generator(torch.nn.Module):
         self.conv_post.apply(init_weights)
 
     def forward(self, x, f0):
-        f0 = self.f0_upsamp(f0[:, None]).transpose(1, 2)  # bs,n,t
+        f0 = F.interpolate(
+            f0, size=x.shape[-1] * self.h.hop_size, mode="linear"
+        ).transpose(1, 2)
 
         har_source, _, _ = self.m_source(f0)
         har_source = har_source.transpose(1, 2)
