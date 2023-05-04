@@ -130,6 +130,8 @@ def transform_pipeline(pipeline, data):
             for k, *args in step["keys"]:
                 data[k] = data[k].transpose(*args)
         elif step["type"] == "UnSqueeze":
+            print(step["keys"])
+            print(data.keys())
             for k, *args in step["keys"]:
                 if isinstance(data[k], np.ndarray):
                     data[k] = np.expand_dims(data[k], *args)
