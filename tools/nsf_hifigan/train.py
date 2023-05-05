@@ -177,7 +177,7 @@ class HSFHifiGAN(pl.LightningModule):
         for mel_transform in self.multi_scale_mels:
             y_mel = self.get_mels(y, mel_transform)
             y_g_hat_mel = self.get_mels(y_g_hat, mel_transform)
-            loss_mel += F.smoo(y_mel, y_g_hat_mel)
+            loss_mel += F.l1_loss(y_mel, y_g_hat_mel)
 
         loss_mel /= len(self.multi_scale_mels)
 
