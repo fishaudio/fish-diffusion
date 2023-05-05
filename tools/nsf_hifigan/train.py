@@ -93,6 +93,23 @@ class HSFHifiGAN(pl.LightningModule):
 
         return [optim_g, optim_d], [scheduler_g, scheduler_d]
 
+    def generator_envelope_loss(self, y, y_hat):
+        def extract_envelope(signal, kernel_size=100, stride=50):
+            envelope = F.max_pool1d(signal, kernel_size=kernel_size, stride=stride)
+            return envelope
+
+        y_envelope = extract_envelope(y)
+        y_hat_envelope = extract_envelope(y_hat)
+
+        y_reverse_envelope = extract_envelope(-y)
+        y_hat_reverse_envelope = extract_envelope(-y_hat)
+
+        loss_envelope = F.l1_loss(y_envelope, y_hat_envelope) + F.l1_loss(
+            y_reverse_envelope, y_hat_reverse_envelope
+        )
+
+        return loss_envelope
+
     def training_step(self, batch, batch_idx):
         optim_g, optim_d = self.optimizers()
 
@@ -160,11 +177,21 @@ class HSFHifiGAN(pl.LightningModule):
         for mel_transform in self.multi_scale_mels:
             y_mel = self.get_mels(y, mel_transform)
             y_g_hat_mel = self.get_mels(y_g_hat, mel_transform)
-            loss_mel += F.l1_loss(y_mel, y_g_hat_mel)
+            loss_mel += F.smoo(y_mel, y_g_hat_mel)
 
         loss_mel /= len(self.multi_scale_mels)
 
         loss_aux = 0.5 * loss_stft + loss_mel
+
+        # L1 Envelope Loss
+        loss_envelope = self.generator_envelope_loss(y, y_g_hat)
+        self.log(
+            "train_loss_g_envelope",
+            loss_envelope,
+            on_step=True,
+            prog_bar=False,
+            sync_dist=True,
+        )
 
         # Discriminator Loss
         y_df_hat_r, y_df_hat_g, fmap_f_r, fmap_f_g = self.mpd(y, y_g_hat)
@@ -173,7 +200,14 @@ class HSFHifiGAN(pl.LightningModule):
         loss_fm_s = feature_loss(fmap_s_r, fmap_s_g)
         loss_gen_f, _ = generator_loss(y_df_hat_g)
         loss_gen_s, _ = generator_loss(y_ds_hat_g)
-        loss_gen_all = loss_gen_s + loss_gen_f + loss_fm_s + loss_fm_f + loss_aux * 45
+        loss_gen_all = (
+            loss_gen_s
+            + loss_gen_f
+            + loss_fm_s
+            + loss_fm_f
+            + loss_envelope
+            + loss_aux * 45
+        )
 
         self.manual_backward(loss_gen_all)
         optim_g.step()
