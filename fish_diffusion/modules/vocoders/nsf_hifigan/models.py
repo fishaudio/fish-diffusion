@@ -405,6 +405,9 @@ class Generator(torch.nn.Module):
         self.conv_post.apply(init_weights)
 
     def forward(self, x, f0):
+        if f0.ndim == 2:
+            f0 = f0[:, None]
+
         f0 = F.interpolate(
             f0, size=x.shape[-1] * self.h.hop_size, mode="linear"
         ).transpose(1, 2)
