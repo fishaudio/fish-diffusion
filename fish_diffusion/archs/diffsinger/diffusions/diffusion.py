@@ -10,6 +10,10 @@ from tqdm import tqdm
 from .builder import DENOISERS, DIFFUSIONS
 from .noise_predictor import NaiveNoisePredictor, PLMSNoisePredictor
 
+from hydra.utils import instantiate
+from omegaconf import OmegaConf
+from hydra.utils import get_class
+
 
 def get_noise_schedule_list(schedule_mode, timesteps, max_beta=0.01, s=0.008):
     if schedule_mode == "linear":
@@ -45,7 +49,8 @@ def noise_like(shape, device, repeat=False):
 class GaussianDiffusion(nn.Module):
     def __init__(
         self,
-        denoiser,
+        denoiser_target,
+        denoiser_config,
         mel_channels=128,
         noise_schedule="linear",
         timesteps=1000,
@@ -59,7 +64,9 @@ class GaussianDiffusion(nn.Module):
     ):
         super().__init__()
 
-        self.denoise_fn = DENOISERS.build(denoiser)
+        # self.denoise_fn = instantiate(denoiser)
+        DenoiserClass = get_class(denoiser_target)
+        self.denoise_fn = DenoiserClass(**denoiser_config)
         self.mel_bins = mel_channels
 
         betas = get_noise_schedule_list(noise_schedule, timesteps, max_beta, s)

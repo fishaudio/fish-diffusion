@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Optional
+from loguru import logger
 
 import numpy as np
 import torch
@@ -21,6 +22,7 @@ class NaiveDataset(Dataset):
         project_root = get_original_cwd()
         path = Path(project_root) / path
         self.paths = list_files(path, {".npy"}, recursive=True, sort=True)
+        logger.info(f"Found {len(self.paths)} npy files in {path}")
         self.dataset_path = Path(path)
         self.speaker_id = speaker_id
 
@@ -85,6 +87,7 @@ class NaiveSVCDataset(NaiveDataset):
                 "mel",
                 "contents",
                 "pitches",
+                "key_shift",
                 "speaker",
             ],
         ),
@@ -98,6 +101,7 @@ class NaiveSVCDataset(NaiveDataset):
             type="ToTensor",
             keys=[
                 ("time_stretch", torch.float32),
+                ("key_shift", torch.float32),
                 ("speaker", torch.int64),
             ],
         ),

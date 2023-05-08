@@ -5,16 +5,15 @@
 type: DiffSVC
 diffusion:
   # type: GaussianDiffusion
-  # _target_: fish_diffusion.archs.diffsinger.diffusions.diffusion.GaussianDiffusion
+  _target_: fish_diffusion.archs.diffsinger.diffusions.diffusion.GaussianDiffusion
   mel_channels: ${mel_channels:}
   noise_schedule: linear
   timesteps: 1000
   max_beta: 0.01
   s: 0.008
   noise_loss: smoothed-l1
-  denoiser:
-    # type: WaveNetDenoiser
-    _target_: fish_diffusion.modules.wavenet.WaveNet
+  denoiser_target: fish_diffusion.modules.wavenet.WaveNet
+  denoiser_config:
     mel_channels: ${mel_channels:}
     d_encoder: ${hidden_size:}
     residual_channels: 512
