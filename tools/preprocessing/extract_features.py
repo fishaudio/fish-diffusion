@@ -15,6 +15,7 @@ from loguru import logger
 
 # from mmengine import Config
 from tqdm import tqdm
+from hydra.utils import get_original_cwd
 
 # from fish_diffusion.modules.energy_extractors import ENERGY_EXTRACTORS
 # from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
@@ -28,10 +29,11 @@ from fish_diffusion.modules.vocoders.nsf_hifigan.nsf_hifigan import NsfHifiGAN
 from fish_diffusion.utils.tensor import repeat_expand
 
 from box import Box
-from omegaconf import OmegaConf, DictConfig
 import hydra
 from tools.diffusion import resolvers
 from hydra.utils import instantiate
+from omegaconf import OmegaConf, DictConfig
+from hydra.utils import get_original_cwd
 
 model_caches = None
 
@@ -66,7 +68,7 @@ def init(
 
     pitch_extractor = None
     if hasattr(config.preprocessing, "pitch_extractor"):
-        if config.preprocessing.pitch_extractor.type == "CrepePitchExtractor":
+        if config.pitch_extractor_type == "CrepePitchExtractor":
             torchcrepe.load.model(device, "full")
 
         pitch_extractor = instantiate(config.preprocessing.pitch_extractor)
@@ -142,7 +144,7 @@ def process(
 
     # Extract text features
     if text_features_extractor is not None:
-        if config.model.type == "DiffSinger":
+        if config.model_type == "DiffSinger":
             contents, phones2mel = text_features_extractor(audio_path, mel_length)
             sample["phones2mel"] = phones2mel.cpu().numpy()
         else:
@@ -168,12 +170,12 @@ def process(
     np.save(save_path, sample)
 
 
-def safe_process(args, config, audio_path: Path):
+def safe_process(config, audio_path: Path):
     try:
         # Baseline
         process(config, audio_path)
 
-        if args.no_augmentation or "augmentations" not in config.preprocessing:
+        if config.no_augmentation or "augmentations" not in config.preprocessing:
             return 1
 
         # Augmentation
@@ -207,60 +209,74 @@ def safe_process(args, config, audio_path: Path):
         logger.exception(e)
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
+# def parse_config():
+#     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--config", type=str, required=True)
-    parser.add_argument("--path", type=str, required=True)
-    parser.add_argument("--clean", action="store_true")
-    parser.add_argument("--num-workers", type=int, default=1)
-    parser.add_argument("--no-augmentation", action="store_true")
+#     parser.add_argument("--config", type=str, required=True)
+#     parser.add_argument("--path", type=str, required=True)
+#     parser.add_argument("--clean", action="store_true")
+#     parser.add_argument("--num-workers", type=int, default=1)
+#     parser.add_argument("--no-augmentation", action="store_true")
 
-    return parser.parse_args()
+#     return parser.parse_config()
 
 
-if __name__ == "__main__":
+@hydra.main(config_name=None, config_path="../../configs")
+def main(config: DictConfig) -> None:
+    resolvers.register_resolvers(OmegaConf=OmegaConf)
+
+    project_root = get_original_cwd()
+    OmegaConf.set_struct(config, False)  # Allow changes to the config
+    config.model.vocoder.project_root = project_root  # Add project_root to the config
+    OmegaConf.set_struct(config, True)
+
+    config = OmegaConf.to_container(config, resolve=True)
+    config = Box(config)
+    logger.debug(config.model)
+
     mp.set_start_method("spawn", force=True)
 
-    args = parse_args()
+    # config = parse_args()
 
-    logger.info(f"Using {args.num_workers} workers")
+    logger.info(f"Using {config.num_workers} workers")
 
     if torch.cuda.is_available():
         logger.info(f"Found {torch.cuda.device_count()} GPUs")
     else:
         logger.warning("No GPU found, using CPU")
 
-    if args.clean:
+    project_root = get_original_cwd()
+    path = Path(project_root) / config.path
+
+    if config.clean:
         logger.info("Cleaning *.npy files...")
 
-        files = list_files(args.path, {".npy"}, recursive=True, sort=True)
+        files = list_files(path, {".npy"}, recursive=True, sort=True)
         for f in files:
             f.unlink()
 
         logger.info("Done!")
 
-    config = Config.fromfile(args.config)
-    # files = list_files(args.path, AUDIO_EXTENSIONS, recursive=True, sort=False)
-    files = list(Path(args.path).glob("*/**/*.wav"))
+    # files = list_files(config.path, AUDIO_EXTENSIONS, recursive=True, sort=False)
+    files = list(path.glob("*/**/*.wav"))
     logger.info(f"Found {len(files)} files, processing...")
 
     # Shuffle files will balance the workload of workers
     random.shuffle(files)
     total_samples, failed = 0, 0
 
-    if args.num_workers <= 1:
+    if config.num_workers <= 1:
         for audio_path in tqdm(files):
-            i = safe_process(args, config, audio_path)
+            i = safe_process(config, audio_path)
             if isinstance(i, int):
                 total_samples += i
             else:
                 failed += 1
     else:
         with ProcessPoolExecutor(
-            max_workers=args.num_workers,
+            max_workers=config.num_workers,
         ) as executor:
-            params = [(args, config, audio_path) for audio_path in files]
+            params = [(config, audio_path) for audio_path in files]
 
             for i in tqdm(executor.map(safe_process, *zip(*params)), total=len(params)):
                 if isinstance(i, int):
@@ -274,3 +290,7 @@ if __name__ == "__main__":
         f"Augmented samples: {total_samples} (x{total_samples / len(files):.2f})"
     )
     logger.info(f"Failed: {failed}")
+
+
+if __name__ == "__main__":
+    main()

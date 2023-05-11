@@ -10,10 +10,9 @@ import torch
 from fish_diffusion.utils.audio import dynamic_range_compression
 from fish_diffusion.utils.pitch_adjustable_mel import PitchAdjustableMelSpectrogram
 
-from ..builder import VOCODERS
+# from ..builder import VOCODERS
 from .models import AttrDict, Generator
 
-from hydra.utils import get_original_cwd
 from pathlib import Path
 
 
@@ -25,6 +24,7 @@ class NsfHifiGAN(pl.LightningModule):
 
     def __init__(
         self,
+        project_root: str,
         checkpoint_path: str = "checkpoints/nsf_hifigan/model",
         config_file: Optional[str] = None,
         use_natural_log: bool = True,
@@ -32,7 +32,7 @@ class NsfHifiGAN(pl.LightningModule):
     ):
         super().__init__()
 
-        project_root = get_original_cwd()
+        # project_root = get_original_cwd()
         checkpoint_path = Path(project_root) / checkpoint_path
         logger.info(f"Loading NSF-HiFi-GAN from {checkpoint_path}")
 

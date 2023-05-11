@@ -7,11 +7,8 @@ import torch.nn.functional as F
 from torch import nn
 from tqdm import tqdm
 
-from .builder import DENOISERS, DIFFUSIONS
 from .noise_predictor import NaiveNoisePredictor, PLMSNoisePredictor
 
-from hydra.utils import instantiate
-from omegaconf import OmegaConf
 from hydra.utils import get_class
 
 
@@ -45,7 +42,6 @@ def noise_like(shape, device, repeat=False):
     return repeat_noise() if repeat else noise()
 
 
-@DIFFUSIONS.register_module()
 class GaussianDiffusion(nn.Module):
     def __init__(
         self,

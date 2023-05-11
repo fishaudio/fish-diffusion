@@ -9,12 +9,13 @@ defaults:
 preprocessing:
   text_features_extractor:
     _target_: fish_diffusion.modules.feature_extractors.hubert_soft.HubertSoft
-    type: HubertSoft
   pitch_extractor:
     _target_: fish_diffusion.modules.pitch_extractors.parsel_mouth.ParselMouthPitchExtractor
-    type: ParselMouthPitchExtractor
     keep_zeros: false
 
+model_type : DiffSVC
+text_features_extractor_type: HubertSoft
+pitch_extractor_type: ParselMouthPitchExtractor
 pretrained: null
 resume: null
 tensorboard: false
@@ -22,3 +23,7 @@ resume_id: null
 entity: null
 name: null
 only_train_speaker_embeddings: falsex 
+path: dataset
+clean: false
+num_workers: 8
+no_augmentation: true

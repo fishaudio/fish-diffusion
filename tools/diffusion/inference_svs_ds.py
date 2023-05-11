@@ -11,8 +11,10 @@ from loguru import logger
 from mmengine import Config
 
 from fish_diffusion.archs.diffsinger import DiffSingerLightning
-from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
+
+# from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.utils.tensor import repeat_expand
+from hydra.utils import instantiate
 
 
 @torch.no_grad()
@@ -61,7 +63,7 @@ def inference(
     model.to(device)
     model.eval()
 
-    pitch_extractor = PITCH_EXTRACTORS.build(config.preprocessing.pitch_extractor)
+    pitch_extractor = instantiate(config.preprocessing.pitch_extractor)
     assert pitch_extractor is not None, "Pitch extractor not found"
 
     # Load dictionary

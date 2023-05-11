@@ -1,10 +1,10 @@
 import numpy as np
 import pyworld
 
-from .builder import PITCH_EXTRACTORS, BasePitchExtractor
+from .builder import BasePitchExtractor
 
 
-@PITCH_EXTRACTORS.register_module()
+# @PITCH_EXTRACTORS.register_module()
 class HarvestPitchExtractor(BasePitchExtractor):
     def __call__(self, x, sampling_rate=44100, pad_to=None):
         """Extract pitch using world harvest.
@@ -34,7 +34,7 @@ class HarvestPitchExtractor(BasePitchExtractor):
         return self.post_process(x, sampling_rate, f0, pad_to)
 
 
-@PITCH_EXTRACTORS.register_module()
+# @PITCH_EXTRACTORS.register_module()
 class DioPitchExtractor(BasePitchExtractor):
     def __call__(self, x, sampling_rate=44100, pad_to=None):
         """Extract pitch using world dio.

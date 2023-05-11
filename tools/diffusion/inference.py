@@ -17,10 +17,13 @@ from torch import nn
 from fish_diffusion.archs.diffsinger.diffsinger import DiffSingerLightning
 from fish_diffusion.modules.energy_extractors import ENERGY_EXTRACTORS
 from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
-from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
+
+# from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.utils.audio import separate_vocals, slice_audio
 from fish_diffusion.utils.inference import load_checkpoint
 from fish_diffusion.utils.tensor import repeat_expand
+
+from hydra.utils import instantiate
 
 
 class SVCInference(nn.Module):
@@ -32,9 +35,7 @@ class SVCInference(nn.Module):
         self.text_features_extractor = FEATURE_EXTRACTORS.build(
             config.preprocessing.text_features_extractor
         )
-        self.pitch_extractor = PITCH_EXTRACTORS.build(
-            config.preprocessing.pitch_extractor
-        )
+        self.pitch_extractor = instantiate(config.preprocessing.pitch_extractor)
 
         if hasattr(config.preprocessing, "energy_extractor"):
             self.energy_extractor = ENERGY_EXTRACTORS.build(

@@ -11,6 +11,7 @@ from fish_diffusion.datasets.utils import build_loader_from_config
 from tools.diffusion import resolvers
 from hydra.utils import instantiate
 from box import Box
+from hydra.utils import get_original_cwd
 
 torch.set_float32_matmul_precision("medium")
 
@@ -22,6 +23,10 @@ def main(cfg: DictConfig) -> None:
     from loguru import logger
 
     resolvers.register_resolvers(OmegaConf=OmegaConf)
+    project_root = get_original_cwd()
+    OmegaConf.set_struct(cfg, False)  # Allow changes to the config
+    cfg.model.vocoder.project_root = project_root  # Add project_root to the config
+    OmegaConf.set_struct(cfg, True)
 
     cfg = OmegaConf.to_container(cfg, resolve=True)
     cfg = Box(cfg)

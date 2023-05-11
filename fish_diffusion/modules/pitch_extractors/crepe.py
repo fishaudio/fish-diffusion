@@ -6,7 +6,7 @@ import torchcrepe
 from torch import nn
 from torch.nn import functional as F
 
-from .builder import PITCH_EXTRACTORS, BasePitchExtractor
+from fish_diffusion.modules.pitch_extractors.builder import BasePitchExtractor
 
 
 class MaskedAvgPool1d(nn.Module):
@@ -148,7 +148,6 @@ class MaskedMedianPool1d(nn.Module):
         return median_pooled
 
 
-@PITCH_EXTRACTORS.register_module()
 class CrepePitchExtractor(BasePitchExtractor):
     def __init__(
         self,

@@ -1,10 +1,7 @@
 import numpy as np
 import torch
-from mmengine import Registry
 
 from fish_diffusion.utils.tensor import interpolate, repeat_expand
-
-PITCH_EXTRACTORS = Registry("pitch_extractors")
 
 
 class BasePitchExtractor:
