@@ -14,7 +14,7 @@ After installing Miniconda, open "Anaconda", in my case I have Windows so I pres
 
 Then you will need to type
 
-    conda create --name Fish
+    conda create --name Fish python=3.10
 
   Once you have done that, a environment called Fish will be created, to access it you need to type
 
