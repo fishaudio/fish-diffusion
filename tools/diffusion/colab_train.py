@@ -2,6 +2,7 @@ import argparse
 import glob
 import hashlib
 import logging
+import math
 import os
 import re
 import shutil
@@ -53,10 +54,9 @@ def copy_files(src, dest):
                 src_stat = os.stat(src_file)
                 if os.path.exists(dest_file):
                     dest_stat = os.stat(dest_file)
-                    if (
-                        src_stat.st_size == dest_stat.st_size
-                        and src_stat.st_mtime <= dest_stat.st_mtime
-                    ):
+                    if src_stat.st_size == dest_stat.st_size and math.floor(
+                        src_stat.st_mtime
+                    ) <= math.floor(dest_stat.st_mtime):
                         continue
                     src_hash = hashlib.md5(open(src_file, "rb").read()).hexdigest()
                     dest_hash = hashlib.md5(open(dest_file, "rb").read()).hexdigest()
