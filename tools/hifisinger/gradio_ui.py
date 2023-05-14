@@ -21,7 +21,6 @@ README = GLOBAL_CONFIG["readme"]
 MAX_MIXING_SPEAKERS = GLOBAL_CONFIG["max_mixing_speakers"]
 MODELS = GLOBAL_CONFIG["models"]
 
-
 # Speaker mixing component
 def get_speakers_layout(init_speakers=[], default_speaker=None):
     with gr.Blocks():
