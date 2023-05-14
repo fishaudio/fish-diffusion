@@ -3,10 +3,10 @@ import glob
 import hashlib
 import logging
 import os
+import re
 import shutil
 import subprocess
 import time
-import re
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", required=True, help="path to config file")

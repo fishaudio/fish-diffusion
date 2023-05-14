@@ -52,7 +52,6 @@ for file in tqdm.tqdm(
     list_files("dataset/mfa-data/english/LJSpeech/normed", ".wav", recursive=True)
 ):
     try:
-
         textgrid = tg.TextGrid()
         textgrid.read(str(file.with_suffix(".TextGrid")))
         words = textgrid[0]
