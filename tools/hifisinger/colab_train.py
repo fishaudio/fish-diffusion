@@ -150,7 +150,8 @@ while True:
                     reverse=True,
                 )
                 for checkpoint in checkpoints[4:]:
-                    os.remove(checkpoint)
+                    if ".ipynb_checkpoints" not in checkpoint:
+                        os.remove(checkpoint)
             else:
                 logging.warning(
                     "No checkpoints folder found in %s yet, skipping cleanup", d
