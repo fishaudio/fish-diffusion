@@ -63,14 +63,14 @@
 # 参考 https://pytorch.org/get-started/locally/
 conda install "pytorch>=2.0.0" "torchvision>=0.15.0" "torchaudio>=2.0.0" pytorch-cuda=11.8 -c pytorch -c nvidia
 
-# 安装 Poetry 依赖管理工具, 如果已安装则跳过
-# 参考 https://python-poetry.org/docs/#installation
-curl -sSL https://install.python-poetry.org | python3 -
+# 安装 PDM 依赖管理工具, 如果已安装则跳过
+# 参考 https://pdm.fming.dev/latest/
+curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
 
 # 安装依赖 (推荐)
-poetry install
+pdm install
 
-# 如果 Poetry 不可用, 或者速度较慢, 可以使用 pip 安装依赖
+# 如果 PDM 不可用, 或者速度较慢, 可以使用 pip 安装依赖
 pip install -r requirements.txt
 pip install -e .
 ```
@@ -167,7 +167,7 @@ python tools/diffusion/diff_svc_converter.py --config configs/svc_hubert_soft_di
 
 ## 参与本项目
 如果你有任何问题, 请提交 issue 或 pull request.  
-你应该在提交 pull request 之前运行 `tools/lint.sh`
+你应该在提交 pull request 之前运行 `pdm run lint`
 
 实时预览文档
 ```bash
