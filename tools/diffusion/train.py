@@ -2,8 +2,8 @@ import pytorch_lightning as pl
 import torch
 from omegaconf import OmegaConf, DictConfig
 import hydra
-from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
-
+from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.loggers.wandb import WandbLogger
 from fish_diffusion.archs.diffsinger import DiffSingerLightning
 from fish_diffusion.datasets.utils import build_loader_from_config
 
@@ -28,8 +28,8 @@ def main(cfg: DictConfig) -> None:
     cfg.model.vocoder.project_root = project_root  # Add project_root to the config
     OmegaConf.set_struct(cfg, True)
 
-    cfg = OmegaConf.to_container(cfg, resolve=True)
-    cfg = Box(cfg)
+    cfg = OmegaConf.to_container(cfg, resolve=True)  # type: ignore
+    cfg = Box(cfg)  # type: ignore
 
     pl.seed_everything(594461, workers=True)
     model = DiffSingerLightning(cfg)

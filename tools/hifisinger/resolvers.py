@@ -8,6 +8,9 @@ import sys
 
 from fish_diffusion.modules.vocoders import NsfHifiGAN
 
+# def pitch_to_scale(pitch):
+#     return pitch_to_scale(pitch)
+
 
 def create_ddp_strategy():
     if torch.cuda.is_available() and torch.cuda.device_count() > 1:
@@ -35,6 +38,9 @@ def register_resolvers(OmegaConf):
     OmegaConf.register_new_resolver("mel_channels", lambda: 128)
     OmegaConf.register_new_resolver("sampling_rate", lambda: 44100)
     OmegaConf.register_new_resolver("hidden_size", lambda: 256)
+    OmegaConf.register_new_resolver("n_fft", lambda: 2048)
+    OmegaConf.register_new_resolver("hop_length", lambda: 256)
+    OmegaConf.register_new_resolver("win_length", lambda: 2048)
     OmegaConf.register_new_resolver("pitch_to_scale", lambda: pitch_to_scale)
     OmegaConf.register_new_resolver("create_ddp_strategy", create_ddp_strategy)
     OmegaConf.register_new_resolver("create_lr_lambda", create_lr_lambda)

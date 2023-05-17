@@ -1,0 +1,44 @@
+type: HiFiSVC
+hidden_size: ${hidden_size:}
+text_encoder:
+  _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
+  input_size: 768
+  output_size: ${hidden_size:}
+speaker_encoder:
+  _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
+  input_size: 10
+  output_size: ${hidden_size:}
+  use_embedding: true
+pitch_encoder:
+  _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
+  input_size: 1
+  output_size: ${hidden_size:}
+  use_embedding: false
+  preprocessing: ${pitch_to_log:}
+pitch_shift_encoder:
+  _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
+  input_size: 1
+  output_size: 256
+  use_embedding: false
+energy_encoder:
+  _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
+  input_size: 1
+  output_size: 256
+  use_embedding: false
+encoder:
+  _target_: fish_diffusion.modules.RefineGAN
+  sampling_rate: ${sampling_rate:}
+  hop_length: ${hop_length:}
+  downsample_rates: [2, 2, 8, 8]
+  upsample_rates: [8, 8, 2, 2]
+  leaky_relu_slope: 0.2
+  num_mels: ${hidden_size:}
+  start_channels: 16
+mpd:
+  periods: [2, 3, 5, 7, 11]
+mrd:
+  resolutions: [[1024, 120, 600], [2048, 240, 1200], [512, 50, 240]]
+multi_scale_mels:
+  - '${n_fft:}, ${hop_length:}, ${win_length:}'
+  - [2048, 270, 1080]
+  - [4096, 540, 2160]

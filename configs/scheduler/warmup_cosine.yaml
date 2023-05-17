@@ -1,2 +1,9 @@
 _target_: torch.optim.lr_scheduler.LambdaLR
-lr_lambda: ${create_lr_lambda:}
+# lr_lambda: ${create_lr_lambda:}
+lr_lambda: 
+  _target_: fish_diffusion.utils.lr_schedulers.create_lr_lambda
+  warm_up_steps: 1000
+  lr_min: 1e-4
+  lr_max: 8e-4
+  lr_start: 1e-5
+  max_decay_steps: 150000

@@ -1,0 +1,5 @@
+text_features_extractor:
+  _target_: fish_diffusion.modules.feature_extractors.hubert_soft.HubertSoft
+pitch_extractor:
+  _target_: fish_diffusion.modules.pitch_extractors.parsel_mouth.ParselMouthPitchExtractor
+  keep_zeros: false

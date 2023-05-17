@@ -1,6 +1,3 @@
-# sampling_rate: 44100
-# mel_channels: 128
-# hidden_size: 256
 
 type: DiffSVC
 diffusion:
@@ -42,7 +39,10 @@ pitch_encoder:
   input_size: 1
   output_size: ${hidden_size:}
   use_embedding: false
-  preprocessing: ${pitch_to_scale:}
+  # preprocessing: ${pitch_to_scale:}
+  preprocessing:
+    _target_: fish_diffusion.utils.pitch.pitch_to_scale
+    _partial_: true
 vocoder:
   _target_: fish_diffusion.modules.vocoders.nsf_hifigan.nsf_hifigan.NsfHifiGAN
   type: NsfHifiGAN
