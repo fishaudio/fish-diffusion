@@ -45,6 +45,12 @@ model:
     sampling_rate: 44100
     mel_channels: 128
     use_natural_log: false
+preprocessing:
+  text_features_extractor:
+    _target_: fish_diffusion.modules.feature_extractors.hubert_soft.HubertSoft
+  pitch_extractor:
+    _target_: fish_diffusion.modules.pitch_extractors.parsel_mouth.ParselMouthPitchExtractor
+    keep_zeros: false
 dataset:
   train:
     _target_: fish_diffusion.datasets.naive.NaiveSVCDataset
@@ -68,7 +74,7 @@ dataloader:
 scheduler:
   _target_: torch.optim.lr_scheduler.LambdaLR
   lr_lambda:
-    _target_: fish_diffusion.utils.lr_schedulers.create_lr_lambda
+    _target_: fish_diffusion.schedulers.warmup_cosine_scheduler.LambdaWarmUpCosineScheduler
     warm_up_steps: 1000
     lr_min: 0.0001
     lr_max: 0.0008
@@ -99,3 +105,17 @@ trainer:
   - _target_: pytorch_lightning.callbacks.LearningRateMonitor
     logging_interval: step
   strategy: null
+model_type: DiffSVC
+text_features_extractor_type: HubertSoft
+pitch_extractor_type: ParselMouthPitchExtractor
+pretrained: null
+resume: null
+tensorboard: false
+resume_id: null
+entity: null
+name: null
+only_train_speaker_embeddings: false
+path: dataset
+clean: false
+num_workers: 8
+no_augmentation: true
