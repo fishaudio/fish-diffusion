@@ -1,64 +1,73 @@
-[tool.poetry]
+[project]
 name = "fish-diffusion"
-version = "0.1.0"
-description = ""
-authors = ["Lengyue <lengyue@lengyue.me>"]
-license = "Apache"
+version = "2.1.0"
+description = "An easy to understand TTS / SVS / SVC framework"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Lengyue", email = "lengyue@lengyue.me"},
+]
+requires-python = ">=3.10,<4.0"
+dependencies = [
+    "praat-parselmouth<1.0.0,>=0.4.3",
+    "soundfile<1.0.0,>=0.11.0",
+    "librosa<1.0.0,>=0.9.1",
+    "numba<1.0.0,>=0.56.4",
+    "fish-audio-preprocess<1.0.0,>=0.1.9",
+    "wandb<1.0.0,>=0.13.9",
+    "transformers<5.0.0,>=4.27.4",
+    "torchcrepe>=0.0.19",
+    "mmengine<1.0.0,>=0.4.0",
+    "loguru<1.0.0,>=0.6.0",
+    "click<9.0.0,>=8.1.3",
+    "tensorboard<3.0.0,>=2.11.2",
+    "openai-whisper<20230125,>=20230124",
+    "pypinyin<1.0.0,>=0.48.0",
+    "TextGrid<2.0,>=1.5",
+    "pyworld<1.0.0,>=0.3.2",
+    "pykakasi<3.0.0,>=2.2.1",
+    "gradio<4.0.0,>=3.24.1",
+    "onnxruntime<2.0.0,>=1.14.0",
+    "flask<3.0.0,>=2.2.3",
+    "flask-cors<4.0.0,>=3.0.10",
+    "natsort<9.0.0,>=8.3.1",
+    "torch<3.0.0,>=2.0.0",
+    "torchvision<1.0.0,>=0.15.1",
+    "torchaudio<3.0.0,>=2.0.0",
+    "pytorch-lightning<3.0.0,>=2.0.2",
+    "fastapi==0.88.0",
+]
 
-packages = [{ include = "fish_diffusion" }]
+[tool.pdm]
+[tool.pdm.build]
+includes = ["fish_diffusion"]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-praat-parselmouth = "^0.4.3"
-soundfile = "^0.11.0"
-librosa = "^0.9.1"
-numba = "^0.56.4"
-fish-audio-preprocess = "^0.1.9"
-wandb = "^0.13.9"
-transformers = "^4.27.4"
-torchcrepe = "^0.0.17"
-mmengine = "^0.4.0"
-loguru = "^0.6.0"
-click = "^8.1.3"
-tensorboard = "^2.11.2"
-openai-whisper = "^20230124"
-pypinyin = "^0.48.0"
-TextGrid = "^1.5"
-pyworld = "^0.3.2"
-pykakasi = "^2.2.1"
-gradio = "^3.24.1"
-onnxruntime = "^1.14.0"
-flask = "^2.2.3"
-flask-cors = "^3.0.10"
-natsort = "^8.3.1"
-torch = { version = "^2.0.0", source = "torch-cu118" }
-torchvision = { version = "^0.15.1", source = "torch-cu118" }
-torchaudio = { version = "^2.0.0", source = "torch-cu118" }
-pytorch-lightning = "^2.0.2"
-fastapi = "=0.88.0"
-
-[tool.poetry.group.dev.dependencies]
-isort = "^5.11.4"
-black = "^22.12.0"
-ipdb = "^0.13.13"
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-furo = "^2022.12.7"
-sphinx-autobuild = "^2021.3.14"
-myst-parser = "^0.18.1"
-
-[[tool.poetry.source]]
-name = "torch-cu118"
-url = "https://download.pytorch.org/whl/cu118"
-default = false
-secondary = true
+[tool.pdm.dev-dependencies]
+dev = [
+    "isort>=5.12.0",
+    "black>=22.12.0",
+    "pytest>=7.3.1",
+    "ipdb>=0.13.13",
+]
+docs = [
+    "furo>=2023.3.27",
+    "sphinx-autobuild>=2021.3.14",
+    "myst-parser>=0.18.1",
+]
 
 [build-system]
-requires = ["poetry-core>=1.2.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm.scripts]
+lint = { shell = "black . && isort ." }
+test = { shell = "PYTHONPATH=. pytest -n=auto -q tests" }
+docs = { shell = "sphinx-autobuild docs docs/_build/html" }
+
+[[tool.pdm.source]]
+type = "find_links"
+name = "torch-cu118"
+url = "https://download.pytorch.org/whl/cu118"
+verify_ssl = true
 
 [tool.isort]
 profile = "black"

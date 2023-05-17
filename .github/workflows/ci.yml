@@ -14,15 +14,15 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
-      - name: Install dependencies
+      - name: Install Dependecies
         run: |
-          pip install poetry==1.4.0
-          poetry config virtualenvs.create false
-          poetry install
+          pip3 install --upgrade pip && \
+          pip3 install pdm && \
+          pdm sync
       - name: Lint with black and isort
         run: |
-          poetry run python -m black . --check
-          poetry run python -m isort . --check --profile black
+          pdm run black . --check
+          pdm run isort . --check
 
   docs:
     runs-on: ubuntu-latest
@@ -37,9 +37,9 @@ jobs:
           python-version: "3.10"
       - name: Install dependencies
         run: |
-          pip install poetry==1.4.0
-          poetry config virtualenvs.create false
-          poetry install --with docs
+          pip3 install --upgrade pip && \
+          pip3 install pdm && \
+          pdm sync
       - name: Build docs
         run: cd docs && make html
       - name: Deploy

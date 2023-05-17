@@ -13,16 +13,16 @@ RUN useradd -rm -d /home/fish -s /bin/bash -g root -G sudo -u 1000 fish && \
     mkdir /run/sshd
 EXPOSE 22
 
-# Install Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
+# Install PDM
+RUN curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
 ENV PATH="/root/.local/bin:${PATH}"
-RUN poetry config virtualenvs.create false
 
 # Install dependencies
 WORKDIR /app
 
 RUN git clone https://github.com/fishaudio/fish-diffusion.git --depth 1 && cd fish-diffusion && \
-    poetry install && rm -rf ~/.cache/pypoetry
+    pdm sync && rm -rf ~/.cache/pdm
+ENV PATH="/app/fish-diffusion/.venv/bin:${PATH}"
 
 WORKDIR /app/fish-diffusion
 RUN python3 tools/download_nsf_hifigan.py --agree-license
