@@ -68,7 +68,7 @@ conda install "pytorch>=2.0.0" "torchvision>=0.15.0" "torchaudio>=2.0.0" pytorch
 curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
 
 # 安装依赖 (推荐)
-pdm install
+pdm sync
 
 # 如果 PDM 不可用, 或者速度较慢, 可以使用 pip 安装依赖
 pip install -r requirements.txt

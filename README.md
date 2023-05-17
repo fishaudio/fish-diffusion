@@ -67,7 +67,7 @@ conda install "pytorch>=2.0.0" "torchvision>=0.15.0" "torchaudio>=2.0.0" pytorch
 curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
 
 # Install the project dependencies
-pdm install
+pdm sync
 ```
 
 ## Vocoder preparation
