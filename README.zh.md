@@ -171,7 +171,7 @@ python tools/diffusion/diff_svc_converter.py --config configs/svc_hubert_soft_di
 
 实时预览文档
 ```bash
-sphinx-autobuild docs docs/_build/html
+pdm run docs
 ```
 
 

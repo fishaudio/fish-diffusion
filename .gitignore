@@ -154,3 +154,4 @@ exp_*.sh
 .vscode
 exported
 pitches_editor
+.pdm-python

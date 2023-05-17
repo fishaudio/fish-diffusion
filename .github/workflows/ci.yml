@@ -41,7 +41,7 @@ jobs:
           pip3 install pdm && \
           pdm sync
       - name: Build docs
-        run: cd docs && make html
+        run: pdm run sphinx-build docs docs/_build
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
