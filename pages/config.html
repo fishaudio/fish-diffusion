@@ -1,0 +1,473 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="FAQ" href="faq.html" /><link rel="prev" title="Quick FishSVC Guide" href="guide.html" />
+
+    <link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/fishaudio/fish-diffusion@main/images/logo_512x512.png"/><!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
+        <title>Configuration - Fish Diffusion documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     Wiki is under construction, we welcome any contribution! 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">Fish Diffusion  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand centered" href="../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="https://cdn.jsdelivr.net/gh/fishaudio/fish-diffusion@main/images/logo_512x512.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Fish Diffusion  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="guide.html">Quick FishSVC Guide</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Configuration</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/fishaudio/fish-diffusion/edit/main/docs/pages/config.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="configuration">
+<h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading">#</a></h1>
+<p>Since fish diffusion supports various modules, writing a good config file is essential. There are many examples in the configs folder.<br />
+To begin with, you should create a config file <code class="docutils literal notranslate"><span class="pre">exp_xxxxxx.py</span></code> in the <code class="docutils literal notranslate"><span class="pre">configs</span></code> folder with the following code:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">_base_</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;./_base_/archs/diff_svc_v2.py&quot;</span><span class="p">,</span>  <span class="c1"># Using Diff SVC v2 architecture</span>
+    <span class="s2">&quot;./_base_/trainers/base.py&quot;</span><span class="p">,</span>  <span class="c1"># Use default trainer (with DDP + fp16)</span>
+    <span class="s2">&quot;./_base_/schedulers/warmup_cosine.py&quot;</span><span class="p">,</span>  <span class="c1"># Use Cosine Learning Rate Scheulder</span>
+    <span class="s2">&quot;./_base_/datasets/audio_folder.py&quot;</span><span class="p">,</span>  <span class="c1"># Use the default dataset and dataloader</span>
+<span class="p">]</span>
+
+</pre></div>
+</div>
+<section id="preprocessing">
+<h2>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this heading">#</a></h2>
+<p>Preprocessing config currently includes two components: <code class="docutils literal notranslate"><span class="pre">text_features_extractor</span></code> and <code class="docutils literal notranslate"><span class="pre">pitch_extractor.</span></code></p>
+<p>Stable feature extractors are <code class="docutils literal notranslate"><span class="pre">HubertSoft</span></code>, <code class="docutils literal notranslate"><span class="pre">ChineseHubertSoft</span></code>, and <code class="docutils literal notranslate"><span class="pre">ContentVec</span></code>. Although there is a <code class="docutils literal notranslate"><span class="pre">Chinese</span></code> in the second one, it works on multilingual and outperforms the vanilla one.</p>
+<p>To extract the pitch, you can choose <code class="docutils literal notranslate"><span class="pre">ParselMouthPitchExtractor</span></code> or <code class="docutils literal notranslate"><span class="pre">CrepePitchExtractor</span></code>. ParselMouth is good enough in most cases, and it’s literally 100x faster than Crepe. However, in some edge cases, Crepe is more robust and stable. For more results, see <a class="reference external" href="https://github.com/fishaudio/fish-diffusion/wiki/Pitch-Extractors">Pitch Extractors</a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># HubertSoft Example</span>
+<span class="n">preprocessing</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">text_features_extractor</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;HubertSoft&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">pitch_extractor</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;ParselMouthPitchExtractor&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># ChineseHubertSoft Example</span>
+<span class="n">text_features_extractor</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+    <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;ChineseHubertSoft&quot;</span><span class="p">,</span>
+    <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Use Lengyue&#39;s Chinese Hubert Soft Model</span>
+    <span class="n">gate_size</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>  <span class="c1"># Controlling how much information can be kept. Too large will lead to information leaking.</span>
+<span class="p">),</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>Note: You need to rerun the preprocessing command after you change the preprocessing config.</p>
+</div></blockquote>
+</section>
+<section id="dataset">
+<h2>Dataset<a class="headerlink" href="#dataset" title="Permalink to this heading">#</a></h2>
+<p>Be default, <code class="docutils literal notranslate"><span class="pre">./_base_/datasets/naive_svc.py</span></code> will try to load data from <code class="docutils literal notranslate"><span class="pre">dataset/train</span></code> and <code class="docutils literal notranslate"><span class="pre">dataset/valid</span></code>. However, if you want to train a multi speakers model, you should refer to <code class="docutils literal notranslate"><span class="pre">svc_hubert_soft_multi_speakers.py</span></code>. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">train</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">_delete_</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Delete the default train dataset</span>
+        <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;ConcatDataset&quot;</span><span class="p">,</span>  <span class="c1"># You want to contact multiple datasets</span>
+        <span class="n">datasets</span><span class="o">=</span><span class="p">[</span>
+            <span class="nb">dict</span><span class="p">(</span>
+                <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;NaiveSVCDataset&quot;</span><span class="p">,</span>
+                <span class="n">path</span><span class="o">=</span><span class="s2">&quot;dataset/speaker_0&quot;</span><span class="p">,</span>  <span class="c1"># First speaker&#39;s data folder</span>
+                <span class="n">speaker_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>  <span class="c1"># Dataset for the first speaker</span>
+            <span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span>
+                <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;NaiveSVCDataset&quot;</span><span class="p">,</span>
+                <span class="n">path</span><span class="o">=</span><span class="s2">&quot;dataset/speaker_1&quot;</span><span class="p">,</span>
+                <span class="n">speaker_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">],</span>
+        <span class="c1"># Are there any other ways to do this?</span>
+        <span class="n">collate_fn</span><span class="o">=</span><span class="n">NaiveSVCDataset</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">valid</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;NaiveSVCDataset&quot;</span><span class="p">,</span>  <span class="c1"># Only use one speaker to validate</span>
+        <span class="n">path</span><span class="o">=</span><span class="s2">&quot;dataset/valid&quot;</span><span class="p">,</span>
+        <span class="n">speaker_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">speaker_encoder</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">input_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>  <span class="c1"># 2 speakers</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+</pre></div>
+</div>
+<p>Since this is a Python script, you can load dataset from any folder you like.<br />
+But… What if I have 100+ speakers? I can’t setup manually and I don’t know how to write Python code :(<br />
+Don’t worry. You can use the following folder structure and scripts:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>dataset
+├───train
+│   ├───speaker0 # Train data for speaker 0
+│   |   └───xxx1-xxx1.wav
+│   └───speaker1
+│       └───xxx1-xxx1.wav
+└───valid
+    ├───speaker0  # Test data for speaker 0. You can pick some from other speakers
+    |   └───xxx1-xxx1.wav
+    └───speaker1
+        └───xxx1-xxx1.wav
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fish_diffusion.datasets.utils</span> <span class="kn">import</span> <span class="n">get_speaker_map_from_subfolder</span><span class="p">,</span> <span class="n">get_datasets_from_subfolder</span>
+
+<span class="n">speaker_mapping</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="n">speaker_mapping</span> <span class="o">=</span> <span class="n">get_speaker_map_from_subfolder</span><span class="p">(</span><span class="s2">&quot;dataset/train&quot;</span><span class="p">,</span> <span class="n">speaker_mapping</span><span class="p">)</span> <span class="c1"># Update speaker_mapping using subfolders in `dataset/train`.</span>
+
+<span class="c1"># This will update speaker_mapping to {&#39;speaker0&#39;: 0, &#39;speaker&#39;: 1}</span>
+
+<span class="n">train_datasets</span> <span class="o">=</span> <span class="n">get_datasets_from_subfolder</span><span class="p">(</span><span class="s2">&quot;NaiveSVCDataset&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset/train&quot;</span><span class="p">,</span> <span class="n">speaker_mapping</span><span class="p">)</span>  <span class="c1"># Build datasets manually.</span>
+<span class="n">valid_datasets</span> <span class="o">=</span> <span class="n">get_datasets_from_subfolder</span><span class="p">(</span><span class="s2">&quot;NaiveSVCDataset&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset/valid&quot;</span><span class="p">,</span> <span class="n">speaker_mapping</span><span class="p">)</span>  <span class="c1"># Build datasets manually.</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">train</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">_delete_</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Delete the default train dataset</span>
+        <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;ConcatDataset&quot;</span><span class="p">,</span>  <span class="c1"># You want to contact multiple datasets</span>
+        <span class="n">datasets</span><span class="o">=</span><span class="n">train_datasets</span><span class="p">,</span>
+        <span class="c1"># Are there any other ways to do this?</span>
+        <span class="n">collate_fn</span><span class="o">=</span><span class="n">NaiveSVCDataset</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">valid</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">_delete_</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Delete the default train dataset</span>
+        <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;ConcatDataset&quot;</span><span class="p">,</span>  <span class="c1"># You want to contact multiple datasets</span>
+        <span class="n">datasets</span><span class="o">=</span><span class="n">valid_datasets</span><span class="p">,</span>
+        <span class="c1"># Are there any other ways to do this?</span>
+        <span class="n">collate_fn</span><span class="o">=</span><span class="n">NaiveSVCDataset</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">speaker_encoder</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">input_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">speaker_mapping</span><span class="p">),</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="data-augmentation">
+<h2>Data Augmentation<a class="headerlink" href="#data-augmentation" title="Permalink to this heading">#</a></h2>
+<p>To enable data augmentation, you can reference to the following config:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">preprocessing</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="o">...</span>
+    <span class="n">augmentations</span><span class="o">=</span><span class="p">[</span>
+        <span class="nb">dict</span><span class="p">(</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;FixedPitchShifting&quot;</span><span class="p">,</span>
+            <span class="n">key_shifts</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">5.</span><span class="p">,</span> <span class="mf">5.</span><span class="p">],</span>
+            <span class="n">probability</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="nb">dict</span><span class="p">(</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;RandomPitchShifting&quot;</span><span class="p">,</span>
+            <span class="n">key_shifts</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">5.</span><span class="p">,</span> <span class="mf">5.</span><span class="p">],</span>
+            <span class="n">probability</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="nb">dict</span><span class="p">(</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;RandomTimeStretching&quot;</span><span class="p">,</span>
+            <span class="n">factors</span><span class="o">=</span><span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">],</span>
+            <span class="n">probability</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>After editing the config, you need to rerun the preprocessing command.</p>
+<blockquote>
+<div><p>Note: You should not use <code class="docutils literal notranslate"><span class="pre">RandomPitchShifting</span></code> and <code class="docutils literal notranslate"><span class="pre">RandomTimeStretching</span></code> at the same time.<br />
+RandomTimeStretching is not tested yet (as of 2023-03-03).</p>
+</div></blockquote>
+</section>
+<section id="appendix-pitch-extractors">
+<h2>Appendix: Pitch Extractors<a class="headerlink" href="#appendix-pitch-extractors" title="Permalink to this heading">#</a></h2>
+<p>Currently, this repo supports ParselMouth, Crepe, Harvest, and Dio. However, we recommend only using <strong>Crepe</strong> and <strong>ParselMouth</strong>.</p>
+<ul class="simple">
+<li><p>If your dataset is small and you want it to be more robust, Crepe is probably good for you.</p></li>
+<li><p>Otherwise, you should use ParselMouth since it is much faster.</p></li>
+</ul>
+<p>Here are some comparisions:</p>
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <img src="https://s2.loli.net/2023/02/14/pq3UjBalWRPVS9u.png" width="50%">
+    <img src="https://s2.loli.net/2023/02/14/WJv7X3R5pHbDO1f.png" width="50%">
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="faq.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">FAQ</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="guide.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Quick FishSVC Guide</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2023, Fish Audio Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link fa-brands fa-github fa-2x" href="https://github.com/fishaudio/fish-diffusion/" aria-label="GitHub"></a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Configuration</a><ul>
+<li><a class="reference internal" href="#preprocessing">Preprocessing</a></li>
+<li><a class="reference internal" href="#dataset">Dataset</a></li>
+<li><a class="reference internal" href="#data-augmentation">Data Augmentation</a></li>
+<li><a class="reference internal" href="#appendix-pitch-extractors">Appendix: Pitch Extractors</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/scripts/furo.js"></script>
+    </body>
+</html>
