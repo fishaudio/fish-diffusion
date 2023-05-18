@@ -36,6 +36,8 @@ If you don't want to install the environment manually or don't have a powerful G
    ```
    curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
    ```
+   For Chinese users, you may need to get pdm through the mirror source, and change the pdm source according to the guide of the mirror station.  
+   The link for guide is here: [https://mirrors.tuna.tsinghua.edu.cn/help/pypi/](https://mirrors.tuna.tsinghua.edu.cn/help/pypi/)
 
  4. Once you have finished the base to set up the environment, proceed to download FishSVC from the [GitHub](https://github.com/fishaudio/fish-diffusion). You can either
 
@@ -52,7 +54,6 @@ If you don't want to install the environment manually or don't have a powerful G
    ```
    pdm sync
    ```
-
   
 6. Fish Diffusion requires the [FishAudio NSF-HiFiGAN](https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0) vocoder to generate audio, there is an automatic download for it, just run the command
    ```
