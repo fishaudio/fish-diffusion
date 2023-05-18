@@ -1,7 +1,7 @@
 import click
-from flask import cli
 from omegaconf import OmegaConf
 from loguru import logger
+from pathlib import Path
 import torch
 import sys
 from torch.distributed.algorithms.ddp_comm_hooks import default_hooks as default
@@ -19,21 +19,8 @@ def create_ddp_strategy():
         return None
 
 
-def generate_config(model, dataset, scheduler, output_name):
+def generate_config(model, dataset, scheduler, output_name, is_multi_speaker):
     config = OmegaConf.create()
-
-    # Determine which parts of the configuration to include
-    if model == "diff_svc_v2":
-        config.model = OmegaConf.load("configs/model/diff_svc_v2.yaml")
-        config.preprocessing = OmegaConf.load("configs/preprocessing/diff_svc_v2.yaml")
-
-    if dataset == "naive_svc":
-        config.dataset = OmegaConf.load("configs/dataset/naive_svc.yaml")
-        config.dataloader = OmegaConf.load("configs/dataloader/naive_svc.yaml")
-
-    if scheduler == "warmup_cosine":
-        config.scheduler = OmegaConf.load("configs/scheduler/warmup_cosine.yaml")
-        config.optimizer = OmegaConf.load("configs/optimizer/warmup_cosine.yaml")
 
     config.trainer = OmegaConf.load("configs/trainer/base.yaml")
     config.model_type = "DiffSVC"
@@ -51,6 +38,85 @@ def generate_config(model, dataset, scheduler, output_name):
     config.num_workers = 8
     config.no_augmentation = True
 
+    # Determine which parts of the configuration to include
+    try:
+        config.model = OmegaConf.load(f"configs/model/{model}.yaml")
+        config.preprocessing = OmegaConf.load(f"configs/preprocessing/{model}.yaml")
+    except FileNotFoundError:
+        logger.error(f"Could not find model {model}, exiting.")
+        raise click.Abort()
+
+    try:
+        if not is_multi_speaker:
+            config.dataset = OmegaConf.load(f"configs/dataset/{dataset}.yaml")
+            config.dataloader = OmegaConf.load(f"configs/dataloader/{dataset}.yaml")
+        else:
+            # Get speaker ids
+            train_speaker_ids = {}
+            for i, folder in enumerate((Path(config.path) / "train").iterdir()):
+                if folder.is_dir():
+                    train_speaker_ids[folder.name] = i
+            val_speaker_ids = {}
+            for i, folder in enumerate((Path(config.path) / "valid").iterdir()):
+                if folder.is_dir():
+                    val_speaker_ids[folder.name] = i
+            # val_speaker_ids = [
+            #     i
+            #     for i, folder in enumerate((Path(config.path) / "valid").iterdir())
+            #     if folder.is_dir()
+            # ]
+
+            # Create datasets for each speaker
+            config.dataset = OmegaConf.create(
+                {
+                    "train": {
+                        "_target_": "fish_diffusion.datasets.ConcatDataset",
+                        "datasets": [
+                            {
+                                "_target_": "fish_diffusion.datasets.naive.NaiveSVCDataset",
+                                "path": f"dataset/train/{speaker}",
+                                "speaker_id": train_speaker_ids[speaker],
+                            }
+                            for speaker in train_speaker_ids.keys()
+                        ],
+                        "collate_fn": "fish_diffusion.datasets.naive.NaiveSVCDataset.collate_fn",
+                    },
+                    "valid": {
+                        "_target_": "fish_diffusion.datasets.ConcatDataset",
+                        "datasets": [
+                            {
+                                "_target_": "fish_diffusion.datasets.naive.NaiveSVCDataset",
+                                "path": f"dataset/valid/{speaker}",
+                                "speaker_id": train_speaker_ids.get(
+                                    speaker, val_speaker_ids[speaker]
+                                ),
+                            }
+                            for speaker in val_speaker_ids.keys()
+                        ],
+                        "collate_fn": "fish_diffusion.datasets.naive.NaiveSVCDataset.collate_fn",
+                    },
+                }
+            )
+
+            config.dataloader = OmegaConf.load(f"configs/dataloader/{dataset}.yaml")
+
+            # change the input size of the speaker encoder in the model
+            config.model.speaker_encoder.input_size = len(train_speaker_ids)
+
+    except FileNotFoundError as e:
+        if is_multi_speaker:
+            logger.error(f"error: {e}")
+        else:
+            logger.error(f"Could not find dataset {dataset}, exiting.")
+        raise click.Abort()
+
+    try:
+        config.scheduler = OmegaConf.load(f"configs/scheduler/{scheduler}.yaml")
+        config.optimizer = OmegaConf.load(f"configs/optimizer/{scheduler}.yaml")
+    except FileNotFoundError as e:
+        logger.error(f"Could not find scheduler {scheduler}, exiting.")
+        raise click.Abort()
+
     # Save the resulting configuration to a file
     OmegaConf.save(config, f"configs/{output_name}.yaml", resolve=True)
     logger.info(f"Saved configuration to configs/{output_name}.yaml")
@@ -61,8 +127,11 @@ def generate_config(model, dataset, scheduler, output_name):
 @click.option("--dataset", default="naive_svc", help="Dataset to use")
 @click.option("--scheduler", default="warmup_cosine", help="Scheduler to use")
 @click.option("--output", default="svc_hubert_soft", help="Name of the output file")
-def main(model, dataset, scheduler, output):
-    generate_config(model, dataset, scheduler, output)
+@click.option(
+    "--is_multi_speaker", default=True, help="Whether to use multi-speaker dataset"
+)
+def main(model, dataset, scheduler, output, is_multi_speaker):
+    generate_config(model, dataset, scheduler, output, is_multi_speaker)
 
 
 if __name__ == "__main__":
