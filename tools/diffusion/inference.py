@@ -22,6 +22,27 @@ from fish_diffusion.utils.audio import separate_vocals, slice_audio
 from fish_diffusion.utils.inference import load_checkpoint
 from fish_diffusion.utils.tensor import repeat_expand
 
+from tqdm import tqdm
+path = Path("dataset/genshin/train/钟离")
+all_nps = list(path.rglob("*.npy"))[:5000]
+
+all_data = []
+for file in tqdm(all_nps):
+    try:
+        x = np.load(file, allow_pickle=True).item()
+        all_data.append(x['contents'].T)
+    except:
+        pass
+
+import faiss
+XX = np.concatenate(all_data, axis=0).astype(np.float32)
+quantizer = faiss.IndexFlatL2(1024)
+index = faiss.IndexIVFFlat(quantizer, 1024, 100)
+assert not index.is_trained
+index.train(XX)
+assert index.is_trained
+index.add(XX)
+print("Index built")
 
 class SVCInference(nn.Module):
     def __init__(self, config, checkpoint, model_cls=DiffSingerLightning):
@@ -71,6 +92,8 @@ class SVCInference(nn.Module):
     ):
         mel_len = audio.shape[-1] // 512
 
+        pitch_adjust = -12
+
         # Extract and process pitch
         if pitches is None:
             pitches = self.pitch_extractor(audio, sr, pad_to=mel_len).float()
@@ -82,8 +105,32 @@ class SVCInference(nn.Module):
 
         pitches *= 2 ** (pitch_adjust / 12)
 
+        audio = librosa.effects.pitch_shift(
+            audio.cpu().numpy(), sr, pitch_adjust, bins_per_octave=12
+        )
+        audio = torch.from_numpy(audio).to(torch.float32).to(self.device)
+
         # Extract and process text features
         text_features = self.text_features_extractor(audio, sr)[0]
+        print(text_features.shape) # (1024, 1043)
+
+        import numpy as np
+        import faiss
+        kmeans_centroids = np.load("kmeans.npy")
+        print(kmeans_centroids.shape) # (500, 1024)
+
+        text_features_np = text_features.cpu().numpy().T
+        # Retrieve the closest centroid
+        # indexk = faiss.IndexFlatL2(1024)
+        # indexk.add(kmeans_centroids)
+        _, I = index.search(text_features_np, 1)
+        # _, IK = indexk.search(text_features_np, 1)
+        #  * 0.5 + kmeans_centroids[IK] * 0.5
+
+        text_features = torch.from_numpy(XX[I]).to(self.device)
+        print(text_features.shape) # (1043, 1, 1024)
+        text_features = text_features.squeeze(1).T
+
         text_features = repeat_expand(text_features, mel_len).T
 
         # Pitch shift should always be 0 for inference to avoid distortion

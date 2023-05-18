@@ -92,8 +92,9 @@ class DiffSinger(nn.Module):
         if speaker_embed.ndim == 2:
             speaker_embed = speaker_embed[:, None, :]
 
-        features += speaker_embed
-        features += self.pitch_encoder(pitches)
+        # Ignore speaker embedding for now
+        # features += speaker_embed
+        # features += self.pitch_encoder(pitches)
 
         if pitch_shift is not None and hasattr(self, "pitch_shift_encoder"):
             pitch_shift_embed = self.pitch_shift_encoder(pitch_shift)
