@@ -1,8 +1,8 @@
 # Quick FishSVC Guide
 
-> Updated: May 17 2023 (Lengyue)  
+> Updated: March 03 2023 (Lengyue)  
 > Made & Updated: Kangarroar (Feb 01 2023)
-
+> Updated: May 17 2023 (OOPPEENN)
 
 If you don't want to install the environment manually or don't have a powerful GPU, using [Google Colab](https://colab.research.google.com/github/fishaudio/fish-diffusion/blob/main/notebooks/train.ipynb) for training is a good option to get started
 
@@ -13,7 +13,8 @@ If you don't want to install the environment manually or don't have a powerful G
    
    For Chinese users, you may need to get miniconda through the mirror source, and change the miniconda source according to the guide of the mirror station.
    
-   The link for Miniconda is here: [https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/](https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/)
+   The link for Miniconda is here: [https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/](https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/)  
+   The link for guide is here: [https://mirrors.tuna.tsinghua.edu.cn/help/anaconda/](https://mirrors.tuna.tsinghua.edu.cn/help/anaconda/)
 
 2. After installing Miniconda, open "Anaconda", then you will need to type
    ```
@@ -25,13 +26,15 @@ If you don't want to install the environment manually or don't have a powerful G
    ```
 3. Make sure that the next steps are in the virtual environment of Fish
 
-   Install PyTorch to be able to train, inference and etc with this command:
-   ```
-   conda install "pytorch>=2.0.0" "torchvision>=0.15.0" "torchaudio>=2.0.0" pytorch-cuda=11.8 -c pytorch -c nvidia
-   ```
    Install pdm to manage project dependencies
+   
+   Windows:
    ```
    pip install pdm
+   ```
+   Linux:
+   ```
+   curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
    ```
 
  4. Once you have finished the base to set up the environment, proceed to download FishSVC from the [GitHub](https://github.com/fishaudio/fish-diffusion). You can either
@@ -39,7 +42,7 @@ If you don't want to install the environment manually or don't have a powerful G
 - Click code and then "Download as zip", then you decompress the folder wherever you want.
 - Or you can clone the repository with the command `git clone https://github.com/fishaudio/fish-diffusion` if you have git installed.
 
-   On your conda environment, point to the folder where you have all the files for fish, just click on the file explorer bar and copy the full path, on conda run the command
+   In your conda environment, point to the folder where you have all the files for fish, just click on the file explorer bar and copy the full path, on conda run the command
    ```
    cd C:/Users/NAME/Documents/fish-difussion (example)
    ```
@@ -47,7 +50,7 @@ If you don't want to install the environment manually or don't have a powerful G
   
 5. Run this command to update the dependencies and install the project
    ```
-   pdm install
+   pdm sync
    ```
 
   
