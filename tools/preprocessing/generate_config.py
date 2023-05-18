@@ -60,11 +60,6 @@ def generate_config(model, dataset, scheduler, output_name, is_multi_speaker):
             for i, folder in enumerate((Path(config.path) / "valid").iterdir()):
                 if folder.is_dir():
                     val_speaker_ids[folder.name] = i
-            # val_speaker_ids = [
-            #     i
-            #     for i, folder in enumerate((Path(config.path) / "valid").iterdir())
-            #     if folder.is_dir()
-            # ]
 
             # Create datasets for each speaker
             config.dataset = OmegaConf.create(
@@ -101,7 +96,7 @@ def generate_config(model, dataset, scheduler, output_name, is_multi_speaker):
             config.dataloader = OmegaConf.load(f"configs/dataloader/{dataset}.yaml")
 
             # change the input size of the speaker encoder in the model
-            config.model.speaker_encoder.input_size = len(train_speaker_ids)
+            config.model.speaker_encoder.input_size = len(train_speaker_ids.keys())
 
     except FileNotFoundError as e:
         if is_multi_speaker:
