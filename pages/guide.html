@@ -217,56 +217,67 @@
 <h1>Quick FishSVC Guide<a class="headerlink" href="#quick-fishsvc-guide" title="Permalink to this heading">#</a></h1>
 <blockquote>
 <div><p>Updated: March 03 2023 (Lengyue)<br />
-Made &amp; Updated: Kangarroar (Feb 01 2023)</p>
+Made &amp; Updated: Kangarroar (Feb 01 2023)
+Updated: May 17 2023 (OOPPEENN)</p>
 </div></blockquote>
-<blockquote>
-<div><p>You may want to check the <a class="reference external" href="https://colab.research.google.com/github/fishaudio/fish-diffusion/blob/main/notebooks/train.ipynb">colab notebook</a> to get started</p>
-</div></blockquote>
-<p>First you need to install conda on your PC, I recommend installing Miniconda if you don’t want it to eat a lot of your disk space.</p>
+<p>If you don’t want to install the environment manually or don’t have a powerful GPU, using <a class="reference external" href="https://colab.research.google.com/github/fishaudio/fish-diffusion/blob/main/notebooks/train.ipynb">Google Colab</a> for training is a good option to get started</p>
+<section id="preparing-the-environment">
+<h2>Preparing the environment<a class="headerlink" href="#preparing-the-environment" title="Permalink to this heading">#</a></h2>
+<ol class="arabic">
+<li><p>You need to install conda on your PC, I recommend installing Miniconda if you don’t want it to eat a lot of your disk space.</p>
 <p>The link for Miniconda is here: <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">https://docs.conda.io/en/latest/miniconda.html</a></p>
-<p>Make sure you choose Miniconda Python 3.10 otherwise you won’t be able to install Fish!
-After installing Miniconda, open “Anaconda”, in my case I have Windows so I press the key Windows and type Anaconda, smh.</p>
-<p>Then you will need to type</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>conda create --name Fish python=3.10
+<p>For Chinese users, you may need to get miniconda through the mirror source, and change the miniconda source according to the guide of the mirror station.</p>
+<p>The link for Miniconda is here: <a class="reference external" href="https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/">https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/</a><br />
+The link for guide is here: <a class="reference external" href="https://mirrors.tuna.tsinghua.edu.cn/help/anaconda/">https://mirrors.tuna.tsinghua.edu.cn/help/anaconda/</a></p>
+</li>
+<li><p>After installing Miniconda, open “Anaconda”, then you will need to type</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">--</span><span class="n">name</span> <span class="n">Fish</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.10</span>
 </pre></div>
 </div>
 <p>Once you have done that, a environment called Fish will be created, to access it you need to type</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>conda activate Fish
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">activate</span> <span class="n">Fish</span>
 </pre></div>
 </div>
-<p>Then you will be already on your Fish environment and you can proceed installation of FishSVC!</p>
-<hr class="docutils" />
-<section id="preparing-the-environment">
-<h2>Preparing the environment<a class="headerlink" href="#preparing-the-environment" title="Permalink to this heading">#</a></h2>
-<p>First you need to install PyTorch to be able to train, inference and etc with this command:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>conda install &quot;pytorch&gt;=2.0.0&quot; &quot;torchvision&gt;=0.15.0&quot; &quot;torchaudio&gt;=2.0.0&quot; pytorch-cuda=11.8 -c pytorch -c nvidia
+</li>
+<li><p>Make sure that the next steps are in the virtual environment of Fish</p>
+<p>Install pdm to manage project dependencies</p>
+<p>Windows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">sSL</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">raw</span><span class="o">.</span><span class="n">githubusercontent</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">pdm</span><span class="o">-</span><span class="n">project</span><span class="o">/</span><span class="n">pdm</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">install</span><span class="o">-</span><span class="n">pdm</span><span class="o">.</span><span class="n">py</span> <span class="o">|</span> <span class="n">python3</span> <span class="o">-</span>
 </pre></div>
 </div>
-<p>After that you need to run</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span> pip install poetry
+<p>Linux:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">sSL</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">raw</span><span class="o">.</span><span class="n">githubusercontent</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">pdm</span><span class="o">-</span><span class="n">project</span><span class="o">/</span><span class="n">pdm</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">install</span><span class="o">-</span><span class="n">pdm</span><span class="o">.</span><span class="n">py</span> <span class="o">|</span> <span class="n">python3</span> <span class="o">-</span>
 </pre></div>
 </div>
-<p>Once you have finished the base to set up the environment, proceed to download FishSVC from the <a class="reference external" href="https://github.com/fishaudio/fish-diffusion">GitHub</a>. You can either</p>
-<ul class="simple">
+<p>For Chinese users, you may need to get pdm through the mirror source, and change the pdm source according to the guide of the mirror station.<br />
+The link for guide is here: <a class="reference external" href="https://mirrors.tuna.tsinghua.edu.cn/help/pypi/">https://mirrors.tuna.tsinghua.edu.cn/help/pypi/</a></p>
+</li>
+<li><p>Once you have finished the base to set up the environment, proceed to download FishSVC from the <a class="reference external" href="https://github.com/fishaudio/fish-diffusion">GitHub</a>. You can either</p></li>
+</ol>
+<ul>
 <li><p>Click code and then “Download as zip”, then you decompress the folder wherever you want.</p></li>
-<li><p>Or you can clone the repository with the command <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/fishaudio/fish-diffusion</span></code> if you have git installed.</p></li>
+<li><p>Or you can clone the repository with the command <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/fishaudio/fish-diffusion</span></code> if you have git installed.</p>
+<p>In your conda environment, point to the folder where you have all the files for fish, just click on the file explorer bar and copy the full path, on conda run the command</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">C</span><span class="p">:</span><span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">NAME</span><span class="o">/</span><span class="n">Documents</span><span class="o">/</span><span class="n">fish</span><span class="o">-</span><span class="n">difussion</span> <span class="p">(</span><span class="n">example</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
 </ul>
-<p>On your conda environment, point to the folder where you have all the files for fish, just click on the file explorer bar and copy the full path, on conda run the command</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cd C:/Users/NAME/Documents/fish-difussion (example)
+<ol class="arabic" start="5">
+<li><p>Run this command to update the dependencies and install the project</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pdm</span> <span class="n">sync</span>
 </pre></div>
 </div>
-<p>And then run the command</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>poetry install
+</li>
+<li><p>Fish Diffusion requires the <a class="reference external" href="https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0">FishAudio NSF-HiFiGAN</a> vocoder to generate audio, there is an automatic download for it, just run the command</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">tools</span><span class="o">/</span><span class="n">download_nsf_hifigan</span><span class="o">.</span><span class="n">py</span>
 </pre></div>
 </div>
-<p>Fish Diffusion requires the <a class="reference external" href="https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0">FishAudio NSF-HiFiGAN</a> vocoder to generate audio, there is an automatic download for it, just run the command</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span> python tools/download_nsf_hifigan.py
-</pre></div>
-</div>
-<p>It will start downloading the vocoder automatically and will put it on the checkpoints folder,, wait until it’s done or you can do a manual download for it. <a class="reference external" href="https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1">Hifigan Link</a></p>
-<p>FishSVC is installed!</p>
+<p>It will start downloading the vocoder automatically and will put it on the checkpoints folder, wait until it’s done or you can do a manual download for it. <a class="reference external" href="https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1">Hifigan Link</a></p>
+</li>
+<li><p>FishSVC is installed!</p></li>
+</ol>
 </section>
-<hr class="docutils" />
 <section id="dataset-preparation-single-speaker">
 <h2>Dataset Preparation (Single Speaker)<a class="headerlink" href="#dataset-preparation-single-speaker" title="Permalink to this heading">#</a></h2>
 <p>You need to put the dataset into the dataset directory in the following file structure</p>
