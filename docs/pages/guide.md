@@ -30,7 +30,7 @@ If you don't want to install the environment manually or don't have a powerful G
    
    Windows:
    ```
-   pip install pdm
+   curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
    ```
    Linux:
    ```
