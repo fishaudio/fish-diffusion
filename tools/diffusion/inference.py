@@ -22,6 +22,28 @@ from fish_diffusion.utils.audio import separate_vocals, slice_audio
 from fish_diffusion.utils.inference import load_checkpoint
 from fish_diffusion.utils.tensor import repeat_expand
 
+# from tqdm import tqdm
+# path = Path("dataset/train/aria")
+# all_nps = list(path.rglob("*.npy"))[:5000]
+
+# all_data = []
+# for file in tqdm(all_nps):
+#     try:
+#         x = np.load(file, allow_pickle=True).item()
+#         all_data.append(x['contents'].T)
+#     except:
+#         pass
+
+# # import faiss
+# XX = np.concatenate(all_data, axis=0).astype(np.float32)
+# quantizer = faiss.IndexFlatL2(1024)
+# index = faiss.IndexIVFFlat(quantizer, 1024, 100)
+# assert not index.is_trained
+# index.train(XX)
+# assert index.is_trained
+# index.add(XX)
+# print("Index built")
+
 
 class SVCInference(nn.Module):
     def __init__(self, config, checkpoint, model_cls=DiffSingerLightning):
@@ -68,8 +90,15 @@ class SVCInference(nn.Module):
         sampler_progress: bool = False,
         sampler_interval: Optional[int] = None,
         pitches: Optional[torch.Tensor] = None,
+        skip_steps: int = 0,
     ):
-        mel_len = audio.shape[-1] // 512
+        if skip_steps > 0:
+            original_mel = self.model.vocoder.wav2spec(audio, sr)[None]
+            original_mel = original_mel.to(self.device)
+            mel_len = original_mel.shape[-1]
+        else:
+            original_mel = None
+            mel_len = audio.shape[-1] // 512
 
         # Extract and process pitch
         if pitches is None:
@@ -82,8 +111,32 @@ class SVCInference(nn.Module):
 
         pitches *= 2 ** (pitch_adjust / 12)
 
+        # audio = librosa.effects.pitch_shift(
+        #     audio.cpu().numpy(), sr, pitch_adjust, bins_per_octave=12
+        # )
+        # audio = torch.from_numpy(audio).to(torch.float32).to(self.device)
+
         # Extract and process text features
         text_features = self.text_features_extractor(audio, sr)[0]
+        # print(text_features.shape) # (1024, 1043)
+
+        # import numpy as np
+        # import faiss
+        # kmeans_centroids = np.load("kmeans.npy")
+        # print(kmeans_centroids.shape) # (500, 1024)
+
+        # text_features_np = text_features.cpu().numpy().T
+        # # Retrieve the closest centroid
+        # # indexk = faiss.IndexFlatL2(1024)
+        # # indexk.add(kmeans_centroids)
+        # _, I = index.search(text_features_np, 1)
+        # # _, IK = indexk.search(text_features_np, 1)
+        # #  * 0.5 + kmeans_centroids[IK] * 0.5
+
+        # text_features = torch.from_numpy(XX[I]).to(self.device)
+        # print(text_features.shape) # (1043, 1, 1024)
+        # text_features = text_features.squeeze(1).T
+
         text_features = repeat_expand(text_features, mel_len).T
 
         # Pitch shift should always be 0 for inference to avoid distortion
@@ -115,6 +168,8 @@ class SVCInference(nn.Module):
             features["features"],
             progress=sampler_progress,
             sampler_interval=sampler_interval,
+            skip_steps=skip_steps,
+            original_mel=original_mel,
         )
         wav = self.model.vocoder.spec2wav(result[0].T, f0=pitches).cpu().numpy()
 
@@ -193,6 +248,7 @@ class SVCInference(nn.Module):
         gradio_progress=None,
         min_silence_duration=0,
         pitches_path=None,
+        skip_steps=0,
     ):
         """Inference
 
@@ -209,6 +265,7 @@ class SVCInference(nn.Module):
             gradio_progress: gradio progress callback
             min_silence_duration: minimum silence duration
             pitches_path: disable pitch extraction and use the pitch from the given path
+            skip_steps: skip steps
         """
 
         if isinstance(input_path, str) and os.path.isdir(input_path):
@@ -323,6 +380,7 @@ class SVCInference(nn.Module):
                 sampler_progress=sampler_progress,
                 sampler_interval=sampler_interval,
                 pitches=pitches_segment,
+                skip_steps=skip_steps,
             )
             max_wav_len = generated_audio.shape[-1] - start
             generated_audio[start : start + wav.shape[-1]] = wav[:max_wav_len]
@@ -470,6 +528,14 @@ def parse_args():
         help="Pitch extractor",
     )
 
+    # Shallow diffusion
+    parser.add_argument(
+        "--skip_steps",
+        type=int,
+        default=0,
+        help="Skip steps and use original audio as input",
+    )
+
     return parser.parse_args()
 
 
@@ -522,4 +588,5 @@ if __name__ == "__main__":
             silence_threshold=args.silence_threshold,
             max_slice_duration=args.max_slice_duration,
             min_silence_duration=args.min_silence_duration,
+            skip_steps=args.skip_steps,
         )
