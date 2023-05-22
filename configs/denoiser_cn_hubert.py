@@ -1,5 +1,3 @@
-from fish_diffusion.utils.pitch import pitch_to_log
-
 _base_ = [
     "./_base_/archs/diff_svc_v2.py",
     "./_base_/trainers/base.py",
@@ -16,16 +14,10 @@ model = dict(
         output_size=256,
     ),
     speaker_encoder=dict(
-        input_size=len(speaker_mapping),
+        _delete_=True,
     ),
     pitch_encoder=dict(
-        preprocessing=pitch_to_log,
-    ),
-    pitch_shift_encoder=dict(
-        type="NaiveProjectionEncoder",
-        input_size=1,
-        output_size=256,
-        use_embedding=False,
+        _delete_=True,
     ),
     vocoder=dict(
         checkpoint_path="checkpoints/nsf_hifigan/model",
