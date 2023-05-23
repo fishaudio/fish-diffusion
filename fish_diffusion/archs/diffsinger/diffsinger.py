@@ -90,14 +90,20 @@ class DiffSinger(nn.Module):
 
         if speakers.ndim in [2, 3] and torch.is_floating_point(speakers):
             speaker_embed = speakers
-        else:
+        elif hasattr(self, "speaker_encoder"):
             speaker_embed = self.speaker_encoder(speakers)
+        else:
+            speaker_embed = None
 
-        if speaker_embed.ndim == 2:
+        if speaker_embed is not None and speaker_embed.ndim == 2:
             speaker_embed = speaker_embed[:, None, :]
 
-        features += speaker_embed
-        features += self.pitch_encoder(pitches)
+        # Ignore speaker embedding for now
+        if speaker_embed is not None:
+            features += speaker_embed
+
+        if hasattr(self, "pitch_encoder"):
+            features += self.pitch_encoder(pitches)
 
         if pitch_shift is not None and hasattr(self, "pitch_shift_encoder"):
             pitch_shift_embed = self.pitch_shift_encoder(pitch_shift)

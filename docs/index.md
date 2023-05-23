@@ -20,6 +20,14 @@ Full functional and high performance scrcpy client.
    pages/config
 ```
 
+### Generation Quality
+```{eval-rst}
+.. toctree::
+   :maxdepth: 4
+
+   pages/quality
+```
+
 ### Common Questions
 ```{eval-rst}
 .. toctree::

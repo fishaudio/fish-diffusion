@@ -11,8 +11,8 @@ from fish_diffusion.modules.vocoders.refinegan.refinegan import RefineGAN
 
 class ExportableRefineGAN(RefineGAN):
     def forward(self, mel: torch.Tensor, f0: torch.Tensor):
-        mel = mel.transpose(2, 1) * 2.30259
-        wav = self.model(mel, f0)
+        mel = mel.transpose(1, 2) * 2.30259
+        wav = self.model(mel, f0[:, None])
 
         return wav
 
@@ -63,8 +63,9 @@ def main(input_file, output_path, config, license):
     logger.info(f"Config exported")
 
     # Export ONNX
+    # sinc is not supported by ONNX
     # logger.info(f"Exporting ONNX")
-    # model = ExportableNsfHiFiGAN(checkpoint_path=input_file, config_file=config)
+    # model = ExportableRefineGAN(checkpoint_path=input_file, config_file=config)
     # model.eval()
     # logger.info(f"Model loaded")
 
@@ -74,7 +75,7 @@ def main(input_file, output_path, config, license):
     # torch.onnx.export(
     #     model,
     #     (mel, f0),
-    #     output_path / "nsf_hifigan.onnx",
+    #     output_path / "refinegan.onnx",
     #     input_names=["mel", "f0"],
     #     output_names=["waveform"],
     #     opset_version=16,
