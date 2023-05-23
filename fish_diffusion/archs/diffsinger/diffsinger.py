@@ -25,7 +25,7 @@ class DiffSinger(nn.Module):
         self.text_encoder = ENCODERS.build(model_config.text_encoder)
         self.diffusion = DIFFUSIONS.build(model_config.diffusion)
 
-        if getattr(model_config, "model_config", None):
+        if getattr(model_config, "speaker_encoder", None):
             self.speaker_encoder = ENCODERS.build(model_config.speaker_encoder)
 
         if getattr(model_config, "pitch_encoder", None):
