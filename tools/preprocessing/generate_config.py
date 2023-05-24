@@ -5,6 +5,7 @@ from pathlib import Path
 import torch
 import sys
 from torch.distributed.algorithms.ddp_comm_hooks import default_hooks as default
+from typing import Dict, List
 
 
 def create_ddp_strategy():
@@ -17,6 +18,40 @@ def create_ddp_strategy():
         }
     else:
         return None
+
+
+def build_naive_svc_datasets(
+    train_speaker_ids: Dict[str, int],
+    val_speaker_ids: Dict[str, int],
+    datasetConf: OmegaConf,
+) -> Dict[str, Dict]:
+    train_datasets = {
+        "_target_": "fish_diffusion.datasets.ConcatDataset",
+        "datasets": [
+            {
+                "_target_": f"{datasetConf.train._target_}",
+                "path": f"dataset/train/{speaker}",
+                "speaker_id": train_speaker_ids[speaker],
+            }
+            for speaker in train_speaker_ids.keys()
+        ],
+        "collate_fn": f"{datasetConf.train._target_}.collate_fn",
+    }
+
+    valid_datasets = {
+        "_target_": "fish_diffusion.datasets.ConcatDataset",
+        "datasets": [
+            {
+                "_target_": f"{datasetConf.valid._target_}",
+                "path": f"dataset/valid/{speaker}",
+                "speaker_id": train_speaker_ids.get(speaker, val_speaker_ids[speaker]),
+            }
+            for speaker in val_speaker_ids.keys()
+        ],
+        "collate_fn": f"{datasetConf.valid._target_}.collate_fn",
+    }
+
+    return {"train": train_datasets, "valid": valid_datasets}
 
 
 def generate_config(model, dataset, scheduler, output_name, is_multi_speaker):
@@ -47,9 +82,9 @@ def generate_config(model, dataset, scheduler, output_name, is_multi_speaker):
         raise click.Abort()
 
     try:
+        datasetConf = OmegaConf.load(f"configs/dataset/{dataset}.yaml")
         if not is_multi_speaker:
-            config.dataset = OmegaConf.load(f"configs/dataset/{dataset}.yaml")
-            config.dataloader = OmegaConf.load(f"configs/dataloader/{dataset}.yaml")
+            config.dataset = datasetConf
         else:
             # Get speaker ids
             train_speaker_ids = {}
@@ -63,40 +98,14 @@ def generate_config(model, dataset, scheduler, output_name, is_multi_speaker):
 
             # Create datasets for each speaker
             config.dataset = OmegaConf.create(
-                {
-                    "train": {
-                        "_target_": "fish_diffusion.datasets.ConcatDataset",
-                        "datasets": [
-                            {
-                                "_target_": "fish_diffusion.datasets.naive.NaiveSVCDataset",
-                                "path": f"dataset/train/{speaker}",
-                                "speaker_id": train_speaker_ids[speaker],
-                            }
-                            for speaker in train_speaker_ids.keys()
-                        ],
-                        "collate_fn": "fish_diffusion.datasets.naive.NaiveSVCDataset.collate_fn",
-                    },
-                    "valid": {
-                        "_target_": "fish_diffusion.datasets.ConcatDataset",
-                        "datasets": [
-                            {
-                                "_target_": "fish_diffusion.datasets.naive.NaiveSVCDataset",
-                                "path": f"dataset/valid/{speaker}",
-                                "speaker_id": train_speaker_ids.get(
-                                    speaker, val_speaker_ids[speaker]
-                                ),
-                            }
-                            for speaker in val_speaker_ids.keys()
-                        ],
-                        "collate_fn": "fish_diffusion.datasets.naive.NaiveSVCDataset.collate_fn",
-                    },
-                }
+                build_naive_svc_datasets(
+                    train_speaker_ids, val_speaker_ids, datasetConf
+                )
             )
-
-            config.dataloader = OmegaConf.load(f"configs/dataloader/{dataset}.yaml")
 
             # change the input size of the speaker encoder in the model
             config.model.speaker_encoder.input_size = len(train_speaker_ids.keys())
+        config.dataloader = OmegaConf.load(f"configs/dataloader/base.yaml")
 
     except FileNotFoundError as e:
         if is_multi_speaker:
@@ -134,8 +143,10 @@ if __name__ == "__main__":
     OmegaConf.register_new_resolver("mel_channels", lambda: 128)
     OmegaConf.register_new_resolver("sampling_rate", lambda: 44100)
     OmegaConf.register_new_resolver("hidden_size", lambda: 257)
+    # for hifi
     OmegaConf.register_new_resolver("n_fft", lambda: 2048)
     OmegaConf.register_new_resolver("hop_length", lambda: 256)
     OmegaConf.register_new_resolver("win_length", lambda: 2048)
+    # for ddp
     OmegaConf.register_new_resolver("create_ddp_strategy", create_ddp_strategy)
     main()

@@ -126,7 +126,7 @@ python tools/preprocessing/extract_features.py config-name=svc_hubert_soft num-w
 # Single machine single card / multi-card training
 python tools/diffusion/train.py --config-name svc_hubert_soft
 # Multi-node training
-python tools/diffusion/train.py --config configs/svc_content_vec_multi_node.py
+python tools/diffusion/train.py --config-name svc_hubert_soft_multispk
 # Environment variables need to be defined on each node,please see https://pytorch-lightning.readthedocs.io/en/1.6.5/clouds/cluster.html  for more infomation.
 
 # Resume training
