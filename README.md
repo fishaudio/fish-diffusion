@@ -114,7 +114,7 @@ python tools/preprocessing/generate_config.py --output svc_hubert_soft
 ## Preprocess Data
 ```bash
 # Extract all data features, such as pitch, text features, mel features, etc.
-python tools/preprocessing/extract_features.py config-name=svc_hubert_soft num-workers=8 path=dataset clean=true
+python tools/preprocessing/extract_features.py --config-name=svc_hubert_soft num-workers=8 path=dataset clean=true
 ```
 
 ## Baseline training

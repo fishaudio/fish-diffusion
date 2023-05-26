@@ -7,7 +7,7 @@ import torchcrepe
 from fish_diffusion.modules.pitch_extractors.builder import BasePitchExtractor
 
 
-@PITCH_EXTRACTORS.register_module()
+# @PITCH_EXTRACTORS.register_module()
 class CrepePitchExtractor(BasePitchExtractor):
     def __init__(
         self,

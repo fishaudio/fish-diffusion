@@ -15,7 +15,6 @@ from loguru import logger
 
 # from mmengine import Config
 from tqdm import tqdm
-from hydra.utils import get_original_cwd
 
 # from fish_diffusion.modules.energy_extractors import ENERGY_EXTRACTORS
 # from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
@@ -30,7 +29,6 @@ from fish_diffusion.utils.tensor import repeat_expand
 
 from box import Box
 import hydra
-from tools.diffusion import resolvers
 from hydra.utils import instantiate
 from omegaconf import OmegaConf, DictConfig
 from hydra.utils import get_original_cwd
@@ -119,7 +117,12 @@ def process(
         "path": str(audio_path),
     }
 
-    audio, sr = librosa.load(str(audio_path), sr=config.sampling_rate, mono=True)
+    sampling_rate = (
+        config.sampling_rate
+        if hasattr(config, "sampling_rate")
+        else config.model.encoder.sampling_rate
+    )
+    audio, sr = librosa.load(str(audio_path), sr=sampling_rate, mono=True)
 
     # If time_stretch is > 1, the audio length will be shorter (speed up)
     if time_stretch != 1.0:
@@ -223,11 +226,12 @@ def safe_process(config, audio_path: Path):
 
 @hydra.main(config_name=None, config_path="../../configs")
 def main(config: DictConfig) -> None:
-    resolvers.register_resolvers(OmegaConf=OmegaConf)
-
     project_root = get_original_cwd()
     OmegaConf.set_struct(config, False)  # Allow changes to the config
-    config.model.vocoder.project_root = project_root  # Add project_root to the config
+    if config.model_type == "DiffSVC":
+        config.model.vocoder.project_root = (
+            project_root  # Add project_root to the config
+        )
     OmegaConf.set_struct(config, True)
 
     config = OmegaConf.to_container(config, resolve=True)
@@ -245,13 +249,13 @@ def main(config: DictConfig) -> None:
     else:
         logger.warning("No GPU found, using CPU")
 
-    project_root = get_original_cwd()
     path = Path(project_root) / config.path
 
     if config.clean:
         logger.info("Cleaning *.npy files...")
 
-        files = list_files(path, {".npy"}, recursive=True, sort=True)
+        # files = list_files(path, {".npy"}, recursive=True, sort=True)
+        files = list(path.glob("*/**/*.npy"))
         for f in files:
             f.unlink()
 

@@ -1,0 +1,13 @@
+ext_features_extractor :
+  _target_: fish_diffusion.modules.feature_extractors.content_vec.ContentVec
+pitch_extractor : 
+    _target_: fish_diffusion.modules.pitch_extractors.parsel_mouth.ParselMouthPitchExtractor
+    keep_zeros : false
+    f0_min : 40.0
+    f0_max : 1600.0
+energy_extractor : 
+    _target_: fish_diffusion.modules.energy_extractors.rms.RMSEnergyExtractor
+augmentations :
+  - type : "FixedPitchShifting"
+    key_shifts : [-5.0, 5.0]
+    probability : 0.75,

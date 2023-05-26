@@ -1,50 +1,38 @@
-from argparse import ArgumentParser
-
 import pytorch_lightning as pl
 import torch
-from loguru import logger
-from mmengine import Config
-from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
-
+from omegaconf import OmegaConf, DictConfig
+import hydra
+from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.loggers.wandb import WandbLogger
 from fish_diffusion.archs.hifisinger import HiFiSingerV1Lightning, HiFiSingerV2Lightning
 from fish_diffusion.datasets.utils import build_loader_from_config
+from hydra.utils import get_original_cwd, instantiate
+from box import Box
+
 
 torch.set_float32_matmul_precision("medium")
 
 
-if __name__ == "__main__":
+# python train.py --config-name svc_hifi name=xxxx entity=xxx
+# Load the configuration file
+@hydra.main(config_name=None, config_path="../../configs")
+def main(cfg: DictConfig) -> None:
+    from loguru import logger
+
+    cfg = OmegaConf.to_container(cfg, resolve=True)  # type: ignore
+    cfg = Box(cfg)  # type: ignore
+
     pl.seed_everything(594461, workers=True)
-
-    parser = ArgumentParser()
-    parser.add_argument("--config", type=str, required=True)
-    parser.add_argument("--resume", type=str, default=None)
-    parser.add_argument(
-        "--tensorboard",
-        action="store_true",
-        default=False,
-        help="Use tensorboard logger, default is wandb.",
-    )
-    parser.add_argument("--resume-id", type=str, default=None, help="Wandb run id.")
-    parser.add_argument("--entity", type=str, default=None, help="Wandb entity.")
-    parser.add_argument("--name", type=str, default=None, help="Wandb run name.")
-    parser.add_argument(
-        "--pretrained", type=str, default=None, help="Pretrained model."
-    )
-
-    args = parser.parse_args()
-
-    cfg = Config.fromfile(args.config)
-
-    if cfg.model.encoder.type.lower() == "RefineGAN".lower():
+    if cfg.model.encoder._target_.lower().split(".")[-1] == "RefineGAN".lower():
         model = HiFiSingerV2Lightning(cfg)
-    elif cfg.model.encoder.type.lower() == "HiFiGAN".lower():
+    elif cfg.model.encoder._target_.lower().split(".")[-1] == "HiFiGAN".lower():
         model = HiFiSingerV1Lightning(cfg)
     else:
         raise NotImplementedError(f"Unknown encoder type: {cfg.model.encoder.type}")
 
     # We only load the state_dict of the model, not the optimizer.
-    if args.pretrained:
-        state_dict = torch.load(args.pretrained, map_location="cpu")
+    if cfg.pretrained:
+        state_dict = torch.load(cfg.pretrained, map_location="cpu")
         if "state_dict" in state_dict:
             state_dict = state_dict["state_dict"]
 
@@ -60,23 +48,31 @@ if __name__ == "__main__":
 
     logger = (
         TensorBoardLogger("logs", name=cfg.model.type)
-        if args.tensorboard
+        if cfg.tensorboard
         else WandbLogger(
             project=cfg.model.type,
             save_dir="logs",
             log_model=True,
-            name=args.name,
-            entity=args.entity,
-            resume="must" if args.resume_id else False,
-            id=args.resume_id,
+            name=cfg.name,
+            entity=cfg.entity,
+            resume="must" if cfg.resume_id else False,
+            id=cfg.resume_id,
         )
     )
 
+    if cfg.trainer.strategy is None:
+        del cfg.trainer.strategy
+    callbacks = [instantiate(cb) for cb in cfg.trainer.callbacks]
+    del cfg.trainer.callbacks
     trainer = pl.Trainer(
         logger=logger,
-        **cfg.trainer,
+        callbacks=callbacks,
+        **cfg.trainer.to_dict(),
     )
 
     train_loader, valid_loader = build_loader_from_config(cfg, trainer.num_devices)
+    trainer.fit(model, train_loader, valid_loader, ckpt_path=cfg.resume)
 
-    trainer.fit(model, train_loader, valid_loader, ckpt_path=args.resume)
+
+if __name__ == "__main__":
+    main()

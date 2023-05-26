@@ -1,9 +1,11 @@
 import torch
 import torch.nn as nn
 
-from fish_diffusion.modules.encoders import ENCODERS
+# from fish_diffusion.modules.encoders import ENCODERS
 from fish_diffusion.modules.vocoders.nsf_hifigan.models import AttrDict, Generator
 from fish_diffusion.modules.vocoders.refinegan.generator import RefineGANGenerator
+
+from hydra.utils import instantiate
 
 
 class HiFiSinger(nn.Module):
@@ -12,14 +14,14 @@ class HiFiSinger(nn.Module):
     def __init__(self, model_config):
         super(HiFiSinger, self).__init__()
 
-        self.text_encoder = ENCODERS.build(model_config.text_encoder)
-        self.speaker_encoder = ENCODERS.build(model_config.speaker_encoder)
+        self.text_encoder = instantiate(model_config.text_encoder)
+        self.speaker_encoder = instantiate(model_config.speaker_encoder)
 
         if "pitch_shift_encoder" in model_config:
-            self.pitch_shift_encoder = ENCODERS.build(model_config.pitch_shift_encoder)
+            self.pitch_shift_encoder = instantiate(model_config.pitch_shift_encoder)
 
         if "energy_encoder" in model_config:
-            self.energy_encoder = ENCODERS.build(model_config.energy_encoder)
+            self.energy_encoder = instantiate(model_config.energy_encoder)
 
         self.feature_fuser = nn.Sequential(
             nn.Linear(model_config.hidden_size, model_config.hidden_size),
