@@ -1,7 +1,5 @@
 # Fish Diffusion
 
-Full functional and high performance scrcpy client.
-
 ## Contents
 
 ### Quick Guide
