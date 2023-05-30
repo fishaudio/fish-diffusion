@@ -3,12 +3,18 @@ import json
 from typing import Optional
 
 import numpy as np
+from omegaconf import DictConfig
 import torch
-from mmengine import Config
+
 
 from fish_diffusion.archs.hifisinger import HiFiSingerV1Lightning, HiFiSingerV2Lightning
 from fish_diffusion.utils.tensor import repeat_expand
 from tools.diffusion.inference import SVCInference
+
+import hydra
+from hydra import initialize, compose
+from box import Box
+from hydra.utils import get_original_cwd
 
 
 class HiFiSingerSVCInference(SVCInference):
@@ -200,7 +206,10 @@ def parse_args():
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+@hydra.main(config_path="../../configs", config_name=None)
+def main(cfg: DictConfig) -> None:
+    project_root = get_original_cwd()
+
     args = parse_args()
 
     assert args.gradio or (
@@ -212,7 +221,9 @@ if __name__ == "__main__":
     else:
         device = torch.device(args.device)
 
-    config = Config.fromfile(args.config)
+    # config = Config.fromfile(args.config)
+    # with initialize(config_path='../../configs'):
+    #     config = compose(config_name=)
 
     if args.speaker_mapping is not None:
         config.speaker_mapping = json.load(open(args.speaker_mapping))
@@ -234,3 +245,7 @@ if __name__ == "__main__":
         max_slice_duration=args.max_slice_duration,
         min_silence_duration=args.min_silence_duration,
     )
+
+
+if __name__ == "__main__":
+    main()

@@ -49,7 +49,6 @@ def build_hifi_svc_datasets(
             {
                 "_target_": f"{datasetConf.valid._target_}",
                 "path": f"dataset/valid/{speaker}",
-                "segment_size": datasetConf.valid.segment_size,
                 "speaker_id": train_speaker_ids.get(speaker, val_speaker_ids[speaker]),
             }
             for speaker in val_speaker_ids.keys()

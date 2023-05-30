@@ -6,7 +6,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.loggers.wandb import WandbLogger
 from fish_diffusion.archs.hifisinger import HiFiSingerV1Lightning, HiFiSingerV2Lightning
 from fish_diffusion.datasets.utils import build_loader_from_config
-from hydra.utils import get_original_cwd, instantiate
+from hydra.utils import instantiate
 from box import Box
 
 

@@ -1,8 +1,10 @@
 text_features_extractor_type: HubertSoft
 pitch_extractor_type: ParselMouthPitchExtractor
 pretrained: null
+# pretrained: "./checkpoints/test.ckpt"
 resume: null
 tensorboard: false
+# resume_id: 2jw2wcy4
 resume_id: null
 entity: null
 name: null
@@ -140,7 +142,6 @@ dataset:
     datasets:
     - _target_: fish_diffusion.datasets.hifisinger.HiFiSVCDataset
       path: dataset/valid/Aria
-      segment_size: 16384
       speaker_id: 0
     collate_fn: fish_diffusion.datasets.hifisinger.HiFiSVCDataset.collate_fn
 dataloader:

@@ -23,6 +23,8 @@ from fish_diffusion.utils.audio import separate_vocals, slice_audio
 from fish_diffusion.utils.inference import load_checkpoint
 from fish_diffusion.utils.tensor import repeat_expand
 
+from hydra.utils import instantiate
+
 # from tqdm import tqdm
 # path = Path("dataset/train/aria")
 # all_nps = list(path.rglob("*.npy"))[:5000]
@@ -52,15 +54,13 @@ class SVCInference(nn.Module):
 
         self.config = config
 
-        self.text_features_extractor = FEATURE_EXTRACTORS.build(
+        self.text_features_extractor = instantiate(
             config.preprocessing.text_features_extractor
         )
         self.pitch_extractor = instantiate(config.preprocessing.pitch_extractor)
 
         if hasattr(config.preprocessing, "energy_extractor"):
-            self.energy_extractor = ENERGY_EXTRACTORS.build(
-                config.preprocessing.energy_extractor
-            )
+            self.energy_extractor = instantiate(config.preprocessing.energy_extractor)
 
         if os.path.isdir(checkpoint):
             # Find the latest checkpoint

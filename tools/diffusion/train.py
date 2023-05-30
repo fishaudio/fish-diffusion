@@ -1,3 +1,4 @@
+from anyio import Path
 import pytorch_lightning as pl
 import torch
 from omegaconf import OmegaConf, DictConfig
@@ -34,7 +35,14 @@ def main(cfg: DictConfig) -> None:
 
     # We only load the state_dict of the model, not the optimizer.
     if cfg.pretrained:
-        state_dict = torch.load(cfg.pretrained, map_location="cpu")
+        pretrained_path = project_root / Path(cfg.pretrained)
+        if not pretrained_path.exists():
+            logger.warning(
+                f"Pretrained model {pretrained_path} does not exist, skipping."
+            )
+            return
+        # todo: need to fix this
+        state_dict = torch.load(str(pretrained_path), map_location="cpu")
         if "state_dict" in state_dict:
             state_dict = state_dict["state_dict"]
 
