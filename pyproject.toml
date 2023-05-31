@@ -35,6 +35,8 @@ dependencies = [
     "torchaudio<3.0.0,>=2.0.0",
     "pytorch-lightning<3.0.0,>=2.0.2",
     "fastapi==0.88.0",
+    "hydra-core>=1.3.2",
+    "omegaconf>=2.3.0",
 ]
 
 [tool.pdm]

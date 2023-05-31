@@ -40,6 +40,7 @@ class HiFiSingerSVCInference(SVCInference):
         sampler_progress: bool = False,
         sampler_interval: Optional[int] = None,
         pitches: Optional[torch.Tensor] = None,
+        skip_steps: int = 0,  # not used
     ):
         mel_len = audio.shape[-1] // getattr(self.config, "hop_length", 512)
         amplitude = audio.abs().max()

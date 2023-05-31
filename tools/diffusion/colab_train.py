@@ -110,40 +110,45 @@ train_process = subprocess.Popen(train_args)
 
 while True:
     try:
-        # Synchronize the logs folder with the destination folder
-        if not args.tensorboard:
-            for subdir, dirs, files in os.walk(
-                os.path.join(fishsvc_logs_path, "wandb")
-            ):
-                copy_files(
-                    os.path.join(subdir), os.path.join(fishsvc_dest_path, subdir)
-                )
-        elif not os.path.exists(fishsvc_chkpt_path):
+        if not os.path.exists(fishsvc_chkpt_path):
             logging.warning("%s doesn't exist yet!", fishsvc_chkpt_path)
             time.sleep(30)
             continue
-        else:
-            for version_dir in glob.glob(os.path.join(fishsvc_chkpt_path, "version_*")):
-                copy_files(
-                    os.path.join(version_dir),
-                    os.path.join(fishsvc_dest_path, version_dir),
-                )
-
-        # Synchronize the checkpoints folder with the destination models folder
-
-        if not args.tensorboard:
-            for runid_dir in glob.glob(os.path.join(fishsvc_chkpt_path, "*")):
-                if "version_*" not in runid_dir:
+        if args.dest_path:
+            # Synchronize the logs folder with the destination folder
+            if not args.tensorboard:
+                for subdir, dirs, files in os.walk(
+                    os.path.join(fishsvc_logs_path, "wandb")
+                ):
                     copy_files(
-                        os.path.join(runid_dir, "checkpoints"),
+                        os.path.join(subdir), os.path.join(fishsvc_dest_path, subdir)
+                    )
+            else:
+                for version_dir in glob.glob(
+                    os.path.join(fishsvc_chkpt_path, "version_*")
+                ):
+                    copy_files(
+                        os.path.join(version_dir),
+                        os.path.join(fishsvc_dest_path, version_dir),
+                    )
+
+            # Synchronize the checkpoints folder with the destination models folder
+
+            if not args.tensorboard:
+                for runid_dir in glob.glob(os.path.join(fishsvc_chkpt_path, "*")):
+                    if "version_*" not in runid_dir:
+                        copy_files(
+                            os.path.join(runid_dir, "checkpoints"),
+                            os.path.join(fishsvc_dest_path, "models"),
+                        )
+            else:
+                for version_dir in glob.glob(
+                    os.path.join(fishsvc_chkpt_path, "version_*")
+                ):
+                    copy_files(
+                        os.path.join(version_dir, "checkpoints"),
                         os.path.join(fishsvc_dest_path, "models"),
                     )
-        else:
-            for version_dir in glob.glob(os.path.join(fishsvc_chkpt_path, "version_*")):
-                copy_files(
-                    os.path.join(version_dir, "checkpoints"),
-                    os.path.join(fishsvc_dest_path, "models"),
-                )
 
         # Keep only the last four checkpoints in the source checkpoint directory
         for d in os.listdir(fishsvc_chkpt_path):
@@ -165,23 +170,22 @@ while True:
                     "No checkpoints folder found in %s yet, skipping cleanup", d
                 )
 
-        # Keep only the last four checkpoints in the destination checkpoint directory
-        models_path = os.path.join(fishsvc_dest_path, "models")
-        if os.path.exists(models_path):
-            checkpoints = sorted(
-                [
-                    os.path.join(checkpoints_path, f)
-                    for f in os.listdir(checkpoints_path)
-                ],
-                key=get_step,
-                reverse=True,
-            )
-            for checkpoint in checkpoints[4:]:
-                os.remove(checkpoint)
-        else:
-            logging.warning(
-                "No models folder found in %s yet, skipping cleanup", fishsvc_dest_path
-            )
+        if args.dest_path:
+            # Keep only the last four checkpoints in the destination checkpoint directory
+            models_path = os.path.join(fishsvc_dest_path, "models")
+            if os.path.exists(models_path):
+                checkpoints = sorted(
+                    [os.path.join(models_path, f) for f in os.listdir(models_path)],
+                    key=get_step,
+                    reverse=True,
+                )
+                for checkpoint in checkpoints[4:]:
+                    os.remove(checkpoint)
+            else:
+                logging.warning(
+                    "No models folder found in %s yet, skipping cleanup",
+                    fishsvc_dest_path,
+                )
 
         time.sleep(
             30

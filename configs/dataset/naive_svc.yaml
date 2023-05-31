@@ -1,0 +1,8 @@
+train:
+  _target_: fish_diffusion.datasets.naive.NaiveSVCDataset
+  path: dataset/train/opencpop
+  speaker_id: 0
+valid:
+  _target_: fish_diffusion.datasets.naive.NaiveSVCDataset
+  path: dataset/valid/F1
+  speaker_id: 0

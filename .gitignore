@@ -132,7 +132,7 @@ dmypy.json
 .pyre/
 
 data
-dataset
+/dataset/
 .vscode
 
 *.pt

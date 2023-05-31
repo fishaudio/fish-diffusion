@@ -42,7 +42,7 @@ class DiscriminatorR(torch.nn.Module):
 
         for l in self.convs:
             x = l(x)
-            x = F.leaky_relu(x, self.leaky_relu_slope)
+            x = F.leaky_relu(x, self.leaky_relu_slope, inplace=True)
             fmap.append(x)
 
         x = self.conv_post(x)
