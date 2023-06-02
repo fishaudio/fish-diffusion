@@ -24,10 +24,8 @@ class RepeatDataset(Dataset):
         self.collate_fn = collate_fn
 
         if isinstance(dataset, dict):
-            logger.debug(f"Building dataset from config: {dataset}")
             self.dataset = DATASETS.build(dataset)
         else:
-            logger.debug(f"Using dataset: {dataset}")
             self.dataset = dataset
 
     def __len__(self):

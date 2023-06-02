@@ -174,9 +174,4 @@ trainer:
     save_top_k: -1
   - _target_: pytorch_lightning.callbacks.LearningRateMonitor
     logging_interval: step
-  strategy: 
-    _target_: pytorch_lightning.strategies.DDPStrategy 
-    find_unused_parameters: true
-    process_group_backend: nccl
-    gradient_as_bucket_view: true
-    ddp_comm_hook: torch.distributed.algorithms.ddp_comm_hooks.default_hooks.fp16_compress_hook
+  strategy: null

@@ -1,3 +1,16 @@
+text_features_extractor_type: HubertSoft
+pitch_extractor_type: ParselMouthPitchExtractor
+pretrained: null
+resume: null
+tensorboard: false
+resume_id: null
+entity: null
+name: null
+only_train_speaker_embeddings: false
+path: dataset
+clean: false
+num_workers: 8
+no_augmentation: true
 model:
   type: DiffSVC
   diffusion:
@@ -27,7 +40,7 @@ model:
     output_size: 256
   speaker_encoder:
     _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
-    input_size: 10
+    input_size: 1
     output_size: 256
     use_embedding: true
   pitch_encoder:
@@ -51,15 +64,21 @@ preprocessing:
   pitch_extractor:
     _target_: fish_diffusion.modules.pitch_extractors.parsel_mouth.ParselMouthPitchExtractor
     keep_zeros: false
+model_type: DiffSVC
 dataset:
   train:
-    _target_: fish_diffusion.datasets.naive.NaiveSVCDataset
-    path: dataset/train/opencpop
-    speaker_id: 0
+    _target_: fish_diffusion.datasets.ConcatDataset
+    datasets:
+    - _target_: fish_diffusion.datasets.naive.NaiveSVCDataset
+      path: dataset/train/opencpop
+      speaker_id: 0
+    collate_fn: fish_diffusion.datasets.naive.NaiveSVCDataset.collate_fn
   valid:
-    _target_: fish_diffusion.datasets.naive.NaiveSVCDataset
-    path: dataset/valid/F1
-    speaker_id: 0
+    _target_: fish_diffusion.datasets.ConcatDataset
+    datasets:
+    - _target_: fish_diffusion.datasets.naive.NaiveSVCDataset
+      path: dataset/valid
+    collate_fn: fish_diffusion.datasets.naive.NaiveSVCDataset.collate_fn
 dataloader:
   train:
     batch_size: 20
@@ -105,17 +124,3 @@ trainer:
   - _target_: pytorch_lightning.callbacks.LearningRateMonitor
     logging_interval: step
   strategy: null
-model_type: DiffSVC
-text_features_extractor_type: HubertSoft
-pitch_extractor_type: ParselMouthPitchExtractor
-pretrained: null
-resume: null
-tensorboard: false
-resume_id: null
-entity: null
-name: null
-only_train_speaker_embeddings: false
-path: dataset
-clean: false
-num_workers: 8
-no_augmentation: true

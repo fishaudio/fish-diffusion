@@ -9,6 +9,7 @@ from fish_diffusion.datasets.utils import build_loader_from_config
 from hydra.utils import instantiate
 from box import Box
 
+from hydra.utils import get_method
 
 torch.set_float32_matmul_precision("medium")
 
@@ -17,7 +18,7 @@ torch.set_float32_matmul_precision("medium")
 # Load the configuration file
 @hydra.main(config_name=None, config_path="../../configs")
 def main(cfg: DictConfig) -> None:
-    from loguru import logger
+    from loguru import logger as loguru_logger
 
     cfg = OmegaConf.to_container(cfg, resolve=True)  # type: ignore
     cfg = Box(cfg)  # type: ignore
@@ -62,6 +63,12 @@ def main(cfg: DictConfig) -> None:
 
     if cfg.trainer.strategy is None:
         del cfg.trainer.strategy
+    else:
+        loguru_logger.debug(f"Using strategy: {cfg.trainer.strategy}")
+        cfg.trainer.strategy.ddp_comm_hook = get_method(
+            cfg.trainer.strategy.ddp_comm_hook
+        )
+        cfg.trainer.strategy = instantiate(cfg.trainer.strategy)
     callbacks = [instantiate(cb) for cb in cfg.trainer.callbacks]
     del cfg.trainer.callbacks
     trainer = pl.Trainer(

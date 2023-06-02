@@ -2,12 +2,10 @@ import click
 from omegaconf import OmegaConf
 from loguru import logger
 from pathlib import Path
-import omegaconf
 import torch
 import sys
 from torch.distributed.algorithms.ddp_comm_hooks import default_hooks as default
 from typing import Dict
-from hydra.utils import get_original_cwd
 
 from hydra.experimental import compose, initialize
 
@@ -15,10 +13,12 @@ from hydra.experimental import compose, initialize
 def create_ddp_strategy():
     if torch.cuda.is_available() and torch.cuda.device_count() > 1:
         return {
+            "_target_": "pytorch_lightning.strategies.DDPStrategy",
             "find_unused_parameters": True,
             "process_group_backend": "nccl" if sys.platform != "win32" else "gloo",
             "gradient_as_bucket_view": True,
-            "ddp_comm_hook": default.fp16_compress_hook,
+            # "ddp_comm_hook": default.fp16_compress_hook,
+            "ddp_comm_hook": "torch.distributed.algorithms.ddp_comm_hooks.default_hooks.fp16_compress_hook",
         }
     else:
         return None
@@ -42,6 +42,14 @@ def build_hifi_svc_datasets(
         ],
         "collate_fn": f"{datasetConf.train._target_}.collate_fn",
     }
+    if len(train_speaker_ids.keys()) == 0:
+        train_datasets["datasets"] = [
+            {
+                "_target_": f"{datasetConf.train._target_}",
+                "path": f"dataset/train",
+                "segment_size": datasetConf.train.segment_size,
+            }
+        ]
 
     valid_datasets = {
         "_target_": "fish_diffusion.datasets.ConcatDataset",
@@ -55,6 +63,14 @@ def build_hifi_svc_datasets(
         ],
         "collate_fn": f"{datasetConf.valid._target_}.collate_fn",
     }
+
+    if len(val_speaker_ids.keys()) == 0:
+        valid_datasets["datasets"] = [
+            {
+                "_target_": f"{datasetConf.valid._target_}",
+                "path": f"dataset/valid",
+            }
+        ]
 
     return {"train": train_datasets, "valid": valid_datasets}
 
@@ -76,6 +92,13 @@ def build_naive_svc_datasets(
         ],
         "collate_fn": f"{datasetConf.train._target_}.collate_fn",
     }
+    if len(train_speaker_ids.keys()) == 0:
+        train_datasets["datasets"] = [
+            {
+                "_target_": f"{datasetConf.train._target_}",
+                "path": f"dataset/train",
+            }
+        ]
 
     valid_datasets = {
         "_target_": "fish_diffusion.datasets.ConcatDataset",
@@ -89,6 +112,13 @@ def build_naive_svc_datasets(
         ],
         "collate_fn": f"{datasetConf.valid._target_}.collate_fn",
     }
+    if len(val_speaker_ids.keys()) == 0:
+        valid_datasets["datasets"] = [
+            {
+                "_target_": f"{datasetConf.valid._target_}",
+                "path": f"dataset/valid",
+            }
+        ]
 
     return {"train": train_datasets, "valid": valid_datasets}
 

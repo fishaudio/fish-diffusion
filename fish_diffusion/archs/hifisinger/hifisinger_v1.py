@@ -105,6 +105,9 @@ class HiFiSingerV1Lightning(pl.LightningModule):
         return [optim_g, optim_d], [scheduler_g, scheduler_d]
 
     def training_step(self, batch, batch_idx):
+        # debug
+        torch.autograd.set_detect_anomaly(True)
+
         optim_g, optim_d = self.optimizers()
 
         y = batch["audio"].float()

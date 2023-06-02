@@ -1,4 +1,3 @@
-import argparse
 import random
 from concurrent.futures import ProcessPoolExecutor
 from copy import deepcopy
@@ -236,7 +235,6 @@ def main(config: DictConfig) -> None:
 
     config = OmegaConf.to_container(config, resolve=True)
     config = Box(config)
-    logger.debug(config.model)
 
     mp.set_start_method("spawn", force=True)
 
@@ -254,15 +252,13 @@ def main(config: DictConfig) -> None:
     if config.clean:
         logger.info("Cleaning *.npy files...")
 
-        # files = list_files(path, {".npy"}, recursive=True, sort=True)
-        files = list(path.glob("*/**/*.npy"))
+        files = list_files(path, {".npy"}, recursive=True, sort=True)
         for f in files:
             f.unlink()
 
         logger.info("Done!")
 
-    # files = list_files(config.path, AUDIO_EXTENSIONS, recursive=True, sort=False)
-    files = list(path.glob("*/**/*.wav"))
+    files = list_files(path, AUDIO_EXTENSIONS, recursive=True, sort=False)
     logger.info(f"Found {len(files)} files, processing...")
 
     # Shuffle files will balance the workload of workers

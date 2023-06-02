@@ -11,7 +11,7 @@ from fish_diffusion.datasets.utils import build_loader_from_config
 # Import resolvers to register them
 from hydra.utils import instantiate
 from box import Box
-from hydra.utils import get_original_cwd
+from hydra.utils import get_original_cwd, get_method
 
 torch.set_float32_matmul_precision("medium")
 
@@ -88,6 +88,11 @@ def main(cfg: DictConfig) -> None:
 
     if cfg.trainer.strategy is None:
         del cfg.trainer.strategy
+    else:
+        cfg.trainer.strategy.ddp_comm_hook = get_method(
+            cfg.trainer.strategy.ddp_comm_hook
+        )
+        cfg.trainer.strategy = instantiate(cfg.trainer.strategy)
     callbacks = [instantiate(cb) for cb in cfg.trainer.callbacks]
     del cfg.trainer.callbacks
     trainer = pl.Trainer(
