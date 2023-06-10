@@ -84,7 +84,10 @@ class HiFiSingerV1Lightning(pl.LightningModule):
         # )
         optim_d = instantiate(
             self.config.optimizer,
-            params=itertools.chain(self.msd.parameters(), self.mpd.parameters()),
+            params=itertools.chain(
+                self.msd.parameters(),
+                self.mpd.parameters(),
+            ),
         )
 
         # scheduler_g = LR_SCHEUDLERS.build(
