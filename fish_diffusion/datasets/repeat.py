@@ -2,12 +2,12 @@ from typing import Iterable, Union
 
 from torch.utils.data import Dataset
 
-from .builder import DATASETS
 
 from loguru import logger
 
+from hydra.utils import instantiate
 
-@DATASETS.register_module()
+
 class RepeatDataset(Dataset):
     def __init__(
         self, dataset: Union[dict, Dataset], repeat: int, collate_fn=None
@@ -24,7 +24,7 @@ class RepeatDataset(Dataset):
         self.collate_fn = collate_fn
 
         if isinstance(dataset, dict):
-            self.dataset = DATASETS.build(dataset)
+            self.dataset = instantiate(dataset)
         else:
             self.dataset = dataset
 

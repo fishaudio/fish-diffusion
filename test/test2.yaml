@@ -124,7 +124,7 @@ preprocessing:
 model_type: HiFiSVC
 dataset:
   train:
-    _target_: fish_diffusion.datasets.ConcatDataset
+    _target_: fish_diffusion.datasets.concat.ConcatDataset
     datasets:
     - _target_: fish_diffusion.datasets.hifisinger.HiFiSVCDataset
       path: dataset/train/opencpop
@@ -132,7 +132,7 @@ dataset:
       speaker_id: 0
     collate_fn: fish_diffusion.datasets.hifisinger.HiFiSVCDataset.collate_fn
   valid:
-    _target_: fish_diffusion.datasets.ConcatDataset
+    _target_: fish_diffusion.datasets.concat.ConcatDataset
     datasets:
     - _target_: fish_diffusion.datasets.hifisinger.HiFiSVCDataset
       path: dataset/valid

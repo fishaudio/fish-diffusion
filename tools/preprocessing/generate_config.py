@@ -30,7 +30,7 @@ def build_hifi_svc_datasets(
     datasetConf: OmegaConf,
 ) -> Dict[str, Dict]:
     train_datasets = {
-        "_target_": "fish_diffusion.datasets.ConcatDataset",
+        "_target_": "fish_diffusion.datasets.concat.ConcatDataset",
         "datasets": [
             {
                 "_target_": f"{datasetConf.train._target_}",
@@ -52,7 +52,7 @@ def build_hifi_svc_datasets(
         ]
 
     valid_datasets = {
-        "_target_": "fish_diffusion.datasets.ConcatDataset",
+        "_target_": "fish_diffusion.datasets.concat.ConcatDataset",
         "datasets": [
             {
                 "_target_": f"{datasetConf.valid._target_}",
@@ -81,7 +81,7 @@ def build_naive_svc_datasets(
     datasetConf: OmegaConf,
 ) -> Dict[str, Dict]:
     train_datasets = {
-        "_target_": "fish_diffusion.datasets.ConcatDataset",
+        "_target_": "fish_diffusion.datasets.concat.ConcatDataset",
         "datasets": [
             {
                 "_target_": f"{datasetConf.train._target_}",
@@ -101,7 +101,7 @@ def build_naive_svc_datasets(
         ]
 
     valid_datasets = {
-        "_target_": "fish_diffusion.datasets.ConcatDataset",
+        "_target_": "fish_diffusion.datasets.concat.ConcatDataset",
         "datasets": [
             {
                 "_target_": f"{datasetConf.valid._target_}",

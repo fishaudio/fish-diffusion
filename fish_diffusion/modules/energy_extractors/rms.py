@@ -6,10 +6,7 @@ from torch import nn
 
 from fish_diffusion.utils.tensor import repeat_expand
 
-from .builder import ENERGY_EXTRACTORS
 
-
-@ENERGY_EXTRACTORS.register_module()
 class RMSEnergyExtractor(nn.Module):
     def __init__(
         self,

@@ -4,7 +4,9 @@ from omegaconf import OmegaConf, DictConfig
 import hydra
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.loggers.wandb import WandbLogger
-from fish_diffusion.archs.hifisinger import HiFiSingerV1Lightning, HiFiSingerV2Lightning
+from fish_diffusion.archs.hifisinger.hifisinger_v1 import HiFiSingerV1Lightning
+
+# from fish_diffusion.archs.hifisinger.hifisinger_v2 import HiFiSingerV2Lightning
 from fish_diffusion.datasets.utils import build_loader_from_config
 from hydra.utils import instantiate
 from box import Box
@@ -25,7 +27,8 @@ def train(cfg: DictConfig) -> None:
 
     pl.seed_everything(594461, workers=True)
     if cfg.model.encoder._target_.lower().split(".")[-1] == "RefineGAN".lower():
-        model = HiFiSingerV2Lightning(cfg)
+        # model = HiFiSingerV2Lightning(cfg)
+        pass
     elif cfg.model.encoder._target_.lower().split(".")[-1] == "HiFiGAN".lower():
         model = HiFiSingerV1Lightning(cfg)
     else:

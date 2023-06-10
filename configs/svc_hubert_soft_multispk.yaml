@@ -84,7 +84,7 @@ preprocessing:
     keep_zeros: false
 dataset:
   train:
-    _target_: fish_diffusion.datasets.ConcatDataset
+    _target_: fish_diffusion.datasets.concat.ConcatDataset
     datasets:
     - _target_: fish_diffusion.datasets.naive.NaiveSVCDataset
       path: dataset/train/M1
@@ -97,7 +97,7 @@ dataset:
       speaker_id: 2
     collate_fn: fish_diffusion.datasets.naive.NaiveSVCDataset.collate_fn
   valid:
-    _target_: fish_diffusion.datasets.ConcatDataset
+    _target_: fish_diffusion.datasets.concat.ConcatDataset
     datasets:
     - _target_: fish_diffusion.datasets.naive.NaiveSVCDataset
       path: dataset/valid/M1
