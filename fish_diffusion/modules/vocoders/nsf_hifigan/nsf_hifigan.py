@@ -32,7 +32,6 @@ class NsfHifiGAN(pl.LightningModule):
     ):
         super().__init__()
 
-        # project_root = get_original_cwd()
         checkpoint_path = Path(project_root) / checkpoint_path
         logger.info(f"Loading NSF-HiFi-GAN from {checkpoint_path}")
 

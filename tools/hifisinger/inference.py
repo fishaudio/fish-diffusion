@@ -209,7 +209,7 @@ def parse_args():
 
 @hydra.main(config_path="../../configs", config_name=None)
 def main(cfg: DictConfig) -> None:
-    project_root = get_original_cwd()
+    project_root = cfg.project_root
 
     args = parse_args()
 

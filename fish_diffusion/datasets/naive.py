@@ -19,8 +19,8 @@ class NaiveDataset(Dataset):
     collating_pipeline = []
 
     def __init__(self, path="dataset", speaker_id=0):
-        project_root = get_original_cwd()
-        path = Path(project_root) / path
+        # project_root = get_original_cwd()
+        # path = Path(project_root) / path
         self.paths = list_files(path, {".npy"}, recursive=True, sort=True)
         logger.info(f"Found {len(self.paths)} npy files in {path}")
         self.dataset_path = Path(path)

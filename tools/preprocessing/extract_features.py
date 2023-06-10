@@ -225,13 +225,10 @@ def safe_process(config, audio_path: Path):
 
 @hydra.main(config_name=None, config_path="../../configs")
 def main(config: DictConfig) -> None:
-    project_root = get_original_cwd()
-    OmegaConf.set_struct(config, False)  # Allow changes to the config
-    if config.model_type == "DiffSVC":
-        config.model.vocoder.project_root = (
-            project_root  # Add project_root to the config
-        )
-    OmegaConf.set_struct(config, True)
+    project_root = config.project_root
+    # OmegaConf.set_struct(config, False)  # Allow changes to the config
+    # if config.model_type == "DiffSVC":
+    # OmegaConf.set_struct(config, True)
 
     config = OmegaConf.to_container(config, resolve=True)
     config = Box(config)

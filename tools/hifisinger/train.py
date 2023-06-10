@@ -17,7 +17,7 @@ torch.set_float32_matmul_precision("medium")
 # python train.py --config-name svc_hifi name=xxxx entity=xxx
 # Load the configuration file
 @hydra.main(config_name=None, config_path="../../configs")
-def main(cfg: DictConfig) -> None:
+def train(cfg: DictConfig) -> None:
     from loguru import logger as loguru_logger
 
     cfg = OmegaConf.to_container(cfg, resolve=True)  # type: ignore
@@ -82,4 +82,4 @@ def main(cfg: DictConfig) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    train()

@@ -19,13 +19,10 @@ torch.set_float32_matmul_precision("medium")
 # python train.py --config-name svc_huber_soft name=xxxx entity=xxx
 # Load the configuration file
 @hydra.main(config_name=None, config_path="../../configs")
-def main(cfg: DictConfig) -> None:
+def train(cfg: DictConfig) -> None:
     from loguru import logger
 
-    project_root = get_original_cwd()
-    OmegaConf.set_struct(cfg, False)  # Allow changes to the config
-    cfg.model.vocoder.project_root = project_root  # Add project_root to the config
-    OmegaConf.set_struct(cfg, True)
+    project_root = cfg.project_root
 
     cfg = OmegaConf.to_container(cfg, resolve=True)  # type: ignore
     cfg = Box(cfg)  # type: ignore
@@ -106,4 +103,4 @@ def main(cfg: DictConfig) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    train()
