@@ -6,8 +6,6 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-# from .builder import DATASETS
-# todo: delete this
 from .repeat import RepeatDataset
 
 from hydra.utils import instantiate
@@ -22,6 +20,7 @@ def build_loader_from_config(cfg, num_devices=1):
     )
 
     valid_dataset = instantiate(cfg.dataset.valid)
+    logger.debug(f"Valid dataset fn: {valid_dataset.collate_fn}")
 
     if num_devices > 1:
         valid_dataset = RepeatDataset(

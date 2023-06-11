@@ -77,12 +77,8 @@ class NsfHifiGAN(pl.LightningModule):
         if "mel_channels" in kwargs:
             kwargs["num_mels"] = kwargs.pop("mel_channels")
 
-        # for k, v in kwargs.items():
-        # if getattr(self.h, k, None) != v:
-        #     logger.debug(f"Testing {self.h} {k} {v}")
-        #     raise ValueError(f"Incorrect value for {k}: {v}")
         for k, v in kwargs.items():
-            if k != "type" and getattr(self.h, k, None) != v:
+            if getattr(self.h, k, None) != v:
                 raise ValueError(f"Incorrect value for {k}: {v}")
 
     @torch.no_grad()

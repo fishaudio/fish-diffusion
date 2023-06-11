@@ -18,14 +18,13 @@ torch.set_float32_matmul_precision("medium")
 
 # python train.py --config-name svc_hifi name=xxxx entity=xxx
 # Load the configuration file
-@hydra.main(config_name=None, config_path="../../configs")
 def train(cfg: DictConfig) -> None:
     from loguru import logger as loguru_logger
 
     cfg = OmegaConf.to_container(cfg, resolve=True)  # type: ignore
     cfg = Box(cfg)  # type: ignore
 
-    pl.seed_everything(594461, workers=True)
+    # pl.seed_everything(594461, workers=True)
     if cfg.model.encoder._target_.lower().split(".")[-1] == "RefineGAN".lower():
         # model = HiFiSingerV2Lightning(cfg)
         pass
@@ -73,11 +72,13 @@ def train(cfg: DictConfig) -> None:
         )
         cfg.trainer.strategy = instantiate(cfg.trainer.strategy)
     callbacks = [instantiate(cb) for cb in cfg.trainer.callbacks]
+    loguru_logger.debug(f"Using callbacks: {callbacks}")
     del cfg.trainer.callbacks
+    loguru_logger.debug(f"trainer: {cfg.trainer}")
     trainer = pl.Trainer(
         logger=logger,
         callbacks=callbacks,
-        **cfg.trainer.to_dict(),
+        **cfg.trainer,
     )
 
     train_loader, valid_loader = build_loader_from_config(cfg, trainer.num_devices)

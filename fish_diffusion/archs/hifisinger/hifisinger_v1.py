@@ -1,4 +1,5 @@
 import itertools
+from loguru import logger
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
@@ -19,7 +20,6 @@ from fish_diffusion.modules.vocoders.nsf_hifigan.models import (
     generator_loss,
 )
 
-# from fish_diffusion.schedulers import LR_SCHEUDLERS
 from fish_diffusion.utils.audio import dynamic_range_compression, get_mel_transform
 from fish_diffusion.utils.viz import plot_mel
 
@@ -188,11 +188,17 @@ class HiFiSingerV1Lightning(pl.LightningModule):
         y_df_hat_r, y_df_hat_g, fmap_f_r, fmap_f_g = self.mpd(y, y_g_hat)
         y_ds_hat_r, y_ds_hat_g, fmap_s_r, fmap_s_g = self.msd(y, y_g_hat)
         loss_fm_f = feature_loss(fmap_f_r, fmap_f_g)
+        # todo: check if this is correct
+        logger.debug(f"loss_fm_f: {loss_fm_f}")
         loss_fm_s = feature_loss(fmap_s_r, fmap_s_g)
+        logger.debug(f"loss_fm_s: {loss_fm_s}")
         loss_gen_f, _ = generator_loss(y_df_hat_g)
         loss_gen_s, _ = generator_loss(y_ds_hat_g)
         loss_gen_all = loss_gen_s + loss_gen_f + loss_fm_s + loss_fm_f + loss_aux * 45
 
+        # todo: check if this is correct
+
+        logger.debug(f"loss_gen_all: {loss_gen_all}")
         self.manual_backward(loss_gen_all)
         optim_g.step()
 

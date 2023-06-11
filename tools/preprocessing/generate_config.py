@@ -4,7 +4,6 @@ from loguru import logger
 from pathlib import Path
 import torch
 import sys
-from torch.distributed.algorithms.ddp_comm_hooks import default_hooks as default
 from typing import Dict
 
 from hydra.experimental import compose, initialize
@@ -17,7 +16,6 @@ def create_ddp_strategy():
             "find_unused_parameters": True,
             "process_group_backend": "nccl" if sys.platform != "win32" else "gloo",
             "gradient_as_bucket_view": True,
-            # "ddp_comm_hook": default.fp16_compress_hook,
             "ddp_comm_hook": "torch.distributed.algorithms.ddp_comm_hooks.default_hooks.fp16_compress_hook",
         }
     else:
@@ -228,6 +226,9 @@ if __name__ == "__main__":
     OmegaConf.register_new_resolver("n_fft", lambda: 2048)
     OmegaConf.register_new_resolver("hop_length", lambda: 256)
     OmegaConf.register_new_resolver("win_length", lambda: 2048)
+
+    # for speaker encoder speaker_embedding_size
+    OmegaConf.register_new_resolver("speaker_embedding_size", lambda: 1)
     # for ddp
     OmegaConf.register_new_resolver("create_ddp_strategy", create_ddp_strategy)
     main()

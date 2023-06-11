@@ -11,7 +11,7 @@ from fish_diffusion.datasets.utils import build_loader_from_config
 # Import resolvers to register them
 from hydra.utils import instantiate
 from box import Box
-from hydra.utils import get_original_cwd, get_method
+from hydra.utils import get_method
 
 torch.set_float32_matmul_precision("medium")
 
@@ -27,7 +27,7 @@ def train(cfg: DictConfig) -> None:
     cfg = OmegaConf.to_container(cfg, resolve=True)  # type: ignore
     cfg = Box(cfg)  # type: ignore
 
-    pl.seed_everything(594461, workers=True)
+    # pl.seed_everything(594461, workers=True)
     model = DiffSingerLightning(cfg)
 
     # We only load the state_dict of the model, not the optimizer.
@@ -90,6 +90,7 @@ def train(cfg: DictConfig) -> None:
             cfg.trainer.strategy.ddp_comm_hook
         )
         cfg.trainer.strategy = instantiate(cfg.trainer.strategy)
+    # todo: check callbacks are correct
     callbacks = [instantiate(cb) for cb in cfg.trainer.callbacks]
     del cfg.trainer.callbacks
     trainer = pl.Trainer(

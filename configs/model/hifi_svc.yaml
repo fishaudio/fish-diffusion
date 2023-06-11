@@ -6,7 +6,7 @@ text_encoder:
   output_size: ${hidden_size:}
 speaker_encoder:
   _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
-  input_size: 10
+  input_size: ${speaker_embedding_size:}
   output_size: ${hidden_size:}
   use_embedding: true
 pitch_encoder:
