@@ -186,8 +186,11 @@ class HiFiSingerV1Lightning(pl.LightningModule):
 
         # Discriminator Loss
         y_df_hat_r, y_df_hat_g, fmap_f_r, fmap_f_g = self.mpd(y, y_g_hat)
+        logger.debug(f"y_df_hat_r: {y_df_hat_r}")
         y_ds_hat_r, y_ds_hat_g, fmap_s_r, fmap_s_g = self.msd(y, y_g_hat)
+        logger.debug(f"y_ds_hat_r: {y_ds_hat_r}")
         loss_fm_f = feature_loss(fmap_f_r, fmap_f_g)
+        logger.debug(f"loss_fm_f: {loss_fm_f}")
         # todo: check if this is correct
         logger.debug(f"loss_fm_f: {loss_fm_f}")
         loss_fm_s = feature_loss(fmap_s_r, fmap_s_g)
