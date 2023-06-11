@@ -5,10 +5,8 @@ from torch import nn
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
 
 from .base import BaseFeatureExtractor
-from .builder import FEATURE_EXTRACTORS
 
 
-@FEATURE_EXTRACTORS.register_module()
 class ChineseHubertSoft(BaseFeatureExtractor):
     def __init__(
         self,
@@ -64,7 +62,6 @@ class ChineseHubertSoft(BaseFeatureExtractor):
         return features.transpose(1, 2)
 
 
-@FEATURE_EXTRACTORS.register_module()
 class ChineseHubert(BaseFeatureExtractor):
     def __init__(self, model="TencentGameMate/chinese-hubert-base"):
         super().__init__()

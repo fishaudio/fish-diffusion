@@ -1,3 +1,4 @@
+import os
 import click
 from omegaconf import OmegaConf
 from loguru import logger
@@ -137,6 +138,7 @@ def generate_config(model, dataset, scheduler, output_name, is_multi_speaker, tr
     config.clean = False
     config.num_workers = 8
     config.no_augmentation = True
+    config.project_root = os.getcwd()
 
     # Determine which parts of the configuration to include
     try:
