@@ -2,13 +2,15 @@ from argparse import ArgumentParser
 
 import torch
 from loguru import logger
-from mmengine import Config
+from omegaconf import OmegaConf, DictConfig
+from box import Box
 
 from fish_diffusion.archs.diffsinger import DiffSingerLightning
 
 
-def convert(config_path, input_path, output_path):
-    config = Config.fromfile(config_path)
+def convert(config_path: DictConfig, input_path, output_path):
+    config = OmegaConf.load(config_path)
+    config = Box(config)
     model = DiffSingerLightning(config)
 
     logger.info("Loading Diff-SVC checkpoint...")

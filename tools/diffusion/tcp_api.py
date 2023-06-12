@@ -6,7 +6,10 @@ import time
 import librosa
 import numpy as np
 import torch
-from mmengine import Config
+
+# from mmengine import Config
+from omegaconf import OmegaConf, DictConfig
+from box import Box
 
 from tools.diffusion.inference import SVCInference
 
@@ -17,7 +20,8 @@ checkpoint_path = (
 config_path = "configs/exp_super_mix_v2.py"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-config = Config.fromfile(config_path)
+# config = Config.fromfile(config_path)
+config = OmegaConf.load(config_path)
 model = SVCInference(config, checkpoint_path)
 model = model.to(device)
 

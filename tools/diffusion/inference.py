@@ -10,7 +10,10 @@ import soundfile as sf
 import torch
 from fish_audio_preprocess.utils import loudness_norm, separate_audio
 from loguru import logger
-from mmengine import Config
+
+# from mmengine import Config
+from omegaconf import OmegaConf, DictConfig
+from box import Box
 from natsort import natsorted
 from torch import nn
 
@@ -550,7 +553,9 @@ if __name__ == "__main__":
     else:
         device = torch.device(args.device)
 
-    config = Config.fromfile(args.config)
+    # config = Config.fromfile(args.config)
+    config = OmegaConf.load(args.config)
+    config = Box(config)
 
     if args.speaker_mapping is not None:
         config.speaker_mapping = json.load(open(args.speaker_mapping))

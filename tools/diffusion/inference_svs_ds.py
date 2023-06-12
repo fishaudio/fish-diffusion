@@ -9,6 +9,8 @@ import torch
 from fish_audio_preprocess.utils import loudness_norm
 from loguru import logger
 from mmengine import Config
+from omegaconf import OmegaConf, DictConfig
+from box import Box
 
 from fish_diffusion.archs.diffsinger import DiffSingerLightning
 
