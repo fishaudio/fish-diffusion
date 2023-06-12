@@ -1,8 +1,7 @@
 import click
 import hydra
 from loguru import logger
-from omegaconf import OmegaConf, DictConfig
-from box import Box
+from omegaconf import OmegaConf
 import os
 from pathlib import Path
 
@@ -15,21 +14,15 @@ from pathlib import Path
     default="test/test2.yaml",
     help="config name",
 )
-@click.option(
-    "--model",
-    "-m",
-    type=str,
-    default="hifisinger",
-    help="model to train: diffusion or hifisinger",
-)
 @click.option("--entity", "-e", type=str, default="fish-audio", help="entity for wandb")
 @click.option("--tensorboard", "-t", is_flag=True, help="Log to tensorboard")
-def main(config, model, entity, tensorboard):
+def main(config, entity, tensorboard):
     run_dir = Path(config).parent.name
     config = Path(config).stem
     logger.info(f"Running {config} in {run_dir}")
     with hydra.initialize(config_path=f"../{run_dir}", job_name=run_dir):
         cfg = hydra.compose(config_name=config)
+        model = cfg.model.type.lower()
         OmegaConf.set_struct(cfg, False)  # Allow changes to the config
         # name=HIFI_SVC_ARIA entity=fish-audio tensorboard=true
         cfg.name = run_dir
