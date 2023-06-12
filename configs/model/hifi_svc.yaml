@@ -27,10 +27,10 @@ energy_encoder:
   output_size: ${hidden_size:}
   use_embedding: false
 encoder:
-  _target_: fish_diffusion.modules.HiFiGAN
+  type: HiFiGAN
   sampling_rate: ${sampling_rate:}
       # Model config
-  resblock: 1
+  resblock: "1"
   upsample_rates: [8, 8, 2, 2, 2]
   upsample_kernel_sizes: [16, 16, 8, 2, 2]
   upsample_initial_channel: 512

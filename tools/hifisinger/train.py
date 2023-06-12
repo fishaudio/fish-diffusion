@@ -25,10 +25,10 @@ def train(cfg: DictConfig) -> None:
     cfg = Box(cfg)  # type: ignore
 
     # pl.seed_everything(594461, workers=True)
-    if cfg.model.encoder._target_.lower().split(".")[-1] == "RefineGAN".lower():
+    if cfg.model.encoder.type.lower() == "RefineGAN".lower():
         # model = HiFiSingerV2Lightning(cfg)
         pass
-    elif cfg.model.encoder._target_.lower().split(".")[-1] == "HiFiGAN".lower():
+    elif cfg.model.encoder.type.lower() == "HiFiGAN".lower():
         model = HiFiSingerV1Lightning(cfg)
     else:
         raise NotImplementedError(f"Unknown encoder type: {cfg.model.encoder.type}")

@@ -5,7 +5,7 @@ from omegaconf import OmegaConf, DictConfig
 import hydra
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.loggers.wandb import WandbLogger
-from fish_diffusion.archs.diffsinger import DiffSingerLightning
+from fish_diffusion.archs.diffsinger.diffusions.diffusion import DiffSingerLightning
 from fish_diffusion.datasets.utils import build_loader_from_config
 
 # Import resolvers to register them

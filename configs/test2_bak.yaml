@@ -43,7 +43,7 @@ model:
   encoder:
     _target_: fish_diffusion.modules.HiFiGAN
     sampling_rate: 44100
-    resblock: 1
+    resblock: "1"
     upsample_rates:
     - 8
     - 8

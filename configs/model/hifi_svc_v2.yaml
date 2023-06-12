@@ -27,7 +27,7 @@ energy_encoder:
   output_size: 256
   use_embedding: false
 encoder:
-  _target_: fish_diffusion.modules.RefineGAN
+  type: RefineGAN
   sampling_rate: ${sampling_rate:}
   hop_length: ${hop_length:}
   downsample_rates: [2, 2, 8, 8]

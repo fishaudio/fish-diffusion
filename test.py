@@ -9,13 +9,17 @@ from pathlib import Path
 
 @click.command()
 @click.option(
-    "--config", "-c", type=click.Path(exists=True), default="config", help="config name"
+    "--config",
+    "-c",
+    type=click.Path(exists=True),
+    default="test/test2.yaml",
+    help="config name",
 )
 @click.option(
     "--model",
     "-m",
     type=str,
-    default="diffusion",
+    default="hifisinger",
     help="model to train: diffusion or hifisinger",
 )
 @click.option("--entity", "-e", type=str, default="fish-audio", help="entity for wandb")
@@ -33,8 +37,8 @@ def main(config, model, entity, tensorboard):
         cfg.name = run_dir
         cfg.entity = entity
         cfg.tensorboard = tensorboard
-
         OmegaConf.set_struct(cfg, True)
+
         os.chdir(run_dir)
         if model == "diffusion":
             from tools.diffusion.train import train

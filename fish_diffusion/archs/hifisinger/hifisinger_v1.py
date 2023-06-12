@@ -69,19 +69,7 @@ class HiFiSingerV1Lightning(pl.LightningModule):
         self.automatic_optimization = False
 
     def configure_optimizers(self):
-        # optim_g = OPTIMIZERS.build(
-        #     {
-        #         "params": self.generator.parameters(),
-        #         **self.config.optimizer,
-        #     }
-        # )
         optim_g = instantiate(self.config.optimizer, params=self.generator.parameters())
-        # optim_d = OPTIMIZERS.build(
-        #     {
-        #         "params": itertools.chain(self.msd.parameters(), self.mpd.parameters()),
-        #         **self.config.optimizer,
-        #     }
-        # )
         optim_d = instantiate(
             self.config.optimizer,
             params=itertools.chain(
@@ -90,27 +78,12 @@ class HiFiSingerV1Lightning(pl.LightningModule):
             ),
         )
 
-        # scheduler_g = LR_SCHEUDLERS.build(
-        #     {
-        #         "optimizer": optim_g,
-        #         **self.config.scheduler,
-        #     }
-        # )
         scheduler_g = instantiate(self.config.scheduler, optimizer=optim_g)
-        # scheduler_d = LR_SCHEUDLERS.build(
-        #     {
-        #         "optimizer": optim_d,
-        #         **self.config.scheduler,
-        #     }
-        # )
         scheduler_d = instantiate(self.config.scheduler, optimizer=optim_d)
 
         return [optim_g, optim_d], [scheduler_g, scheduler_d]
 
     def training_step(self, batch, batch_idx):
-        # debug
-        torch.autograd.set_detect_anomaly(True)
-
         optim_g, optim_d = self.optimizers()
 
         y = batch["audio"].float()
@@ -186,22 +159,14 @@ class HiFiSingerV1Lightning(pl.LightningModule):
 
         # Discriminator Loss
         y_df_hat_r, y_df_hat_g, fmap_f_r, fmap_f_g = self.mpd(y, y_g_hat)
-        logger.debug(f"y_df_hat_r: {y_df_hat_r}")
         y_ds_hat_r, y_ds_hat_g, fmap_s_r, fmap_s_g = self.msd(y, y_g_hat)
-        logger.debug(f"y_ds_hat_r: {y_ds_hat_r}")
         loss_fm_f = feature_loss(fmap_f_r, fmap_f_g)
-        logger.debug(f"loss_fm_f: {loss_fm_f}")
         # todo: check if this is correct
-        logger.debug(f"loss_fm_f: {loss_fm_f}")
         loss_fm_s = feature_loss(fmap_s_r, fmap_s_g)
-        logger.debug(f"loss_fm_s: {loss_fm_s}")
         loss_gen_f, _ = generator_loss(y_df_hat_g)
         loss_gen_s, _ = generator_loss(y_ds_hat_g)
         loss_gen_all = loss_gen_s + loss_gen_f + loss_fm_s + loss_fm_f + loss_aux * 45
-
         # todo: check if this is correct
-
-        logger.debug(f"loss_gen_all: {loss_gen_all}")
         self.manual_backward(loss_gen_all)
         optim_g.step()
 

@@ -14,6 +14,7 @@ trainer:
     save_top_k: -1
   - _target_: pytorch_lightning.callbacks.LearningRateMonitor
     logging_interval: step
+  # Warning: If you are training the model with fs2 (and see nan), you should either use bf16 or fp32
   strategy: null
 model_type: DiffSVC
 text_features_extractor_type: HubertSoft

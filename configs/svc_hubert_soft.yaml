@@ -115,6 +115,7 @@ trainer:
   val_check_interval: 5000
   check_val_every_n_epoch: null
   max_steps: 300000
+  # Warning: If you are training the model with fs2 (and see nan), you should either use bf16 or fp32
   precision: 16
   callbacks:
   - _target_: pytorch_lightning.callbacks.ModelCheckpoint

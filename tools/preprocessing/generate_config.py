@@ -28,48 +28,43 @@ def build_hifi_svc_datasets(
     val_speaker_ids: Dict[str, int],
     datasetConf: OmegaConf,
 ) -> Dict[str, Dict]:
-    train_datasets = {
-        "_target_": "fish_diffusion.datasets.concat.ConcatDataset",
-        "datasets": [
-            {
-                "_target_": f"{datasetConf.train._target_}",
-                "path": f"dataset/train/{speaker}",
-                "segment_size": datasetConf.train.segment_size,
-                "speaker_id": train_speaker_ids[speaker],
-            }
-            for speaker in train_speaker_ids.keys()
-        ],
-        "collate_fn": f"{datasetConf.train._target_}.collate_fn",
-    }
     if len(train_speaker_ids.keys()) == 0:
-        train_datasets["datasets"] = [
+        train_datasets  = [
             {
                 "_target_": f"{datasetConf.train._target_}",
                 "path": f"dataset/train",
                 "segment_size": datasetConf.train.segment_size,
             }
         ]
+        datasetConf.speaker_mapping = {
+            "": 0,
+        }
+    else: 
+        train_datasets = {
+            "_target_": "fish_diffusion.datasets.concat.ConcatDataset",
+            "datasets": [
+                {
+                    "_target_": f"{datasetConf.train._target_}",
+                    "path": f"dataset/train/{speaker}",
+                    "segment_size": datasetConf.train.segment_size,
+                    "speaker_id": train_speaker_ids[speaker],
+                }
+                for speaker in train_speaker_ids.keys()
+            ],
+            "collate_fn": f"{datasetConf.train._target_}.collate_fn",
+        }
+        datasetConf.speaker_mapping = {
+            speaker: train_speaker_ids[speaker] for speaker in train_speaker_ids.keys()
+        }
 
-    valid_datasets = {
-        "_target_": "fish_diffusion.datasets.concat.ConcatDataset",
-        "datasets": [
-            {
-                "_target_": f"{datasetConf.valid._target_}",
-                "path": f"dataset/valid/{speaker}",
-                "speaker_id": train_speaker_ids.get(speaker, val_speaker_ids[speaker]),
-            }
-            for speaker in val_speaker_ids.keys()
-        ],
-        "collate_fn": f"{datasetConf.valid._target_}.collate_fn",
-    }
 
-    if len(val_speaker_ids.keys()) == 0:
-        valid_datasets["datasets"] = [
-            {
-                "_target_": f"{datasetConf.valid._target_}",
-                "path": f"dataset/valid",
-            }
-        ]
+    valid_datasets = [
+        {
+            "_target_": f"{datasetConf.valid._target_}",
+            "path": f"dataset/valid",
+            "speaker_id": 0,
+        }
+    ]
 
     return {"train": train_datasets, "valid": valid_datasets}
 

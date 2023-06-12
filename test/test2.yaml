@@ -42,9 +42,9 @@ model:
     output_size: 256
     use_embedding: false
   encoder:
-    _target_: fish_diffusion.modules.HiFiGAN
+    type: HiFiGAN
     sampling_rate: 44100
-    resblock: 1
+    resblock: "1"
     upsample_rates:
     - 8
     - 8
