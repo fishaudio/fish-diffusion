@@ -180,17 +180,40 @@ class GaussianDiffusion(nn.Module):
         return tqdm(chunks)
 
     @torch.jit.script_if_tracing
-    def forward(self, features, sampler_interval=None, progress: bool = False):
+    def forward(
+        self,
+        features,
+        sampler_interval=None,
+        progress: bool = False,
+        skip_steps: int = 0,
+        original_mel: torch.Tensor = None,
+    ):
         if sampler_interval is None:
             sampler_interval = self.sampler_interval
 
         device = features.device
         features = features.transpose(1, 2)
 
-        shape = (features.shape[0], self.mel_bins, features.shape[2])
-        x = torch.randn(shape, device=device)
+        if original_mel is None:
+            shape = (features.shape[0], self.mel_bins, features.shape[2])
+            x = torch.randn(shape, device=device)
+        else:
+            x = self.norm_spec(original_mel)
+            shape = x.shape
+
+        if skip_steps:
+            # Apply noise for skip_steps
+            t = torch.tensor(
+                [self.num_timesteps - skip_steps], device=device, dtype=torch.long
+            )
+            x = self.q_sample(x_start=x, t=t, noise=torch.randn_like(x))
+
         chunks = torch.arange(
-            0, self.num_timesteps, sampler_interval, dtype=torch.long, device=device
+            0,
+            self.num_timesteps - skip_steps,
+            sampler_interval,
+            dtype=torch.long,
+            device=device,
         ).flip(0)[:, None]
 
         if progress:

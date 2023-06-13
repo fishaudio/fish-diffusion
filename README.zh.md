@@ -6,25 +6,25 @@
 
 <div>
 <a href="https://github.com/fishaudio/fish-diffusion/actions/workflows/ci.yml">
-<img alt="Build Status" src="https://img.shields.io/github/actions/workflow/status/fishaudio/fish-diffusion/ci.yml?style=flat-square&logo=GitHub">
+<img alt="Build Status" src="https://img.shields.io/github/actions/workflow/status/fishaudio/fish-diffusion/ci.yml?style=flat-square&logo=GitHub"/>
 </a>
 <a href="https://hub.docker.com/r/lengyue233/fish-diffusion">
-<img alt="Docker Hub" src="https://img.shields.io/docker/cloud/build/lengyue233/fish-diffusion?style=flat-square&logo=Docker&logoColor=white">
+<img alt="Docker Hub" src="https://img.shields.io/docker/cloud/build/lengyue233/fish-diffusion?style=flat-square&logo=Docker&logoColor=white"/>
 </a>
-<a href="https://huggingface.co/spaces/lengyue233/fish-diffusion">
-<img alt="Hugging Face" src="https://img.shields.io/badge/🤗%20Spaces-HiFiSinger-blue.svg?style=flat-square">
+<a href="https://huggingface.co/spaces/fishaudio/fish-diffusion">
+<img alt="Hugging Face" src="https://img.shields.io/badge/🤗%20Spaces-HiFiSinger-blue.svg?style=flat-square"/>
 </a>
 </div>
 
 <div>
 <a href="https://discord.gg/wbYSRBrW2E">
-<img alt="Discord" src="https://img.shields.io/discord/1044927142900809739?color=%23738ADB&label=Discord&logo=discord&logoColor=white&style=flat-square">
+<img alt="Discord" src="https://img.shields.io/discord/1044927142900809739?color=%23738ADB&label=Discord&logo=discord&logoColor=white&style=flat-square"/>
 </a>
 <a href="https://space.bilibili.com/23195420">
-<img alt="BiliBili" src="https://img.shields.io/badge/BiliBili-%E5%86%B7%E6%9C%882333-00A1D6?logo=bilibili&style=flat-square&logoColor=white">
+<img alt="BiliBili" src="https://img.shields.io/badge/BiliBili-%E5%86%B7%E6%9C%882333-00A1D6?logo=bilibili&style=flat-square&logoColor=white"/>
 </a>
-<a href="https://colab.research.google.com/drive/1GPNq1FWH5LE2f79M4QV2UbdWWazfgrpt">
-<img alt="Colab" src="https://img.shields.io/badge/Colab-Notebook-F9AB00?logo=Google%20Colab&style=flat-square&logoColor=white">
+<a target="_blank" href="https://colab.research.google.com/github/fishaudio/fish-diffusion/blob/main/notebooks/train.ipynb">
+<img alt="Open In Colab" src="https://img.shields.io/static/v1?label=Colab&message=Notebook&color=F9AB00&logo=googlecolab&style=flat-square"/>
 </a>
 </div>
 
@@ -36,11 +36,23 @@
 
 > 从阅读 [Wiki](https://fishaudio.github.io/fish-diffusion/) 开始! 
 
+## Fish Diffusion 使用条款
+1. 获取授权和知识产权侵权：用户应自行负责获取其培训过程中所使用的任何数据集的必要授权，并对因使用输入源而产生的任何侵权问题承担全部责任。Fish Diffusion 及其开发者不承担因使用未授权数据集而可能产生的任何问题的责任。
+
+2. BSD-3-Clause-Clear 许可证：Fish Diffusion 在 BSD-3-Clause-Clear 许可证下分发，该许可证授予用户将其用于任何目的的权利，包括商业应用。有关更多详细信息，请参阅 LICENSE 文件。
+
+3. 适当归属：任何基于 Fish Diffusion 的衍生作品都必须明确表示项目及其许可证。在分发 Fish Diffusion 的代码或发布由该项目生成的结果时，用户必须注明原始作者和源代码（Fish Diffusion）。
+
+4. 音频视觉内容及 AI 生成披露：使用 Fish Diffusion 创建的所有衍生作品，包括音频或视频素材，必须明确表示使用了 Fish Diffusion 项目，并声明内容是 AI 生成的。如果使用第三方发布的视频或音频，必须提供原始链接。
+
+6. 同意条款：通过继续使用 Fish Diffusion，用户明确同意本文档中所述的条款和条件。Fish Diffusion 及其开发者不对可能出现的任何后续问题承担责任。
+
+
 ## 简介
 基于 DiffSinger 实现歌声音色转换。相较于原 diffsvc 仓库，本仓库优缺点如下
 + 支持多说话人
 + 本仓库代码结构更简单易懂, 模块全部解耦
-+ 声码器同样使用 [441khz Diff Singer 社区声码器](https://openvpi.github.io/vocoders/)
++ 声码器同样使用 [44.1khz Diff Singer 社区声码器](https://openvpi.github.io/vocoders/)
 + 支持多机多卡训练, 支持半精度训练, 拯救你的训练速度和显存
 
 ## 环境准备
@@ -51,14 +63,14 @@
 # 参考 https://pytorch.org/get-started/locally/
 conda install "pytorch>=2.0.0" "torchvision>=0.15.0" "torchaudio>=2.0.0" pytorch-cuda=11.8 -c pytorch -c nvidia
 
-# 安装 Poetry 依赖管理工具, 如果已安装则跳过
-# 参考 https://python-poetry.org/docs/#installation
-curl -sSL https://install.python-poetry.org | python3 -
+# 安装 PDM 依赖管理工具, 如果已安装则跳过
+# 参考 https://pdm.fming.dev/latest/
+curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
 
 # 安装依赖 (推荐)
-poetry install
+pdm sync
 
-# 如果 Poetry 不可用, 或者速度较慢, 可以使用 pip 安装依赖
+# 如果 PDM 不可用, 或者速度较慢, 可以使用 pip 安装依赖
 pip install -r requirements.txt
 pip install -e .
 ```
@@ -155,11 +167,11 @@ python tools/diffusion/diff_svc_converter.py --config configs/svc_hubert_soft_di
 
 ## 参与本项目
 如果你有任何问题, 请提交 issue 或 pull request.  
-你应该在提交 pull request 之前运行 `tools/lint.sh`
+你应该在提交 pull request 之前运行 `pdm run lint`
 
 实时预览文档
 ```bash
-sphinx-autobuild docs docs/_build/html
+pdm run docs
 ```
 
 

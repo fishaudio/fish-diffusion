@@ -8,7 +8,7 @@ import librosa
 import numpy as np
 import soundfile as sf
 import torch
-from fish_audio_preprocess.utils import loudness_norm
+from fish_audio_preprocess.utils import loudness_norm, separate_audio
 from loguru import logger
 from mmengine import Config
 from natsort import natsorted
@@ -21,6 +21,28 @@ from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.utils.audio import separate_vocals, slice_audio
 from fish_diffusion.utils.inference import load_checkpoint
 from fish_diffusion.utils.tensor import repeat_expand
+
+# from tqdm import tqdm
+# path = Path("dataset/train/aria")
+# all_nps = list(path.rglob("*.npy"))[:5000]
+
+# all_data = []
+# for file in tqdm(all_nps):
+#     try:
+#         x = np.load(file, allow_pickle=True).item()
+#         all_data.append(x['contents'].T)
+#     except:
+#         pass
+
+# # import faiss
+# XX = np.concatenate(all_data, axis=0).astype(np.float32)
+# quantizer = faiss.IndexFlatL2(1024)
+# index = faiss.IndexIVFFlat(quantizer, 1024, 100)
+# assert not index.is_trained
+# index.train(XX)
+# assert index.is_trained
+# index.add(XX)
+# print("Index built")
 
 
 class SVCInference(nn.Module):
@@ -52,6 +74,7 @@ class SVCInference(nn.Module):
         self.model = load_checkpoint(
             config, checkpoint, device="cpu", model_cls=model_cls
         )
+        self.separate_model = None
 
     @property
     def device(self):
@@ -63,12 +86,19 @@ class SVCInference(nn.Module):
         audio: torch.Tensor,
         sr: int,
         pitch_adjust: int = 0,
-        speaker_id: int = 0,
+        speakers: torch.Tensor = 0,
         sampler_progress: bool = False,
         sampler_interval: Optional[int] = None,
         pitches: Optional[torch.Tensor] = None,
+        skip_steps: int = 0,
     ):
-        mel_len = audio.shape[-1] // 512
+        if skip_steps > 0:
+            original_mel = self.model.vocoder.wav2spec(audio, sr)[None]
+            original_mel = original_mel.to(self.device)
+            mel_len = original_mel.shape[-1]
+        else:
+            original_mel = None
+            mel_len = audio.shape[-1] // 512
 
         # Extract and process pitch
         if pitches is None:
@@ -81,8 +111,32 @@ class SVCInference(nn.Module):
 
         pitches *= 2 ** (pitch_adjust / 12)
 
+        # audio = librosa.effects.pitch_shift(
+        #     audio.cpu().numpy(), sr, pitch_adjust, bins_per_octave=12
+        # )
+        # audio = torch.from_numpy(audio).to(torch.float32).to(self.device)
+
         # Extract and process text features
         text_features = self.text_features_extractor(audio, sr)[0]
+        # print(text_features.shape) # (1024, 1043)
+
+        # import numpy as np
+        # import faiss
+        # kmeans_centroids = np.load("kmeans.npy")
+        # print(kmeans_centroids.shape) # (500, 1024)
+
+        # text_features_np = text_features.cpu().numpy().T
+        # # Retrieve the closest centroid
+        # # indexk = faiss.IndexFlatL2(1024)
+        # # indexk.add(kmeans_centroids)
+        # _, I = index.search(text_features_np, 1)
+        # # _, IK = indexk.search(text_features_np, 1)
+        # #  * 0.5 + kmeans_centroids[IK] * 0.5
+
+        # text_features = torch.from_numpy(XX[I]).to(self.device)
+        # print(text_features.shape) # (1043, 1, 1024)
+        # text_features = text_features.squeeze(1).T
+
         text_features = repeat_expand(text_features, mel_len).T
 
         # Pitch shift should always be 0 for inference to avoid distortion
@@ -99,7 +153,7 @@ class SVCInference(nn.Module):
         contents_lens = torch.tensor([mel_len]).to(self.device)
 
         features = self.model.model.forward_features(
-            speakers=torch.tensor([speaker_id]).long().to(self.device),
+            speakers=speakers.to(self.device),
             contents=text_features[None].to(self.device),
             contents_lens=contents_lens,
             contents_max_len=max(contents_lens),
@@ -114,10 +168,70 @@ class SVCInference(nn.Module):
             features["features"],
             progress=sampler_progress,
             sampler_interval=sampler_interval,
+            skip_steps=skip_steps,
+            original_mel=original_mel,
         )
         wav = self.model.vocoder.spec2wav(result[0].T, f0=pitches).cpu().numpy()
 
         return wav
+
+    def _parse_speaker(self, speaker, recursive=True):
+        to_long_tensor = lambda x: torch.tensor([x], dtype=torch.long)
+
+        # Speaker id
+        if isinstance(speaker, int):
+            return to_long_tensor(speaker)
+
+        # Speaker name
+        if (
+            hasattr(self.config, "speaker_mapping")
+            and speaker in self.config.speaker_mapping
+        ):
+            return to_long_tensor(self.config.speaker_mapping[speaker])
+
+        # Speaker id
+        if speaker.isdigit():
+            return to_long_tensor(int(speaker))
+
+        if recursive is False:
+            logger.error(f"Invalid speaker: {speaker}")
+            exit()
+
+        # Speaker mix
+        speaker = speaker.split(",")
+        speaker_mix = []
+
+        for s in speaker:
+            s = s.split(":")
+            speaker_id = self._parse_speaker(s[0], recursive=False)
+
+            if len(s) == 1:
+                speaker_mix.append((speaker_id, 1.0))
+            else:
+                speaker_mix.append((speaker_id, float(s[1])))
+
+        # Normalize speaker mix weights to 1
+        summation = sum([s[1] for s in speaker_mix])
+        speaker_mix = [(s[0], s[1] / summation) for s in speaker_mix]
+
+        logger.info(
+            f"Speaker mix: {speaker} -> {[f'{s[0].item()}:{s[1]}' for s in speaker_mix]}"
+        )
+
+        if hasattr(self.model, "model"):  # DiffSinger
+            weight = self.model.model
+        elif hasattr(self.model, "generator"):  # HiFiSinger
+            weight = self.model.generator
+        else:
+            logger.error("Model does not have generator or model attribute")
+            exit()
+
+        weight = weight.speaker_encoder.embedding.weight
+        mixed_weight = torch.zeros_like(weight[0])[None]
+        for s in speaker_mix:
+            mixed_weight += weight[s[0]] * s[1]
+
+        return mixed_weight.float()
 
     @torch.no_grad()
     def inference(
@@ -134,13 +248,14 @@ class SVCInference(nn.Module):
         gradio_progress=None,
         min_silence_duration=0,
         pitches_path=None,
+        skip_steps=0,
     ):
         """Inference
 
         Args:
             input_path: input path
             output_path: output path
-            speaker: speaker id or speaker name
+            speaker: speaker id or speaker name or speaker mix (a:0.5,b:0.5)
             pitch_adjust: pitch adjust
             silence_threshold: silence threshold of librosa.effects.split
             max_slice_duration: maximum duration of each slice
@@ -150,6 +265,7 @@ class SVCInference(nn.Module):
             gradio_progress: gradio progress callback
             min_silence_duration: minimum silence duration
             pitches_path: disable pitch extraction and use the pitch from the given path
+            skip_steps: skip steps
         """
 
         if isinstance(input_path, str) and os.path.isdir(input_path):
@@ -186,11 +302,9 @@ class SVCInference(nn.Module):
             return
 
         # Process speaker
-        try:
-            speaker_id = self.config.speaker_mapping[speaker]
-        except (KeyError, AttributeError):
-            # Parse speaker id
-            speaker_id = int(speaker)
+        speakers = self._parse_speaker(speaker)
+        if speakers is None:
+            return
 
         # Load audio
         audio, sr = librosa.load(input_path, sr=self.config.sampling_rate, mono=True)
@@ -204,8 +318,11 @@ class SVCInference(nn.Module):
 
             if gradio_progress is not None:
                 gradio_progress(0, "Extracting vocals...")
-
-            audio, _ = separate_vocals(audio, sr, self.device)
+            if self.separate_model is None:
+                self.separate_model = separate_audio.init_model(
+                    "htdemucs", device=self.device
+                )
+            audio, _ = separate_vocals(audio, sr, self.device, self.separate_model)
 
         # Normalize loudness
         audio = loudness_norm.loudness_norm(audio, sr)
@@ -259,16 +376,17 @@ class SVCInference(nn.Module):
                 segment,
                 sr,
                 pitch_adjust=pitch_adjust,
-                speaker_id=speaker_id,
+                speakers=speakers,
                 sampler_progress=sampler_progress,
                 sampler_interval=sampler_interval,
                 pitches=pitches_segment,
+                skip_steps=skip_steps,
             )
             max_wav_len = generated_audio.shape[-1] - start
             generated_audio[start : start + wav.shape[-1]] = wav[:max_wav_len]
 
-        # Loudness normalization
-        generated_audio = loudness_norm.loudness_norm(generated_audio, sr)
+        # Loudness normalization (disabled)
+        # generated_audio = loudness_norm.loudness_norm(generated_audio, sr)
 
         logger.info("Done")
 
@@ -328,7 +446,7 @@ def parse_args():
         "--speaker",
         type=str,
         default="0",
-        help="Speaker id or speaker name",
+        help="Speaker id or speaker name (if speaker_mapping is specified) or speaker mix (a:0.5,b:0.5)",
     )
 
     parser.add_argument(
@@ -402,6 +520,22 @@ def parse_args():
         help="Min silence duration in seconds",
     )
 
+    # Pitch extractor
+    parser.add_argument(
+        "--pitch_extractor",
+        type=str,
+        default=None,
+        help="Pitch extractor",
+    )
+
+    # Shallow diffusion
+    parser.add_argument(
+        "--skip_steps",
+        type=int,
+        default=0,
+        help="Skip steps and use original audio as input",
+    )
+
     return parser.parse_args()
 
 
@@ -421,6 +555,9 @@ if __name__ == "__main__":
 
     if args.speaker_mapping is not None:
         config.speaker_mapping = json.load(open(args.speaker_mapping))
+
+    if args.pitch_extractor is not None:
+        config.preprocessing.pitch_extractor.type = args.pitch_extractor
 
     model = SVCInference(config, args.checkpoint)
     model = model.to(device)
@@ -451,4 +588,5 @@ if __name__ == "__main__":
             silence_threshold=args.silence_threshold,
             max_slice_duration=args.max_slice_duration,
             min_silence_duration=args.min_silence_duration,
+            skip_steps=args.skip_steps,
         )

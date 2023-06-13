@@ -1,7 +1,5 @@
 # Fish Diffusion
 
-Full functional and high performance scrcpy client.
-
 ## Contents
 
 ### Quick Guide
@@ -18,6 +16,14 @@ Full functional and high performance scrcpy client.
    :maxdepth: 4
 
    pages/config
+```
+
+### Generation Quality
+```{eval-rst}
+.. toctree::
+   :maxdepth: 4
+
+   pages/quality
 ```
 
 ### Common Questions

@@ -3,11 +3,13 @@ dataset = dict(
         type="HiFiSVCDataset",
         path="dataset/train",
         speaker_id=0,
+        segment_size=16384,
     ),
     valid=dict(
         type="HiFiSVCDataset",
         path="dataset/valid",
         speaker_id=0,
+        segment_size=-1,
     ),
 )
 

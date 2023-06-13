@@ -47,7 +47,7 @@ def voice_change_model():
         audio,
         sr,
         pitch_adjust=f_pitch_change,
-        speaker_id=int_speaker_id,
+        speakers=torch.tensor([int_speaker_id]).to(device),
     )
 
     tar_audio = librosa.resample(_audio, orig_sr=sr, target_sr=daw_sample)
@@ -62,10 +62,8 @@ def voice_change_model():
 
 if __name__ == "__main__":
     # fish下只需传入下列参数，文件路径以项目根目录为准
-    checkpoint_path = (
-        "logs/DiffSVC/9ddsi2gk/checkpoints/epoch=88-step=300000-valid_loss=0.08.ckpt"
-    )
-    config_path = "configs/exp_super_mix_v2.py"
+    checkpoint_path = "logs/DiffSVC/8f6md039/checkpoints"
+    config_path = "configs/exp_cn_hubert_leak.py"
     # 加速倍率，None即采用配置文件的值
     sampler_interval = None
     # 是否提取人声

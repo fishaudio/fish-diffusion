@@ -6,14 +6,23 @@ import numpy as np
 import torch
 from mmengine import Config
 
-from fish_diffusion.archs.hifisinger import HiFiSingerLightning
+from fish_diffusion.archs.hifisinger import HiFiSingerV1Lightning, HiFiSingerV2Lightning
 from fish_diffusion.utils.tensor import repeat_expand
 from tools.diffusion.inference import SVCInference
 
 
 class HiFiSingerSVCInference(SVCInference):
     def __init__(self, config, checkpoint):
-        super().__init__(config, checkpoint, model_cls=HiFiSingerLightning)
+        if config.model.encoder.type.lower() == "RefineGAN".lower():
+            model_cls = HiFiSingerV2Lightning
+        elif config.model.encoder.type.lower() == "HiFiGAN".lower():
+            model_cls = HiFiSingerV1Lightning
+        else:
+            raise NotImplementedError(
+                f"Unknown encoder type: {config.model.encoder.type}"
+            )
+
+        super().__init__(config, checkpoint, model_cls=model_cls)
 
     @torch.no_grad()
     def forward(
@@ -21,12 +30,14 @@ class HiFiSingerSVCInference(SVCInference):
         audio: torch.Tensor,
         sr: int,
         pitch_adjust: int = 0,
-        speaker_id: int = 0,
+        speakers: torch.Tensor = 0,
         sampler_progress: bool = False,
         sampler_interval: Optional[int] = None,
         pitches: Optional[torch.Tensor] = None,
+        skip_steps: int = 0,  # not used
     ):
-        mel_len = audio.shape[-1] // 512
+        mel_len = audio.shape[-1] // getattr(self.config, "hop_length", 512)
+        amplitude = audio.abs().max()
 
         # Extract and process pitch
         if pitches is None:
@@ -56,21 +67,20 @@ class HiFiSingerSVCInference(SVCInference):
         # Predict
         contents_lens = torch.tensor([mel_len]).to(self.device)
 
-        wav = (
-            self.model.generator(
-                speakers=torch.tensor([speaker_id]).long().to(self.device),
-                contents=text_features[None].to(self.device),
-                contents_lens=contents_lens,
-                contents_max_len=max(contents_lens),
-                pitches=pitches[None, :, None].to(self.device),
-                pitch_shift=pitch_shift,
-                energy=energy,
-            )
-            .cpu()
-            .numpy()[0]
+        wav = self.model.generator(
+            speakers=speakers.to(self.device),
+            contents=text_features[None].to(self.device),
+            contents_lens=contents_lens,
+            contents_max_len=max(contents_lens),
+            pitches=pitches[None, :, None].to(self.device),
+            pitch_shift=pitch_shift,
+            energy=energy,
         )
 
-        return wav
+        wav_amplitude = wav.abs().max()
+        wav *= amplitude / wav_amplitude
+
+        return wav.cpu().numpy()[0]
 
 
 def parse_args():
@@ -120,7 +130,7 @@ def parse_args():
         "--speaker",
         type=str,
         default="0",
-        help="Speaker id or speaker name",
+        help="Speaker id or speaker name (if speaker_mapping is specified) or speaker mix (a:0.5,b:0.5)",
     )
 
     parser.add_argument(
@@ -148,20 +158,6 @@ def parse_args():
         "--extract_vocals",
         action="store_true",
         help="Extract vocals",
-    )
-
-    parser.add_argument(
-        "--sampler_interval",
-        type=int,
-        default=None,
-        required=False,
-        help="Sampler interval, if not specified, will be taken from config",
-    )
-
-    parser.add_argument(
-        "--sampler_progress",
-        action="store_true",
-        help="Show sampler progress",
     )
 
     parser.add_argument(
@@ -194,6 +190,14 @@ def parse_args():
         help="Min silence duration in seconds",
     )
 
+    # Pitch extractor
+    parser.add_argument(
+        "--pitch_extractor",
+        type=str,
+        default=None,
+        help="Pitch extractor",
+    )
+
     return parser.parse_args()
 
 
@@ -214,33 +218,20 @@ if __name__ == "__main__":
     if args.speaker_mapping is not None:
         config.speaker_mapping = json.load(open(args.speaker_mapping))
 
+    if args.pitch_extractor is not None:
+        config.preprocessing.pitch_extractor.type = args.pitch_extractor
+
     model = HiFiSingerSVCInference(config, args.checkpoint)
     model = model.to(device)
 
-    if args.gradio:
-        from tools.diffusion.gradio_ui import launch_gradio
-
-        launch_gradio(
-            config,
-            model.inference,
-            speaker=args.speaker,
-            pitch_adjust=args.pitch_adjust,
-            sampler_interval=args.sampler_interval,
-            extract_vocals=args.extract_vocals,
-            share=args.gradio_share,
-        )
-
-    else:
-        model.inference(
-            input_path=args.input,
-            output_path=args.output,
-            speaker=args.speaker,
-            pitch_adjust=args.pitch_adjust,
-            pitches_path=args.pitches_path,
-            extract_vocals=args.extract_vocals,
-            sampler_progress=args.sampler_progress,
-            sampler_interval=args.sampler_interval,
-            silence_threshold=args.silence_threshold,
-            max_slice_duration=args.max_slice_duration,
-            min_silence_duration=args.min_silence_duration,
-        )
+    model.inference(
+        input_path=args.input,
+        output_path=args.output,
+        speaker=args.speaker,
+        pitch_adjust=args.pitch_adjust,
+        pitches_path=args.pitches_path,
+        extract_vocals=args.extract_vocals,
+        silence_threshold=args.silence_threshold,
+        max_slice_duration=args.max_slice_duration,
+        min_silence_duration=args.min_silence_duration,
+    )

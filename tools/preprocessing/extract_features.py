@@ -1,6 +1,4 @@
 import argparse
-import multiprocessing as mp
-import os
 import random
 from concurrent.futures import ProcessPoolExecutor
 from copy import deepcopy
@@ -10,8 +8,9 @@ from typing import Optional
 import librosa
 import numpy as np
 import torch
+import torch.multiprocessing as mp
 import torchcrepe
-from fish_audio_preprocess.utils.file import list_files
+from fish_audio_preprocess.utils.file import AUDIO_EXTENSIONS, list_files
 from loguru import logger
 from mmengine import Config
 from tqdm import tqdm
@@ -44,7 +43,6 @@ def init(
 
     if torch.cuda.is_available():
         gpu_id = rank % torch.cuda.device_count()
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
         device = torch.device(f"cuda:{gpu_id}")
 
     logger.info(f"Rank {rank} uses device {device}")
@@ -132,7 +130,8 @@ def process(
         sample["mel"] = mel.cpu().numpy()
     else:
         # Calculate mel length from audio length
-        mel_length = int(audio.shape[-1] / 512) + 1
+        hop_length = getattr(config, "hop_length", 512)
+        mel_length = int(audio.shape[-1] / hop_length) + 1
 
     # Extract text features
     if text_features_extractor is not None:
@@ -235,7 +234,7 @@ if __name__ == "__main__":
         logger.info("Done!")
 
     config = Config.fromfile(args.config)
-    files = list_files(args.path, {".wav"}, recursive=True, sort=False)
+    files = list_files(args.path, AUDIO_EXTENSIONS, recursive=True, sort=False)
     logger.info(f"Found {len(files)} files, processing...")
 
     # Shuffle files will balance the workload of workers

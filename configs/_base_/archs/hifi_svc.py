@@ -4,6 +4,7 @@ sampling_rate = 44100
 hidden_size = 256
 
 vocoder_config = {
+    "type": "HiFiGAN",
     "sampling_rate": sampling_rate,
     # Model config
     "resblock": "1",
@@ -58,13 +59,13 @@ model = dict(
     pitch_shift_encoder=dict(
         type="NaiveProjectionEncoder",
         input_size=1,
-        output_size=256,
+        output_size=hidden_size,
         use_embedding=False,
     ),
     energy_encoder=dict(
         type="NaiveProjectionEncoder",
         input_size=1,
-        output_size=256,
+        output_size=hidden_size,
         use_embedding=False,
     ),
     encoder=vocoder_config,

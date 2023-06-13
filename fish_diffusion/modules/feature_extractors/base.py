@@ -1,3 +1,5 @@
+import librosa
+import torch
 import torchaudio
 from torch import nn
 
@@ -14,8 +16,16 @@ class BaseFeatureExtractor(nn.Module):
             audio = audio.mean(0, keepdim=True)
 
         if sampling_rate != 16000:
-            audio = torchaudio.functional.resample(
-                audio, orig_freq=sampling_rate, new_freq=16000
+            # There is a memory leak in torchaudio resampling
+            # https://github.com/pytorch/audio/issues/2338
+            audio = (
+                torch.from_numpy(
+                    librosa.resample(
+                        audio.cpu().numpy(), orig_sr=sampling_rate, target_sr=16000
+                    )
+                )
+                .float()
+                .to(audio.device)
             )
 
         return audio[0]

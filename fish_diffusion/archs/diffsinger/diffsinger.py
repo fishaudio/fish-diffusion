@@ -24,13 +24,17 @@ class DiffSinger(nn.Module):
 
         self.text_encoder = ENCODERS.build(model_config.text_encoder)
         self.diffusion = DIFFUSIONS.build(model_config.diffusion)
-        self.speaker_encoder = ENCODERS.build(model_config.speaker_encoder)
-        self.pitch_encoder = ENCODERS.build(model_config.pitch_encoder)
 
-        if "pitch_shift_encoder" in model_config:
+        if getattr(model_config, "speaker_encoder", None):
+            self.speaker_encoder = ENCODERS.build(model_config.speaker_encoder)
+
+        if getattr(model_config, "pitch_encoder", None):
+            self.pitch_encoder = ENCODERS.build(model_config.pitch_encoder)
+
+        if getattr(model_config, "pitch_shift_encoder", None):
             self.pitch_shift_encoder = ENCODERS.build(model_config.pitch_shift_encoder)
 
-        if "energy_encoder" in model_config:
+        if getattr(model_config, "energy_encoder", None):
             self.energy_encoder = ENCODERS.build(model_config.energy_encoder)
 
     @staticmethod
@@ -84,12 +88,22 @@ class DiffSinger(nn.Module):
                 1 - mel_masks[:, :, None].float()
             )
 
-        speaker_embed = self.speaker_encoder(speakers)
-        if speaker_embed.ndim == 2:
+        if speakers.ndim in [2, 3] and torch.is_floating_point(speakers):
+            speaker_embed = speakers
+        elif hasattr(self, "speaker_encoder"):
+            speaker_embed = self.speaker_encoder(speakers)
+        else:
+            speaker_embed = None
+
+        if speaker_embed is not None and speaker_embed.ndim == 2:
             speaker_embed = speaker_embed[:, None, :]
 
-        features += speaker_embed
-        features += self.pitch_encoder(pitches)
+        # Ignore speaker embedding for now
+        if speaker_embed is not None:
+            features += speaker_embed
+
+        if hasattr(self, "pitch_encoder"):
+            features += self.pitch_encoder(pitches)
 
         if pitch_shift is not None and hasattr(self, "pitch_shift_encoder"):
             pitch_shift_embed = self.pitch_shift_encoder(pitch_shift)
@@ -153,7 +167,6 @@ class DiffSinger(nn.Module):
 class DiffSingerLightning(pl.LightningModule):
     def __init__(self, config):
         super().__init__()
-        self.save_hyperparameters()
 
         self.model = DiffSinger(config.model)
         self.config = config

@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 
 import resampy
 import torch
@@ -17,11 +17,15 @@ class CrepePitchExtractor(BasePitchExtractor):
         threshold: float = 0.05,
         keep_zeros: bool = False,
         model: Literal["full", "tiny"] = "full",
+        use_fast_filters: bool = True,
     ):
         super().__init__(hop_length, f0_min, f0_max, keep_zeros)
 
         self.threshold = threshold
         self.model = model
+
+        # Use fast filters is already merged into torchcrepe
+        # See https://github.com/maxrmorrison/torchcrepe/pull/22
 
     def __call__(self, x, sampling_rate=44100, pad_to=None):
         """Extract pitch using crepe.
@@ -57,12 +61,12 @@ class CrepePitchExtractor(BasePitchExtractor):
             return_periodicity=True,
         )
 
-        # 滤波, 去掉静音, 设置uv阈值, 参考原仓库readme
+        # Filter, remove silence, set uv threshold, refer to the original warehouse readme
         pd = torchcrepe.filter.median(pd, 3)
         pd = torchcrepe.threshold.Silence(-60.0)(pd, x, 16000, 80)
+
         f0 = torchcrepe.threshold.At(self.threshold)(f0, pd)
         f0 = torchcrepe.filter.mean(f0, 3)
-
         f0 = torch.where(torch.isnan(f0), torch.full_like(f0, 0), f0)[0]
 
         return self.post_process(x, sampling_rate, f0, pad_to)

@@ -102,9 +102,9 @@ class ResBlock1(torch.nn.Module):
 
     def forward(self, x):
         for c1, c2 in zip(self.convs1, self.convs2):
-            xt = F.leaky_relu(x, LRELU_SLOPE)
+            xt = F.leaky_relu(x, LRELU_SLOPE, inplace=False)
             xt = c1(xt)
-            xt = F.leaky_relu(xt, LRELU_SLOPE)
+            xt = F.leaky_relu(xt, LRELU_SLOPE, inplace=True)
             xt = c2(xt)
             x = xt + x
         return x
@@ -148,7 +148,7 @@ class ResBlock2(torch.nn.Module):
 
     def forward(self, x):
         for c in self.convs:
-            xt = F.leaky_relu(x, LRELU_SLOPE)
+            xt = F.leaky_relu(x, LRELU_SLOPE, inplace=True)
             xt = c(xt)
             x = xt + x
         return x
@@ -405,14 +405,19 @@ class Generator(torch.nn.Module):
         self.conv_post.apply(init_weights)
 
     def forward(self, x, f0):
-        f0 = self.f0_upsamp(f0[:, None]).transpose(1, 2)  # bs,n,t
+        if f0.ndim == 2:
+            f0 = f0[:, None]
+
+        f0 = F.interpolate(
+            f0, size=x.shape[-1] * self.h.hop_size, mode="linear"
+        ).transpose(1, 2)
 
         har_source, _, _ = self.m_source(f0)
         har_source = har_source.transpose(1, 2)
         x = self.conv_pre(x)
 
         for i in range(self.num_upsamples):
-            x = F.leaky_relu(x, LRELU_SLOPE)
+            x = F.leaky_relu(x, LRELU_SLOPE, inplace=True)
             x = self.ups[i](x)
             x_source = self.noise_convs[i](har_source)
             x = x + x_source
@@ -426,7 +431,7 @@ class Generator(torch.nn.Module):
 
             x = xs / self.num_kernels
 
-        x = F.leaky_relu(x)
+        x = F.leaky_relu(x, inplace=True)
         x = self.conv_post(x)
         x = torch.tanh(x)
 
@@ -504,9 +509,13 @@ class DiscriminatorP(torch.nn.Module):
 
         for l in self.convs:
             x = l(x)
-            x = F.leaky_relu(x, LRELU_SLOPE)
+            x = F.leaky_relu(x, LRELU_SLOPE, inplace=True)
+            x = torch.nan_to_num(x)
+
             fmap.append(x)
+
         x = self.conv_post(x)
+        x = torch.nan_to_num(x)
         fmap.append(x)
         x = torch.flatten(x, 1, -1)
 
@@ -526,6 +535,7 @@ class MultiPeriodDiscriminator(torch.nn.Module):
         y_d_gs = []
         fmap_rs = []
         fmap_gs = []
+
         for i, d in enumerate(self.discriminators):
             y_d_r, fmap_r = d(y)
             y_d_g, fmap_g = d(y_hat)
@@ -558,9 +568,12 @@ class DiscriminatorS(torch.nn.Module):
         fmap = []
         for l in self.convs:
             x = l(x)
-            x = F.leaky_relu(x, LRELU_SLOPE)
+            x = F.leaky_relu(x, LRELU_SLOPE, inplace=True)
+            x = torch.nan_to_num(x)
             fmap.append(x)
+
         x = self.conv_post(x)
+        x = torch.nan_to_num(x)
         fmap.append(x)
         x = torch.flatten(x, 1, -1)
 
