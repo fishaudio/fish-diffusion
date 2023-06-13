@@ -1,7 +1,6 @@
 import itertools
 import json
 from argparse import ArgumentParser
-
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -71,8 +70,6 @@ class HSFHifiGAN(pl.LightningModule):
             )
             for (n_fft, hop_length, win_length) in [
                 (self.h.n_fft, self.h.hop_size, self.h.win_size),
-                (512, 66, 264),
-                (1024, 135, 540),
                 (2048, 270, 1080),
                 (4096, 540, 2160),
             ]
@@ -160,13 +157,14 @@ class HSFHifiGAN(pl.LightningModule):
             (512, 50, 240),
             (1024, 120, 600),
             (2048, 240, 1200),
-            (4096, 480, 2400),
+            (4096, 480, 2400)
         ]
-        
-        stft_config = [stft_config[np.random.randint(5)]]
-        
+
         loss_stft = 0
-        for n_fft, hop_length, win_length in stft_config:
+        
+        tmp_stft_config = [stft_config[np.random.randint(0,5)] for i in range(3)]
+
+        for n_fft, hop_length, win_length in tmp_stft_config:
             y_stft = torch.stft(
                 y.squeeze(1), n_fft, hop_length, win_length, return_complex=True
             )
@@ -182,10 +180,7 @@ class HSFHifiGAN(pl.LightningModule):
 
         # L1 Mel-Spectrogram Loss
         loss_mel = 0
-        
-        rnd_scale_mel = [self.multi_scale_mels[np.random.randint(5)]]
-        
-        for mel_transform in rnd_scale_mel:
+        for mel_transform in self.multi_scale_mels:
             y_mel = self.get_mels(y, mel_transform)
             y_g_hat_mel = self.get_mels(y_g_hat, mel_transform)
             loss_mel += F.l1_loss(y_mel, y_g_hat_mel)
