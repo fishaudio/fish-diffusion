@@ -5,10 +5,12 @@ import numpy as np
 import onnxruntime as ort
 import torch
 from loguru import logger
-from mmengine import Config
+
+# from mmengine import Config
+from omegaconf import OmegaConf, DictConfig
+from hydra.utils import instantiate
 
 from fish_diffusion.archs.diffsinger import DiffSinger, DiffSingerLightning
-from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
 from fish_diffusion.utils.inference import load_checkpoint
 
 
@@ -217,9 +219,7 @@ def export_feature_extractor(config, device):
         logger.warning("ContentVec is not supported in ONNX. Skip exporting.")
         return
 
-    feature_extractor = FEATURE_EXTRACTORS.build(
-        config.preprocessing.text_features_extractor
-    )
+    feature_extractor = instantiate(config.preprocessing.text_features_extractor)
     feature_extractor = FeatureExtractorWrapper(feature_extractor)
     feature_extractor.eval()
     feature_extractor.to(device)
@@ -268,7 +268,8 @@ def main(config: str, checkpoint: str):
     Path("exported").mkdir(exist_ok=True)
 
     device = "cpu"
-    config = Config.fromfile(config)
+    # config = Config.fromfile(config)
+    config = OmegaConf.load(config)
     model = load_checkpoint(config, checkpoint, device, model_cls=DiffSingerLightning)
 
     # Ignore vocoder

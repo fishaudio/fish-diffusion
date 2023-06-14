@@ -6,7 +6,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.loggers.wandb import WandbLogger
 from fish_diffusion.archs.hifisinger.hifisinger_v1 import HiFiSingerV1Lightning
 
-# from fish_diffusion.archs.hifisinger.hifisinger_v2 import HiFiSingerV2Lightning
+from fish_diffusion.archs.hifisinger.hifisinger_v2 import HiFiSingerV2Lightning
 from fish_diffusion.datasets.utils import build_loader_from_config
 from hydra.utils import instantiate
 from box import Box
@@ -18,6 +18,7 @@ torch.set_float32_matmul_precision("medium")
 
 # python train.py --config-name svc_hifi name=xxxx entity=xxx
 # Load the configuration file
+@hydra.main(config_name=None, config_path="../../configs")
 def train(cfg: DictConfig) -> None:
     from loguru import logger as loguru_logger
 
@@ -26,8 +27,7 @@ def train(cfg: DictConfig) -> None:
 
     # pl.seed_everything(594461, workers=True)
     if cfg.model.encoder.type.lower() == "RefineGAN".lower():
-        # model = HiFiSingerV2Lightning(cfg)
-        pass
+        model = HiFiSingerV2Lightning(cfg)
     elif cfg.model.encoder.type.lower() == "HiFiGAN".lower():
         model = HiFiSingerV1Lightning(cfg)
     else:

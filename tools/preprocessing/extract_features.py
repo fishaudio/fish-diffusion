@@ -15,22 +15,19 @@ from loguru import logger
 # from mmengine import Config
 from tqdm import tqdm
 
-# from fish_diffusion.modules.energy_extractors import ENERGY_EXTRACTORS
-# from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
 from fish_diffusion.modules.feature_extractors.base import BaseFeatureExtractor
 
-# from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.modules.pitch_extractors.builder import BasePitchExtractor
 
-# from fish_diffusion.modules.vocoders import VOCODERS
 from fish_diffusion.modules.vocoders.nsf_hifigan.nsf_hifigan import NsfHifiGAN
 from fish_diffusion.utils.tensor import repeat_expand
 
 from box import Box
-import hydra
 from hydra.utils import instantiate
 from omegaconf import OmegaConf, DictConfig
-from hydra.utils import get_original_cwd
+
+import click
+import os
 
 model_caches = None
 
@@ -45,6 +42,7 @@ def init(
 ]:
     global model_caches
     device = torch.device("cpu")
+    os.chdir(config.project_root)
 
     rank = mp.current_process()._identity
     rank = rank[0] if len(rank) > 0 else 0
@@ -116,11 +114,7 @@ def process(
         "path": str(audio_path),
     }
 
-    sampling_rate = (
-        config.sampling_rate
-        if hasattr(config, "sampling_rate")
-        else config.model.encoder.sampling_rate
-    )
+    sampling_rate = config.sampling_rate
     audio, sr = librosa.load(str(audio_path), sr=sampling_rate, mono=True)
 
     # If time_stretch is > 1, the audio length will be shorter (speed up)
@@ -223,7 +217,6 @@ def safe_process(config, audio_path: Path):
 #     return parser.parse_config()
 
 
-@hydra.main(config_name=None, config_path="../../configs")
 def main(config: DictConfig) -> None:
     project_root = config.project_root
     # OmegaConf.set_struct(config, False)  # Allow changes to the config
@@ -289,5 +282,12 @@ def main(config: DictConfig) -> None:
     logger.info(f"Failed: {failed}")
 
 
+@click.command()
+@click.argument("config_path", type=click.Path(exists=True))
+def load_config(config_path):
+    config = OmegaConf.load(config_path)
+    main(config)
+
+
 if __name__ == "__main__":
-    main()
+    load_config()

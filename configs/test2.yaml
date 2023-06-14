@@ -10,7 +10,7 @@ only_train_speaker_embeddings: false
 path: dataset
 clean: true
 num_workers: 8
-project_root: /home/shawngpus/project/audio/fish-diffusion/
+project_root: 
 no_augmentation: true
 model:
   type: HiFiSVC

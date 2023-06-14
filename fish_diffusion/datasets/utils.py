@@ -8,9 +8,10 @@ from torch.utils.data import DataLoader
 
 from .repeat import RepeatDataset
 
-from hydra.utils import instantiate
+from hydra.utils import instantiate, get_class
 
 
+# todo fix collate_fn for single speaker
 def build_loader_from_config(cfg, num_devices=1):
     train_dataset = instantiate(cfg.dataset.train)
     train_loader = DataLoader(
@@ -20,8 +21,6 @@ def build_loader_from_config(cfg, num_devices=1):
     )
 
     valid_dataset = instantiate(cfg.dataset.valid)
-    logger.debug(f"Valid dataset fn: {valid_dataset.collate_fn}")
-
     if num_devices > 1:
         valid_dataset = RepeatDataset(
             valid_dataset, repeat=num_devices, collate_fn=valid_dataset.collate_fn

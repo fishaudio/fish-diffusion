@@ -16,7 +16,6 @@ from .models import AttrDict, Generator
 from pathlib import Path
 
 
-# @VOCODERS.register_module()
 class NsfHifiGAN(pl.LightningModule):
     checkpoint_path: str
     config_file: Optional[str]
@@ -24,10 +23,10 @@ class NsfHifiGAN(pl.LightningModule):
 
     def __init__(
         self,
-        project_root: str,
         checkpoint_path: str = "checkpoints/nsf_hifigan/model",
         config_file: Optional[str] = None,
         use_natural_log: bool = True,
+        project_root: str = ".",
         **kwargs,
     ):
         super().__init__()

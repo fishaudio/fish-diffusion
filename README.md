@@ -111,6 +111,10 @@ dataset
 ``` bash
 python tools/preprocessing/generate_config.py --output svc_hubert_soft
 ```
+For hifiSinger
+``` bash
+ python tools/preprocessing/generate_config.py --output test --model hifi_svc --dataset hifi_svc --scheduler exponential --trainer hifi_svc  
+```
 ## Preprocess Data
 ```bash
 # Extract all data features, such as pitch, text features, mel features, etc.

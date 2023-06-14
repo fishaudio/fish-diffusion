@@ -53,7 +53,6 @@ model:
       _partial_: true
   vocoder:
     _target_: fish_diffusion.modules.vocoders.nsf_hifigan.nsf_hifigan.NsfHifiGAN
-    type: NsfHifiGAN
     checkpoint_path: checkpoints/nsf_hifigan/model
     sampling_rate: 44100
     mel_channels: 128

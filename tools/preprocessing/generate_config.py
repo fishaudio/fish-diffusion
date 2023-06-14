@@ -1,13 +1,23 @@
 import os
 import click
+from matplotlib.dates import SA
+from networkx import project
 from omegaconf import OmegaConf
 from loguru import logger
 from pathlib import Path
+from sympy import N
 import torch
 import sys
 from typing import Dict
 
 from hydra.experimental import compose, initialize
+
+MEL_CHANNELS = 128
+SAMPLING_RATE = 44100
+HIDDEN_SIZE = 256
+N_FFT = 2048
+HOP_LENGTH = 256
+WIN_LENGTH = 2048
 
 
 def create_ddp_strategy():
@@ -23,101 +33,148 @@ def create_ddp_strategy():
         return None
 
 
-def build_hifi_svc_datasets(
+def build_datasets(
     train_speaker_ids: Dict[str, int],
     val_speaker_ids: Dict[str, int],
     datasetConf: OmegaConf,
+    model: str,
 ) -> Dict[str, Dict]:
     if len(train_speaker_ids.keys()) == 0:
-        train_datasets  = [
-            {
-                "_target_": f"{datasetConf.train._target_}",
-                "path": f"dataset/train",
-                "segment_size": datasetConf.train.segment_size,
-            }
-        ]
-        datasetConf.speaker_mapping = {
-            "": 0,
+        train_datasets = {
+            "_target_": f"{datasetConf.train._target_}",
+            "path": f"dataset/train",
+            # "segment_size": datasetConf.train.segment_size,
+            "speaker_id": 0,
         }
-    else: 
+        speaker_mapping = {
+            "placeholder": 0,
+        }
+    else:
         train_datasets = {
             "_target_": "fish_diffusion.datasets.concat.ConcatDataset",
             "datasets": [
                 {
                     "_target_": f"{datasetConf.train._target_}",
                     "path": f"dataset/train/{speaker}",
-                    "segment_size": datasetConf.train.segment_size,
+                    # "segment_size": datasetConf.train.segment_size,
                     "speaker_id": train_speaker_ids[speaker],
                 }
                 for speaker in train_speaker_ids.keys()
             ],
             "collate_fn": f"{datasetConf.train._target_}.collate_fn",
         }
-        datasetConf.speaker_mapping = {
+        speaker_mapping = {
             speaker: train_speaker_ids[speaker] for speaker in train_speaker_ids.keys()
         }
 
-
-    valid_datasets = [
-        {
+    if len(val_speaker_ids.keys()) == 0:
+        valid_datasets = {
             "_target_": f"{datasetConf.valid._target_}",
             "path": f"dataset/valid",
             "speaker_id": 0,
         }
-    ]
+    else:
+        valid_datasets = {
+            "_target_": "fish_diffusion.datasets.concat.ConcatDataset",
+            "datasets": [
+                {
+                    "_target_": f"{datasetConf.valid._target_}",
+                    "path": f"dataset/valid/{speaker}",
+                    "speaker_id": train_speaker_ids.get(
+                        speaker, val_speaker_ids[speaker]
+                    ),
+                }
+                for speaker in val_speaker_ids.keys()
+            ],
+            "collate_fn": f"{datasetConf.valid._target_}.collate_fn",
+        }
 
-    return {"train": train_datasets, "valid": valid_datasets}
+    # valid_datasets = [
+    #     {
+    #         "_target_": f"{datasetConf.valid._target_}",
+    #         "path": f"dataset/valid",
+    #         "speaker_id": 0,
+    #     }
+    # ]
 
+    # add segment_size for hifi models
+    if "hifi" in model.lower():
+        if len(train_speaker_ids.keys()) == 0:
+            train_datasets["segment_size"] = datasetConf.train.segment_size
+        else:
+            for dataset in train_datasets["datasets"]:
+                dataset["segment_size"] = datasetConf.train.segment_size
 
-def build_naive_svc_datasets(
-    train_speaker_ids: Dict[str, int],
-    val_speaker_ids: Dict[str, int],
-    datasetConf: OmegaConf,
-) -> Dict[str, Dict]:
-    train_datasets = {
-        "_target_": "fish_diffusion.datasets.concat.ConcatDataset",
-        "datasets": [
-            {
-                "_target_": f"{datasetConf.train._target_}",
-                "path": f"dataset/train/{speaker}",
-                "speaker_id": train_speaker_ids[speaker],
-            }
-            for speaker in train_speaker_ids.keys()
-        ],
-        "collate_fn": f"{datasetConf.train._target_}.collate_fn",
+    return {
+        "train": train_datasets,
+        "valid": valid_datasets,
+        "speaker_mapping": speaker_mapping,
     }
-    if len(train_speaker_ids.keys()) == 0:
-        train_datasets["datasets"] = [
-            {
-                "_target_": f"{datasetConf.train._target_}",
-                "path": f"dataset/train",
-            }
-        ]
-
-    valid_datasets = {
-        "_target_": "fish_diffusion.datasets.concat.ConcatDataset",
-        "datasets": [
-            {
-                "_target_": f"{datasetConf.valid._target_}",
-                "path": f"dataset/valid/{speaker}",
-                "speaker_id": train_speaker_ids.get(speaker, val_speaker_ids[speaker]),
-            }
-            for speaker in val_speaker_ids.keys()
-        ],
-        "collate_fn": f"{datasetConf.valid._target_}.collate_fn",
-    }
-    if len(val_speaker_ids.keys()) == 0:
-        valid_datasets["datasets"] = [
-            {
-                "_target_": f"{datasetConf.valid._target_}",
-                "path": f"dataset/valid",
-            }
-        ]
-
-    return {"train": train_datasets, "valid": valid_datasets}
 
 
-def generate_config(model, dataset, scheduler, output_name, is_multi_speaker, trainer):
+# def build_naive_svc_datasets(
+#     train_speaker_ids: Dict[str, int],
+#     val_speaker_ids: Dict[str, int],
+#     datasetConf: OmegaConf,
+# ) -> Dict[str, Dict]:
+#     if len(train_speaker_ids.keys()) == 0:
+#         train_datasets["datasets"] = [
+#             {
+#                 "_target_": f"{datasetConf.train._target_}",
+#                 "path": f"dataset/train",
+#             }
+#         ]
+#         speaker_mapping = {"placeholder": 0}
+#     else:
+#         train_datasets = {
+#             "_target_": "fish_diffusion.datasets.concat.ConcatDataset",
+#             "datasets": [
+#                 {
+#                     "_target_": f"{datasetConf.train._target_}",
+#                     "path": f"dataset/train/{speaker}",
+#                     "speaker_id": train_speaker_ids[speaker],
+#                 }
+#                 for speaker in train_speaker_ids.keys()
+#             ],
+#             "collate_fn": f"{datasetConf.train._target_}.collate_fn",
+#         }
+#         speaker_mapping = {
+#             speaker: train_speaker_ids[speaker] for speaker in train_speaker_ids.keys()
+#         }
+
+#     if len(val_speaker_ids.keys()) == 0:
+#         valid_datasets["datasets"] = [
+#             {
+#                 "_target_": f"{datasetConf.valid._target_}",
+#                 "path": f"dataset/valid",
+#             }
+#         ]
+#     else:
+#         valid_datasets = {
+#             "_target_": "fish_diffusion.datasets.concat.ConcatDataset",
+#             "datasets": [
+#                 {
+#                     "_target_": f"{datasetConf.valid._target_}",
+#                     "path": f"dataset/valid/{speaker}",
+#                     "speaker_id": train_speaker_ids.get(
+#                         speaker, val_speaker_ids[speaker]
+#                     ),
+#                 }
+#                 for speaker in val_speaker_ids.keys()
+#             ],
+#             "collate_fn": f"{datasetConf.valid._target_}.collate_fn",
+#         }
+
+#     return {
+#         "train": train_datasets,
+#         "valid": valid_datasets,
+#         "speaker_mapping": speaker_mapping,
+#     }
+
+
+def generate_config(
+    model, dataset, scheduler, output_name, is_multi_speaker, trainer, output_dir
+):
     config = OmegaConf.create()
 
     config.text_features_extractor_type = "HubertSoft"
@@ -134,6 +191,9 @@ def generate_config(model, dataset, scheduler, output_name, is_multi_speaker, tr
     config.num_workers = 8
     config.no_augmentation = True
     config.project_root = os.getcwd()
+    config.sampling_rate = SAMPLING_RATE
+
+    OmegaConf.register_new_resolver("project_root", lambda: os.getcwd())
 
     # Determine which parts of the configuration to include
     try:
@@ -146,35 +206,26 @@ def generate_config(model, dataset, scheduler, output_name, is_multi_speaker, tr
 
     try:
         datasetConf = OmegaConf.load(f"configs/dataset/{dataset}.yaml")
-        if not is_multi_speaker:
-            config.dataset = datasetConf
-        else:
-            # Get speaker ids
-            train_speaker_ids = {}
-            for i, folder in enumerate((Path(config.path) / "train").iterdir()):
-                if folder.is_dir():
-                    train_speaker_ids[folder.name] = i
-            val_speaker_ids = {}
-            for i, folder in enumerate((Path(config.path) / "valid").iterdir()):
-                if folder.is_dir():
-                    val_speaker_ids[folder.name] = i
+        # if not is_multi_speaker:
+        #     config.dataset = datasetConf
+        # else:
+        # Get speaker ids
+        train_speaker_ids = {}
+        for i, folder in enumerate((Path(config.path) / "train").iterdir()):
+            if folder.is_dir():
+                train_speaker_ids[folder.name] = i
+        val_speaker_ids = {}
+        for i, folder in enumerate((Path(config.path) / "valid").iterdir()):
+            if folder.is_dir():
+                val_speaker_ids[folder.name] = i
 
-            # Create datasets for each speaker
-            if model == "hifi_svc":
-                config.dataset = OmegaConf.create(
-                    build_hifi_svc_datasets(
-                        train_speaker_ids, val_speaker_ids, datasetConf
-                    )
-                )
-            else:
-                config.dataset = OmegaConf.create(
-                    build_naive_svc_datasets(
-                        train_speaker_ids, val_speaker_ids, datasetConf
-                    )
-                )
+        # Create datasets for each speaker
+        config.dataset = OmegaConf.create(
+            build_datasets(train_speaker_ids, val_speaker_ids, datasetConf, model)
+        )
 
-            # change the input size of the speaker encoder in the model
-            config.model.speaker_encoder.input_size = len(train_speaker_ids.keys())
+        # change the input size of the speaker encoder in the model
+        config.model.speaker_encoder.input_size = len(train_speaker_ids.keys())
         config.dataloader = OmegaConf.load(f"configs/dataloader/base.yaml")
 
     except FileNotFoundError as e:
@@ -197,32 +248,44 @@ def generate_config(model, dataset, scheduler, output_name, is_multi_speaker, tr
         config = OmegaConf.merge(config, trainer_conf)
 
     # Save the resulting configuration to a file
-    OmegaConf.save(config, f"configs/{output_name}.yaml", resolve=True)
-    logger.info(f"Saved configuration to configs/{output_name}.yaml")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    OmegaConf.save(config, f"{output_dir}/{output_name}.yaml", resolve=True)
+    logger.info(f"Saved configuration to {output_dir}/{output_name}.yaml")
 
 
 @click.command()
-@click.option("--model", default="diff_svc_v2", help="Model to use")
-@click.option("--dataset", default="naive_svc", help="Dataset to use")
-@click.option("--scheduler", default="warmup_cosine", help="Scheduler to use")
-@click.option("--output", default="svc_hubert_soft", help="Name of the output file")
-@click.option("--trainer", default="base", help="Name of the trainer file")
+@click.option("--model", "-m", default="diff_svc_v2", help="Model to use")
+@click.option("--dataset", "-d", default="naive_svc", help="Dataset to use")
+@click.option("--scheduler", "-s", default="warmup_cosine", help="Scheduler to use")
 @click.option(
-    "--is_multi_speaker", default=True, help="Whether to use multi-speaker dataset"
+    "--output", "-o", default="svc_hubert_soft", help="Name of the output file"
 )
-def main(model, dataset, scheduler, output, is_multi_speaker, trainer):
-    generate_config(model, dataset, scheduler, output, is_multi_speaker, trainer)
+@click.option("--trainer", "-t", default="base", help="Name of the trainer file")
+@click.option(
+    "--is_multi_speaker",
+    "-m",
+    is_flag=True,
+    help="Whether to use multi-speaker dataset",
+)
+@click.option(
+    "--dir-name", "-n", default="./configs", help="Name of the output directory"
+)
+def main(model, dataset, scheduler, output, is_multi_speaker, trainer, dir_name):
+    generate_config(
+        model, dataset, scheduler, output, is_multi_speaker, trainer, dir_name
+    )
 
 
 if __name__ == "__main__":
     # Register custom resolvers for configuration variables
-    OmegaConf.register_new_resolver("mel_channels", lambda: 128)
-    OmegaConf.register_new_resolver("sampling_rate", lambda: 44100)
-    OmegaConf.register_new_resolver("hidden_size", lambda: 256)
+    OmegaConf.register_new_resolver("mel_channels", lambda: MEL_CHANNELS)
+    OmegaConf.register_new_resolver("sampling_rate", lambda: SAMPLING_RATE)
+    OmegaConf.register_new_resolver("hidden_size", lambda: HIDDEN_SIZE)
     # for hifi
-    OmegaConf.register_new_resolver("n_fft", lambda: 2048)
-    OmegaConf.register_new_resolver("hop_length", lambda: 256)
-    OmegaConf.register_new_resolver("win_length", lambda: 2048)
+    OmegaConf.register_new_resolver("n_fft", lambda: N_FFT)
+    OmegaConf.register_new_resolver("hop_length", lambda: HOP_LENGTH)
+    OmegaConf.register_new_resolver("win_length", lambda: WIN_LENGTH)
 
     # for speaker encoder speaker_embedding_size
     OmegaConf.register_new_resolver("speaker_embedding_size", lambda: 1)

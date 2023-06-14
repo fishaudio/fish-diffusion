@@ -8,7 +8,9 @@ import soundfile as sf
 import torch
 from fish_audio_preprocess.utils import loudness_norm
 from loguru import logger
-from mmengine import Config
+
+# from mmengine import Config
+from omegaconf import OmegaConf, DictConfig
 
 from fish_diffusion.archs.diffsinger import DiffSingerLightning
 from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
@@ -229,7 +231,8 @@ if __name__ == "__main__":
         device = torch.device(args.device)
 
     inference(
-        Config.fromfile(args.config),
+        # Config.fromfile(args.config),
+        OmegaConf.load(args.config),
         args.checkpoint,
         args.input,
         args.output,

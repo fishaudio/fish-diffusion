@@ -18,10 +18,7 @@ from natsort import natsorted
 from torch import nn
 
 from fish_diffusion.archs.diffsinger.diffsinger import DiffSingerLightning
-from fish_diffusion.modules.energy_extractors import ENERGY_EXTRACTORS
-from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
 
-# from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.utils.audio import separate_vocals, slice_audio
 from fish_diffusion.utils.inference import load_checkpoint
 from fish_diffusion.utils.tensor import repeat_expand

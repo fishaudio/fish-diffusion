@@ -4,7 +4,6 @@ import parselmouth
 from .builder import BasePitchExtractor
 
 
-# @PITCH_EXTRACTORS.register_module()
 class ParselMouthPitchExtractor(BasePitchExtractor):
     def __call__(self, x, sampling_rate=44100, pad_to=None):
         """Extract pitch using parselmouth.
