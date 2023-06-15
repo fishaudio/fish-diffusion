@@ -12,6 +12,7 @@ from hydra.utils import instantiate
 from box import Box
 
 from hydra.utils import get_method
+from pathlib import Path
 
 torch.set_float32_matmul_precision("medium")
 
@@ -35,7 +36,13 @@ def train(cfg: DictConfig) -> None:
 
     # We only load the state_dict of the model, not the optimizer.
     if cfg.pretrained:
-        state_dict = torch.load(cfg.pretrained, map_location="cpu")
+        pretrained_path = cfg.project_root / Path(cfg.pretrained)
+        if not pretrained_path.exists():
+            logger.warning(
+                f"Pretrained model {pretrained_path} does not exist, skipping."
+            )
+            return
+        state_dict = torch.load(str(pretrained_path), map_location="cpu")
         if "state_dict" in state_dict:
             state_dict = state_dict["state_dict"]
 
@@ -49,12 +56,14 @@ def train(cfg: DictConfig) -> None:
         assert len(unexpected_keys) == 0, f"Unexpected keys: {unexpected_keys}"
         assert len(missing_keys) == 0, f"Missing keys: {missing_keys}"
 
+    log_dir = f"{cfg.run_dir}/logs" if cfg.run_dir else "logs"
+    Path(log_dir).mkdir(parents=True, exist_ok=True)
     logger = (
-        TensorBoardLogger("logs", name=cfg.model.type)
+        TensorBoardLogger(log_dir, name=cfg.model.type)
         if cfg.tensorboard
         else WandbLogger(
             project=cfg.model.type,
-            save_dir="logs",
+            save_dir=log_dir,
             log_model=True,
             name=cfg.name,
             entity=cfg.entity,
@@ -75,6 +84,8 @@ def train(cfg: DictConfig) -> None:
     loguru_logger.debug(f"Using callbacks: {callbacks}")
     del cfg.trainer.callbacks
     loguru_logger.debug(f"trainer: {cfg.trainer}")
+
+    loguru_logger.info(cfg.project_root)
     trainer = pl.Trainer(
         logger=logger,
         callbacks=callbacks,

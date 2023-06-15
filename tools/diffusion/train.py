@@ -1,4 +1,4 @@
-from anyio import Path
+from cv2 import log
 import pytorch_lightning as pl
 import torch
 from omegaconf import OmegaConf, DictConfig
@@ -12,6 +12,7 @@ from fish_diffusion.datasets.utils import build_loader_from_config
 from hydra.utils import instantiate
 from box import Box
 from hydra.utils import get_method
+from pathlib import Path
 
 torch.set_float32_matmul_precision("medium")
 
@@ -69,12 +70,14 @@ def train(cfg: DictConfig) -> None:
                 "Only train speaker embeddings, all other parameters are frozen."
             )
 
+    log_dir = f"{cfg.run_dir}/logs" if cfg.run_dir else "logs"
+    Path(log_dir).mkdir(parents=True, exist_ok=True)
     logger = (
-        TensorBoardLogger("logs", name=cfg.model.type)
+        TensorBoardLogger(log_dir, name=cfg.model.type)
         if cfg.tensorboard
         else WandbLogger(
             project=cfg.model.type,
-            save_dir="logs",
+            save_dir=log_dir,
             log_model=True,
             name=cfg.name,
             entity=cfg.entity,
@@ -93,7 +96,9 @@ def train(cfg: DictConfig) -> None:
     # todo: check callbacks are correct
     callbacks = [instantiate(cb) for cb in cfg.trainer.callbacks]
     del cfg.trainer.callbacks
+
     trainer = pl.Trainer(
+        default_root_dir=cfg.project_root,
         logger=logger,
         callbacks=callbacks,
         **cfg.trainer.to_dict(),

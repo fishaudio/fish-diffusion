@@ -39,13 +39,12 @@ def main(config, entity, tensorboard, resume, resume_id, checkpoint):
         cfg = hydra.compose(config_name=config)
         model = cfg.model.type
         OmegaConf.set_struct(cfg, False)  # Allow changes to the config
-        # name=HIFI_SVC_ARIA entity=fish-audio tensorboard=true
         cfg.name = run_dir
         cfg.entity = entity
         cfg.tensorboard = tensorboard
+        cfg.run_dir = run_dir
         OmegaConf.set_struct(cfg, True)
 
-        os.chdir(run_dir)
         if model == "DiffSVC":
             from tools.diffusion.train import train
         elif model == "HiFiSVC":
@@ -95,7 +94,7 @@ def main(config, entity, tensorboard, resume, resume_id, checkpoint):
                 cfg.resume = ckpts[-1]
         # save config for this run
         curr_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        cfg_path = Path("logs") / model / curr_time / "config.yaml"
+        cfg_path = Path(f"{run_dir}/logs") / model / curr_time / "config.yaml"
         cfg_path.parent.mkdir(parents=True, exist_ok=True)
         OmegaConf.save(cfg, f"{cfg_path}")
         train(cfg)
