@@ -31,6 +31,8 @@
 
 An easy to understand TTS / SVS / SVC training framework.
 
+# Warning: USE RELEASE VERSION ONLY AS FOR NOW, MAIN BRANCH IS UNDER DEVELOPMENT
+
 > Check our [Wiki](https://fishaudio.github.io/fish-diffusion/) to get started! 
 
 [中文文档](README.zh.md)
