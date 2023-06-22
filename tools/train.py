@@ -18,11 +18,15 @@ import re
 )
 @click.option("--entity", "-e", type=str, default="fish-audio", help="entity for wandb")
 @click.option("--tensorboard", "-t", is_flag=True, help="Log to tensorboard")
-@click.option("--resume", "-r", is_flag=True, help="Resume training")
-@click.option("--resume-id", "-i", type=str, default=None, help="Resume training")
+@click.option(
+    "--resume", "-r", is_flag=True, help="Resume training using the latest ckpt"
+)
+@click.option(
+    "--resume-id", "-i", type=str, default=None, help="Resume id for training"
+)
 @click.option(
     "--checkpoint",
-    "-k",
+    "-p",
     type=click.Path(exists=True),
     default=None,
     help="Resume training ckpt file",
@@ -31,8 +35,21 @@ import re
     else None,
     show_default=True,
 )
-@click.option("--name", "-n", type=str, default=None, help="Run name")
-def main(config, entity, tensorboard, resume, resume_id, checkpoint, name):
+@click.option("--name", "-n", type=str, default=None, help="Run name for wandb")
+@click.option(
+    "pretrained",
+    "--pretrained",
+    "-pre",
+    is_flag=True,
+    help="Use pretrained. Make sure to specify checkpoint using -p",
+)
+@click.option("--help", "-h", is_flag=True, help="Show help")
+def main(
+    config, entity, tensorboard, resume, resume_id, checkpoint, name, pretrained, help
+):
+    if help:
+        click.echo(click.get_current_context().get_help())
+        return
     run_dir = Path(config).parent
     config = Path(config).stem
     logger.info(f"Running {config} in {run_dir}")
@@ -51,7 +68,8 @@ def main(config, entity, tensorboard, resume, resume_id, checkpoint, name):
         elif model == "HiFiSVC":
             from tools.hifisinger.train import train
         else:
-            raise ValueError(f"Unknown model: {model}")
+            logger.error(f"Unknown model type {model}")
+            raise ValueError(f"Unknown model type {model}")
 
         if resume:
             if resume_id is None:
@@ -97,6 +115,13 @@ def main(config, entity, tensorboard, resume, resume_id, checkpoint, name):
                         f"Multiple checkpoints found, using the latest one {ckpts[-1]}"
                     )
                 cfg.resume = ckpts[-1]
+
+        if pretrained:
+            if checkpoint is not None:
+                cfg.pretrained = checkpoint
+            else:
+                logger.warning("No pretrained checkpoint specified")
+                raise ValueError("No pretrained checkpoint specified")
         # save config for this run
         curr_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         cfg_path = Path(f"{run_dir}/logs") / model / curr_time / "config.yaml"

@@ -1,3 +1,4 @@
+from cv2 import log
 import pytorch_lightning as pl
 import torch
 from omegaconf import OmegaConf, DictConfig
@@ -45,11 +46,13 @@ def train(cfg: DictConfig) -> None:
             state_dict = state_dict["state_dict"]
 
         result = model.load_state_dict(state_dict, strict=False)
-
         missing_keys = set(result.missing_keys)
         unexpected_keys = set(result.unexpected_keys)
 
-        missing_keys.remove("generator.speaker_encoder.embedding.weight")
+        if (missing_keys is not None) and (
+            "generator.speaker_encoder.embedding.weight" in missing_keys
+        ):
+            missing_keys.remove("generator.speaker_encoder.embedding.weight")
 
         assert len(unexpected_keys) == 0, f"Unexpected keys: {unexpected_keys}"
         assert len(missing_keys) == 0, f"Missing keys: {missing_keys}"

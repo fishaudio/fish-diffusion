@@ -130,18 +130,18 @@ python tools/preprocessing/extract_features.py diffsvc/svc_hubert_soft.yaml --nu
 > The project is under active development, please backup your config file  
 
 ```bash
-# Single machine single card / multi-card training
-python tools/diffusion/train.py --config-name svc_hubert_soft
-# Multi-node training
-python tools/diffusion/train.py --config-name svc_hubert_soft_multispk
-# Environment variables need to be defined on each node,please see https://pytorch-lightning.readthedocs.io/en/1.6.5/clouds/cluster.html  for more infomation.
+# Single machine single card / multi-card training, you can use --help to view more parameters
+ python tools/train.py -c diffsvc/svc_hubert_soft.yaml -n <name> 
 
-# Resume training
-python tools/diffusion/train.py --config configs/svc_hubert_soft.py --resume [checkpoint file]
+# Resume training from the last checkpoint
+ python tools/train.py -c diffsvc/svc_hubert_soft.yaml -r
+
+# Resume training from the specified checkpoint
+ python tools/train.py -c diffsvc/svc_hubert_soft.yaml -r -p [checkpoint file]
 
 # Fine-tune the pre-trained model
 # Note: You should adjust the learning rate scheduler in the config file to warmup_cosine_finetune
-python tools/diffusion/train.py --config configs/svc_cn_hubert_soft_finetune.py --pretrained [checkpoint file]
+python tools/train.py -c diffsvc/svc_hubert_soft_finetune.yaml --p [checkpoint file] -pre
 ```
 
 ## Inference
@@ -157,13 +157,6 @@ python tools/diffusion/inference.py --config [config] \
 python tools/diffusion/inference.py --config [config] \
     --checkpoint [checkpoint file] \
     --gradio
-```
-
-## Convert a DiffSVC model to Fish Diffusion
-```bash
-python tools/diffusion/diff_svc_converter.py --config configs/svc_hubert_soft_diff_svc.py \
-    --input-path [DiffSVC ckpt] \
-    --output-path [Fish Diffusion ckpt]
 ```
 
 ## Contributing
