@@ -391,8 +391,8 @@ class SVCInference(nn.Module):
         logger.info("Done")
 
         if output_path is not None:
-            if os.path.exists(os.path.dirname(output_path)) is False:
-                os.makedirs(os.path.dirname(output_path))
+            if len(os.path.dirname(output_path)) > 0:
+                os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
             sf.write(output_path, generated_audio, sr)
 
