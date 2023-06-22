@@ -1,6 +1,6 @@
 # Configuration
 
-Since fish diffusion supports various modules, writing a good config file is essential. There are many examples in the configs folder.  
+Since fish diffusion supports various modules, writing a good config file is essential. There are many examples in the configs folder.
 To begin with, you should create a config file `exp_xxxxxx.py` in the `configs` folder with the following code:
 
 ```python
@@ -14,7 +14,7 @@ _base_ = [
 ```
 
 ## Preprocessing
-Preprocessing config currently includes two components: `text_features_extractor` and `pitch_extractor.` 
+Preprocessing config currently includes two components: `text_features_extractor` and `pitch_extractor.`
 
 Stable feature extractors are `HubertSoft`, `ChineseHubertSoft`, and `ContentVec`. Although there is a `Chinese` in the second one, it works on multilingual and outperforms the vanilla one.
 
@@ -79,8 +79,8 @@ model = dict(
 
 ```
 
-Since this is a Python script, you can load dataset from any folder you like.  
-But... What if I have 100+ speakers? I can't setup manually and I don't know how to write Python code :(  
+Since this is a Python script, you can load dataset from any folder you like.
+But... What if I have 100+ speakers? I can't setup manually and I don't know how to write Python code :(
 Don't worry. You can use the following folder structure and scripts:
 ```
 dataset
@@ -159,12 +159,12 @@ preprocessing = dict(
 
 After editing the config, you need to rerun the preprocessing command.
 
-> Note: You should not use `RandomPitchShifting` and `RandomTimeStretching` at the same time.   
+> Note: You should not use `RandomPitchShifting` and `RandomTimeStretching` at the same time.
 > RandomTimeStretching is not tested yet (as of 2023-03-03).
 
 ## Appendix: Pitch Extractors
-Currently, this repo supports ParselMouth, Crepe, Harvest, and Dio. However, we recommend only using **Crepe** and **ParselMouth**. 
-- If your dataset is small and you want it to be more robust, Crepe is probably good for you. 
+Currently, this repo supports ParselMouth, Crepe, Harvest, and Dio. However, we recommend only using **Crepe** and **ParselMouth**.
+- If your dataset is small and you want it to be more robust, Crepe is probably good for you.
 - Otherwise, you should use ParselMouth since it is much faster.
 
 Here are some comparisons:
