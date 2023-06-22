@@ -34,7 +34,7 @@
 
 一个简单易懂的 TTS / SVS / SVC 框架.
 
-> 从阅读 [Wiki](https://fishaudio.github.io/fish-diffusion/) 开始! 
+> 从阅读 [Wiki](https://fishaudio.github.io/fish-diffusion/) 开始!
 
 ## Fish Diffusion 使用条款
 1. 获取授权和知识产权侵权：用户应自行负责获取其培训过程中所使用的任何数据集的必要授权，并对因使用输入源而产生的任何侵权问题承担全部责任。Fish Diffusion 及其开发者不承担因使用未授权数据集而可能产生的任何问题的责任。
@@ -96,7 +96,7 @@ python tools/download_nsf_hifigan.py --agree-license
 ```
 
 ### 手动下载
-下载 [Fish Diffusion Release](https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0) 中的 `nsf_hifigan-stable-v1.zip`  
+下载 [Fish Diffusion Release](https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0) 中的 `nsf_hifigan-stable-v1.zip`
 解压 `nsf_hifigan` 文件夹到 `checkpoints` 目录下 (如果没有则创建)
 
 如果你想手动下载 [ContentVec](https://github.com/auspicious3000/contentvec), 你可以从 [这里](https://github.com/fishaudio/fish-diffusion/releases/download/v1.12/content-vec-best-legacy-500.pt) 下载, 并将其放入 `checkpoints` 目录下.
@@ -123,8 +123,8 @@ python tools/preprocessing/extract_features.py --config configs/svc_hubert_soft.
 ```
 
 ## 基本训练
-> 该项目仍在积极开发, 请记得备份你的 config 文件  
-> 该项目仍在积极开发, 请记得备份你的 config 文件  
+> 该项目仍在积极开发, 请记得备份你的 config 文件
+> 该项目仍在积极开发, 请记得备份你的 config 文件
 > 该项目仍在积极开发, 请记得备份你的 config 文件
 
 ```bash
@@ -166,7 +166,7 @@ python tools/diffusion/diff_svc_converter.py --config configs/svc_hubert_soft_di
 ```
 
 ## 参与本项目
-如果你有任何问题, 请提交 issue 或 pull request.  
+如果你有任何问题, 请提交 issue 或 pull request.
 你应该在提交 pull request 之前运行 `pdm run lint`
 
 实时预览文档
