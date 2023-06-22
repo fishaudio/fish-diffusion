@@ -108,17 +108,20 @@ dataset
 ```
 
 ## Generate Config
+For DiffSVC
 ``` bash
-python tools/preprocessing/generate_config.py --output svc_hubert_soft
+python tools/preprocessing/generate_config.py --output svc_hubert_soft --dir-name diffsvc
 ```
 For hifiSinger
 ``` bash
- python tools/preprocessing/generate_config.py --output test --model hifi_svc --dataset hifi_svc --scheduler exponential --trainer hifi_svc  
+ python tools/preprocessing/generate_config.py --output diff_svc_v1 --dir-name diff_svc_v1 --model hifi_svc --dataset hifi_svc --scheduler exponential --trainer hifi_svc -ms 
+ python tools/preprocessing/generate_config.py --output Aria_test --dir-name Aria_test -ms --model hifi_svc --dataset hifi_svc --scheduler exponential --trainer hifi_svc 
 ```
+
 ## Preprocess Data
 ```bash
 # Extract all data features, such as pitch, text features, mel features, etc.
-python tools/preprocessing/extract_features.py --config-name=svc_hubert_soft num-workers=8 path=dataset clean=true
+python tools/preprocessing/extract_features.py diffsvc/svc_hubert_soft.yaml --num-workers=8 --clean
 ```
 
 ## Baseline training

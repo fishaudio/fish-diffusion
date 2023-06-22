@@ -80,7 +80,6 @@ def train(cfg: DictConfig) -> None:
     callbacks = [instantiate(cb) for cb in cfg.trainer.callbacks]
     del cfg.trainer.callbacks
 
-    loguru_logger.info(cfg.project_root)
     trainer = pl.Trainer(
         logger=logger,
         callbacks=callbacks,

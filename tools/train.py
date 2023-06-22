@@ -31,18 +31,19 @@ import re
     else None,
     show_default=True,
 )
-def main(config, entity, tensorboard, resume, resume_id, checkpoint):
-    run_dir = Path(config).parent.name
+@click.option("--name", "-n", type=str, default=None, help="Run name")
+def main(config, entity, tensorboard, resume, resume_id, checkpoint, name):
+    run_dir = Path(config).parent
     config = Path(config).stem
     logger.info(f"Running {config} in {run_dir}")
     with hydra.initialize(config_path=f"../{run_dir}", job_name=run_dir):
         cfg = hydra.compose(config_name=config)
         model = cfg.model.type
         OmegaConf.set_struct(cfg, False)  # Allow changes to the config
-        cfg.name = run_dir
+        cfg.name = str(run_dir) if name is None else name
         cfg.entity = entity
         cfg.tensorboard = tensorboard
-        cfg.run_dir = run_dir
+        cfg.run_dir = str(run_dir)
         OmegaConf.set_struct(cfg, True)
 
         if model == "DiffSVC":
@@ -58,7 +59,7 @@ def main(config, entity, tensorboard, resume, resume_id, checkpoint):
                 resume_ids = sorted(
                     [
                         path
-                        for path in (Path("logs") / model).glob("*")
+                        for path in (run_dir / Path("logs") / model).glob("*")
                         if re.match("^[a-zA-Z0-9]+$", str(path.name))
                     ],
                     key=os.path.getctime,
@@ -79,13 +80,17 @@ def main(config, entity, tensorboard, resume, resume_id, checkpoint):
                 cfg.resume = checkpoint
             else:
                 ckpts = sorted(
-                    (Path("logs") / model / cfg.resume_id / "checkpoints").glob(
-                        "*.ckpt"
-                    ),
+                    (
+                        cfg.run_dir
+                        / Path("logs")
+                        / model
+                        / cfg.resume_id
+                        / "checkpoints"
+                    ).glob("*.ckpt"),
                     key=os.path.getctime,
                 )
                 if len(ckpts) == 0:
-                    raise ValueError("No checkpoint found")
+                    raise ValueError(f"No checkpoint found in {cfg.resume_id}")
                 elif len(ckpts) > 1:
                     # get the latest one
                     logger.warning(

@@ -261,7 +261,7 @@ def generate_config(
 @click.option("--trainer", "-t", default="base", help="Name of the trainer file")
 @click.option(
     "--is_multi_speaker",
-    "-m",
+    "-ms",
     is_flag=True,
     help="Whether to use multi-speaker dataset",
 )

@@ -284,8 +284,14 @@ def main(config: DictConfig) -> None:
 
 @click.command()
 @click.argument("config_path", type=click.Path(exists=True))
-def load_config(config_path):
+@click.option("--clean", is_flag=True)
+@click.option("--num-workers", type=int)
+def load_config(config_path, clean, num_workers):
     config = OmegaConf.load(config_path)
+    OmegaConf.set_struct(config, False)  # Allow changes to the config
+    config.clean = clean
+    config.num_workers = num_workers if num_workers is not None else config.num_workers
+    OmegaConf.set_struct(config, True)
     main(config)
 
 
