@@ -14,7 +14,7 @@ vocoder_config = {
     "resblock_kernel_sizes": [3, 7, 11],
     "resblock_dilation_sizes": [[1, 3, 5], [1, 3, 5], [1, 3, 5]],
     "discriminator_periods": [3, 5, 7, 11, 17, 23, 37],
-    # The folowing parameters are used for validation
+    # The following parameters are used for validation
     "num_mels": 256,
     "n_fft": 2048,
     "hop_size": 512,

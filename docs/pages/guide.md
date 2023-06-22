@@ -98,7 +98,7 @@ python tools/preprocessing/extract_features.py --config configs/svc_content_vec.
 
   Once that is done you have your data prepared to start training!
 
-> It's recommened to copy the config file to a new one, so you don't mess up the original one.
+> It's recommended to copy the config file to a new one, so you don't mess up the original one.
 
 ## Dataset Preparation (Multi Speaker)
 Reference to [Dataset Configuration](https://fishaudio.github.io/fish-diffusion/pages/config.html#dataset). 
@@ -204,7 +204,7 @@ python tools/diffusion/inference.py –-config configs/svc_hubert_soft.py \
 
 ## DIFF SVC CONVERSION TO FISH SVC
 
-This is pretty straightforward, conversion takes 2 minutes to run and it allows inference immediatly!
+This is pretty straightforward, conversion takes 2 minutes to run and it allows inference immediately!
 You first need to copy your DiffSVC checkpoint of the model you want to convert, in my case I created a specific folder called "conversion"
 
  
