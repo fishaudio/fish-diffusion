@@ -151,7 +151,12 @@ class HiFiSingerV2Lightning(pl.LightningModule):
         y_x, _ = self.mpd(y)
         loss_mpd = self.discriminator_loss(y_x, y_g_hat_x)
         self.log(
-            "train_loss_d_mpd", loss_mpd, on_step=True, prog_bar=False, sync_dist=True
+            "train_loss_d_mpd",
+            loss_mpd,
+            on_step=True,
+            prog_bar=False,
+            sync_dist=True,
+            batch_size=batch["contents"].shape[0],
         )
 
         # MRD Loss
@@ -159,12 +164,24 @@ class HiFiSingerV2Lightning(pl.LightningModule):
         y_x, _ = self.mrd(y)
         loss_mrd = self.discriminator_loss(y_x, y_g_hat_x)
         self.log(
-            "train_loss_d_mrd", loss_mrd, on_step=True, prog_bar=False, sync_dist=True
+            "train_loss_d_mrd",
+            loss_mrd,
+            on_step=True,
+            prog_bar=False,
+            sync_dist=True,
+            batch_size=batch["contents"].shape[0],
         )
 
         # Discriminator Loss
         loss_d = loss_mpd + loss_mrd
-        self.log("train_loss_d", loss_d, on_step=True, prog_bar=True, sync_dist=True)
+        self.log(
+            "train_loss_d",
+            loss_d,
+            on_step=True,
+            prog_bar=True,
+            sync_dist=True,
+            batch_size=batch["contents"].shape[0],
+        )
 
         self.manual_backward(loss_d)
         optim_d.step()
@@ -180,7 +197,12 @@ class HiFiSingerV2Lightning(pl.LightningModule):
         # L2 Mel-Spectrogram Loss
         loss_mel = self.generator_mel_loss(y, y_g_hat)
         self.log(
-            "train_loss_g_mel", loss_mel, on_step=True, prog_bar=False, sync_dist=True
+            "train_loss_g_mel",
+            loss_mel,
+            on_step=True,
+            prog_bar=False,
+            sync_dist=True,
+            batch_size=batch["contents"].shape[0],
         )
 
         # L1 Envelope Loss
@@ -191,25 +213,43 @@ class HiFiSingerV2Lightning(pl.LightningModule):
             on_step=True,
             prog_bar=False,
             sync_dist=True,
+            batch_size=batch["contents"].shape[0],
         )
 
         # MPD Loss
         y_g_hat_x, _ = self.mpd(y_g_hat)
         loss_mpd = self.generator_adv_loss(y_g_hat_x)
         self.log(
-            "train_loss_g_mpd", loss_mpd, on_step=True, prog_bar=False, sync_dist=True
+            "train_loss_g_mpd",
+            loss_mpd,
+            on_step=True,
+            prog_bar=False,
+            sync_dist=True,
+            batch_size=batch["contents"].shape[0],
         )
 
         # MRD Loss
         y_g_hat_x, _ = self.mrd(y_g_hat)
         loss_mrd = self.generator_adv_loss(y_g_hat_x)
         self.log(
-            "train_loss_g_mrd", loss_mrd, on_step=True, prog_bar=False, sync_dist=True
+            "train_loss_g_mrd",
+            loss_mrd,
+            on_step=True,
+            prog_bar=False,
+            sync_dist=True,
+            batch_size=batch["contents"].shape[0],
         )
 
         # Generator Loss
         loss_g = 45 * loss_mel + loss_envelope + loss_mpd + loss_mrd
-        self.log("train_loss_g", loss_g, on_step=True, prog_bar=True, sync_dist=True)
+        self.log(
+            "train_loss_g",
+            loss_g,
+            on_step=True,
+            prog_bar=True,
+            sync_dist=True,
+            batch_size=batch["contents"].shape[0],
+        )
 
         self.manual_backward(loss_g)
         optim_g.step()
@@ -263,6 +303,7 @@ class HiFiSingerV2Lightning(pl.LightningModule):
             prog_bar=True,
             logger=True,
             sync_dist=True,
+            batch_size=batch["contents"].shape[0],
         )
 
         for idx, (mel, gen_mel, audio, gen_audio, mel_len, audio_len) in enumerate(
