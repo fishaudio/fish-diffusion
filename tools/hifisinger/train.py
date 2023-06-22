@@ -1,19 +1,18 @@
-from cv2 import log
+from pathlib import Path
+
+import hydra
 import pytorch_lightning as pl
 import torch
-from omegaconf import OmegaConf, DictConfig
-import hydra
+from box import Box
+from cv2 import log
+from hydra.utils import get_method, instantiate
+from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.loggers.wandb import WandbLogger
-from fish_diffusion.archs.hifisinger.hifisinger_v1 import HiFiSingerV1Lightning
 
+from fish_diffusion.archs.hifisinger.hifisinger_v1 import HiFiSingerV1Lightning
 from fish_diffusion.archs.hifisinger.hifisinger_v2 import HiFiSingerV2Lightning
 from fish_diffusion.datasets.utils import build_loader_from_config
-from hydra.utils import instantiate
-from box import Box
-
-from hydra.utils import get_method
-from pathlib import Path
 
 torch.set_float32_matmul_precision("medium")
 

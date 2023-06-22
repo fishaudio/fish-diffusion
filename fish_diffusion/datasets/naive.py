@@ -1,16 +1,15 @@
 from pathlib import Path
 from typing import Optional
-from loguru import logger
 
 import numpy as np
 import torch
 import torchaudio
 from fish_audio_preprocess.utils.file import list_files
+from hydra.utils import get_original_cwd
+from loguru import logger
 from torch.utils.data import Dataset
 
 from fish_diffusion.datasets.utils import transform_pipeline
-
-from hydra.utils import get_original_cwd
 
 
 class NaiveDataset(Dataset):

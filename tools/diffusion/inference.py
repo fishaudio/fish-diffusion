@@ -8,22 +8,20 @@ import librosa
 import numpy as np
 import soundfile as sf
 import torch
+from box import Box
 from fish_audio_preprocess.utils import loudness_norm, separate_audio
+from hydra.utils import instantiate
 from loguru import logger
+from natsort import natsorted
 
 # from mmengine import Config
-from omegaconf import OmegaConf, DictConfig
-from box import Box
-from natsort import natsorted
+from omegaconf import DictConfig, OmegaConf
 from torch import nn
 
 from fish_diffusion.archs.diffsinger.diffsinger import DiffSingerLightning
-
 from fish_diffusion.utils.audio import separate_vocals, slice_audio
 from fish_diffusion.utils.inference import load_checkpoint
 from fish_diffusion.utils.tensor import repeat_expand
-
-from hydra.utils import instantiate
 
 # from tqdm import tqdm
 # path = Path("dataset/train/aria")

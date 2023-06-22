@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import wandb
+from hydra.utils import instantiate
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.nn import functional as F
 
@@ -14,8 +15,6 @@ from fish_diffusion.utils.audio import dynamic_range_compression, get_mel_transf
 from fish_diffusion.utils.viz import plot_mel
 
 from .core import HiFiSinger
-
-from hydra.utils import instantiate
 
 
 class HiFiSingerV2Lightning(pl.LightningModule):

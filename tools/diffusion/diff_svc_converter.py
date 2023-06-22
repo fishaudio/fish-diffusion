@@ -1,9 +1,9 @@
 from argparse import ArgumentParser
 
 import torch
-from loguru import logger
-from omegaconf import OmegaConf, DictConfig
 from box import Box
+from loguru import logger
+from omegaconf import DictConfig, OmegaConf
 
 from fish_diffusion.archs.diffsinger import DiffSingerLightning
 

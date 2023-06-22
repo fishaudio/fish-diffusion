@@ -2,19 +2,17 @@ import argparse
 import json
 from typing import Optional
 
+import hydra
 import numpy as np
-from omegaconf import DictConfig
 import torch
-
+from box import Box
+from hydra import compose, initialize
+from hydra.utils import get_original_cwd
+from omegaconf import DictConfig
 
 from fish_diffusion.archs.hifisinger import HiFiSingerV1Lightning, HiFiSingerV2Lightning
 from fish_diffusion.utils.tensor import repeat_expand
 from tools.diffusion.inference import SVCInference
-
-import hydra
-from hydra import initialize, compose
-from box import Box
-from hydra.utils import get_original_cwd
 
 
 class HiFiSingerSVCInference(SVCInference):

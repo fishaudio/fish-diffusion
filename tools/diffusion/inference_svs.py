@@ -7,17 +7,17 @@ import numpy as np
 import soundfile as sf
 import torch
 from fish_audio_preprocess.utils import loudness_norm
+from hydra.utils import instantiate
 from loguru import logger
 
 # from mmengine import Config
-from omegaconf import OmegaConf, DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 from fish_diffusion.archs.diffsinger import DiffSingerLightning
 from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
 
 # from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.utils.tensor import repeat_expand
-from hydra.utils import instantiate
 
 
 @torch.no_grad()

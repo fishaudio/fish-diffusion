@@ -1,11 +1,10 @@
 import torch
 import torch.nn as nn
+from hydra.utils import instantiate
 
 # from fish_diffusion.modules.encoders import ENCODERS
 from fish_diffusion.modules.vocoders.nsf_hifigan.models import AttrDict, Generator
 from fish_diffusion.modules.vocoders.refinegan.generator import RefineGANGenerator
-
-from hydra.utils import instantiate
 
 
 class HiFiSinger(nn.Module):

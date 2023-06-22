@@ -1,14 +1,13 @@
 from copy import deepcopy
 from pathlib import Path
-from loguru import logger
 
 import numpy as np
 import torch
+from hydra.utils import get_class, instantiate
+from loguru import logger
 from torch.utils.data import DataLoader
 
 from .repeat import RepeatDataset
-
-from hydra.utils import instantiate, get_class
 
 
 # todo fix collate_fn for single speaker

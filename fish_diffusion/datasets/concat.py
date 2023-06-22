@@ -1,10 +1,9 @@
 from typing import Iterable
 
-from torch.utils.data import ConcatDataset as _ConcatDataset
-
 # from .builder import DATASETS
 from hydra.utils import get_static_method
 from loguru import logger
+from torch.utils.data import ConcatDataset as _ConcatDataset
 
 
 # @DATASETS.register_module()

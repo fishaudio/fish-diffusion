@@ -3,14 +3,12 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import wandb
+from hydra.utils import instantiate
+from omegaconf import DictConfig
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.nn import functional as F
 
 from fish_diffusion.utils.viz import viz_synth_sample
-
-from hydra.utils import instantiate
-
-from omegaconf import DictConfig
 
 
 class DiffSinger(nn.Module):

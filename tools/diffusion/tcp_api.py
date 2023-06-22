@@ -6,10 +6,10 @@ import time
 import librosa
 import numpy as np
 import torch
+from box import Box
 
 # from mmengine import Config
-from omegaconf import OmegaConf, DictConfig
-from box import Box
+from omegaconf import DictConfig, OmegaConf
 
 from tools.diffusion.inference import SVCInference
 

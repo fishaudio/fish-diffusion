@@ -4,12 +4,11 @@ from functools import partial
 import numpy as np
 import torch
 import torch.nn.functional as F
+from hydra.utils import get_class
 from torch import nn
 from tqdm import tqdm
 
 from .noise_predictor import NaiveNoisePredictor, PLMSNoisePredictor
-
-from hydra.utils import get_class
 
 
 def get_noise_schedule_list(schedule_mode, timesteps, max_beta=0.01, s=0.008):

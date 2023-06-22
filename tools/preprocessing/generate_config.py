@@ -1,13 +1,13 @@
 import os
-import click
-from omegaconf import OmegaConf
-from loguru import logger
-from pathlib import Path
-import torch
 import sys
+from pathlib import Path
 from typing import Dict
 
+import click
+import torch
 from hydra.experimental import compose, initialize
+from loguru import logger
+from omegaconf import OmegaConf
 
 MEL_CHANNELS = 128
 SAMPLING_RATE = 44100

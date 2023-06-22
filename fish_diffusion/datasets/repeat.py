@@ -1,11 +1,8 @@
 from typing import Iterable, Union
 
-from torch.utils.data import Dataset
-
-
-from loguru import logger
-
 from hydra.utils import instantiate
+from loguru import logger
+from torch.utils.data import Dataset
 
 
 class RepeatDataset(Dataset):

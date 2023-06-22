@@ -1,12 +1,12 @@
 import itertools
-from loguru import logger
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import wandb
 from fish_audio_preprocess.utils.loudness_norm import loudness_norm
-
+from hydra.utils import instantiate
+from loguru import logger
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.nn import functional as F
 
@@ -18,13 +18,10 @@ from fish_diffusion.modules.vocoders.nsf_hifigan.models import (
     feature_loss,
     generator_loss,
 )
-
 from fish_diffusion.utils.audio import dynamic_range_compression, get_mel_transform
 from fish_diffusion.utils.viz import plot_mel
 
 from .core import HiFiSinger
-
-from hydra.utils import instantiate
 
 
 class HiFiSingerV1Lightning(pl.LightningModule):

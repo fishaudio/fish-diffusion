@@ -4,11 +4,11 @@ import click
 import numpy as np
 import onnxruntime as ort
 import torch
+from hydra.utils import instantiate
 from loguru import logger
 
 # from mmengine import Config
-from omegaconf import OmegaConf, DictConfig
-from hydra.utils import instantiate
+from omegaconf import DictConfig, OmegaConf
 
 from fish_diffusion.archs.diffsinger import DiffSinger, DiffSingerLightning
 from fish_diffusion.utils.inference import load_checkpoint

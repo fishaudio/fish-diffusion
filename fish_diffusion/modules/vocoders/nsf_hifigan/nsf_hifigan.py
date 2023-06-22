@@ -1,19 +1,17 @@
 import json
 from pathlib import Path
 from typing import Optional
-from loguru import logger
 
 import librosa
 import pytorch_lightning as pl
 import torch
+from loguru import logger
 
 from fish_diffusion.utils.audio import dynamic_range_compression
 from fish_diffusion.utils.pitch_adjustable_mel import PitchAdjustableMelSpectrogram
 
 # from ..builder import VOCODERS
 from .models import AttrDict, Generator
-
-from pathlib import Path
 
 
 class NsfHifiGAN(pl.LightningModule):
