@@ -5,21 +5,23 @@ import numpy as np
 import torch
 import torchaudio
 from fish_audio_preprocess.utils.file import list_files
+from hydra.utils import get_original_cwd
+from loguru import logger
 from torch.utils.data import Dataset
 
 from fish_diffusion.datasets.utils import transform_pipeline
 
-from .builder import DATASETS
 
-
-@DATASETS.register_module()
 class NaiveDataset(Dataset):
     processing_pipeline = []
 
     collating_pipeline = []
 
     def __init__(self, path="dataset", speaker_id=0):
+        # project_root = get_original_cwd()
+        # path = Path(project_root) / path
         self.paths = list_files(path, {".npy"}, recursive=True, sort=True)
+        logger.info(f"Found {len(self.paths)} npy files in {path}")
         self.dataset_path = Path(path)
         self.speaker_id = speaker_id
 
@@ -39,7 +41,41 @@ class NaiveDataset(Dataset):
         return transform_pipeline(cls.collating_pipeline, data)
 
 
-@DATASETS.register_module()
+class NaiveTTSDataset(NaiveDataset):
+    processing_pipeline = [
+        dict(
+            type="PickKeys",
+            keys=[
+                "path",
+                "time_stretch",
+                "mel",
+                "contents",
+                "pitches",
+                "key_shift",
+                "speaker",
+            ],
+        ),
+        dict(type="Transpose", keys=[("mel", 1, 0), ("contents", 1, 0)]),
+    ]
+
+    collating_pipeline = [
+        dict(type="ListToDict"),
+        dict(type="PadStack", keys=[("mel", -2), ("contents", -2), ("pitches", -1)]),
+        dict(
+            type="ToTensor",
+            keys=[
+                ("time_stretch", torch.float32),
+                ("key_shift", torch.float32),
+                ("speaker", torch.int64),
+            ],
+        ),
+        dict(
+            type="UnSqueeze",
+            keys=[("pitches", -1), ("time_stretch", -1), ("key_shift", -1)],
+        ),  # (N, T) -> (N, T, 1)
+    ]
+
+
 class NaiveSVCDataset(NaiveDataset):
     processing_pipeline = [
         dict(
@@ -75,7 +111,6 @@ class NaiveSVCDataset(NaiveDataset):
     ]
 
 
-@DATASETS.register_module()
 class NaiveSVCPowerDataset(NaiveDataset):
     processing_pipeline = [
         dict(
@@ -120,7 +155,6 @@ class NaiveSVCPowerDataset(NaiveDataset):
     ]
 
 
-@DATASETS.register_module()
 class NaiveVOCODERDataset(NaiveDataset):
     processing_pipeline = [
         dict(type="PickKeys", keys=["path", "audio", "pitches", "sampling_rate"]),
@@ -196,7 +230,6 @@ class NaiveVOCODERDataset(NaiveDataset):
         }
 
 
-@DATASETS.register_module()
 class NaiveSVSDataset(NaiveDataset):
     processing_pipeline = [
         dict(

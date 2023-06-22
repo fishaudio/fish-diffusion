@@ -3,7 +3,6 @@ from torch import nn
 from transformers import HubertModel
 
 from .base import BaseFeatureExtractor
-from .builder import FEATURE_EXTRACTORS
 
 
 class HubertModelWithFinalProj(HubertModel):
@@ -13,7 +12,6 @@ class HubertModelWithFinalProj(HubertModel):
         self.final_proj = nn.Linear(config.hidden_size, config.classifier_proj_size)
 
 
-@FEATURE_EXTRACTORS.register_module()
 class ContentVec(BaseFeatureExtractor):
     def __init__(
         self,

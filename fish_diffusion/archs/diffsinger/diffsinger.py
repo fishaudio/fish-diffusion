@@ -3,17 +3,12 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import wandb
-from mmengine.optim import OPTIMIZERS
+from hydra.utils import instantiate
+from omegaconf import DictConfig
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.nn import functional as F
 
-from fish_diffusion.modules.encoders import ENCODERS
-from fish_diffusion.modules.vocoders import VOCODERS
-from fish_diffusion.modules.vocoders.builder import VOCODERS
-from fish_diffusion.schedulers import LR_SCHEUDLERS
 from fish_diffusion.utils.viz import viz_synth_sample
-
-from .diffusions import DIFFUSIONS
 
 
 class DiffSinger(nn.Module):
@@ -22,20 +17,16 @@ class DiffSinger(nn.Module):
     def __init__(self, model_config):
         super(DiffSinger, self).__init__()
 
-        self.text_encoder = ENCODERS.build(model_config.text_encoder)
-        self.diffusion = DIFFUSIONS.build(model_config.diffusion)
+        self.text_encoder = instantiate(model_config.text_encoder)
+        self.diffusion = instantiate(model_config.diffusion)
+        self.speaker_encoder = instantiate(model_config.speaker_encoder)
+        self.pitch_encoder = instantiate(model_config.pitch_encoder)
 
-        if getattr(model_config, "speaker_encoder", None):
-            self.speaker_encoder = ENCODERS.build(model_config.speaker_encoder)
+        if "pitch_shift_encoder" in model_config:
+            self.pitch_shift_encoder = instantiate(model_config.pitch_shift_encoder)
 
-        if getattr(model_config, "pitch_encoder", None):
-            self.pitch_encoder = ENCODERS.build(model_config.pitch_encoder)
-
-        if getattr(model_config, "pitch_shift_encoder", None):
-            self.pitch_shift_encoder = ENCODERS.build(model_config.pitch_shift_encoder)
-
-        if getattr(model_config, "energy_encoder", None):
-            self.energy_encoder = ENCODERS.build(model_config.energy_encoder)
+        if "energy_encoder" in model_config:
+            self.energy_encoder = instantiate(model_config.energy_encoder)
 
     @staticmethod
     def get_mask_from_lengths(lengths, max_len=None):
@@ -165,32 +156,39 @@ class DiffSinger(nn.Module):
 
 
 class DiffSingerLightning(pl.LightningModule):
-    def __init__(self, config):
+    def __init__(self, config: DictConfig):
         super().__init__()
 
         self.model = DiffSinger(config.model)
         self.config = config
 
         # 音频编码器, 将梅尔谱转换为音频
-        self.vocoder = VOCODERS.build(config.model.vocoder)
+        self.vocoder = instantiate(config.model.vocoder)
         self.vocoder.freeze()
 
     def configure_optimizers(self):
-        optimizer = OPTIMIZERS.build(
-            {
-                "params": self.parameters(),
-                **self.config.optimizer,
-            }
-        )
+        # Instantiate the optimizer
+        optimizer = instantiate(self.config.optimizer, params=self.parameters())
 
-        scheduler = LR_SCHEUDLERS.build(
-            {
-                "optimizer": optimizer,
-                **self.config.scheduler,
-            }
-        )
+        # Instantiate the scheduler
+        scheduler = instantiate(self.config.scheduler, optimizer=optimizer)
 
         return [optimizer], dict(scheduler=scheduler, interval="step")
+        # optimizer = OPTIMIZERS.build(
+        #     {
+        #         "params": self.parameters(),
+        #         **self.config.optimizer,
+        #     }
+        # )
+
+        # scheduler = LR_SCHEUDLERS.build(
+        #     {
+        #         "optimizer": optimizer,
+        #         **self.config.scheduler,
+        #     }
+        # )
+
+        # return [optimizer], dict(scheduler=scheduler, interval="step")
 
     def _step(self, batch, batch_idx, mode):
         assert batch["pitches"].shape[1] == batch["mel"].shape[1]

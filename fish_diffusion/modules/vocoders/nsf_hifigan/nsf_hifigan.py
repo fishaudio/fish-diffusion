@@ -5,27 +5,36 @@ from typing import Optional
 import librosa
 import pytorch_lightning as pl
 import torch
+from loguru import logger
 
 from fish_diffusion.utils.audio import dynamic_range_compression
 from fish_diffusion.utils.pitch_adjustable_mel import PitchAdjustableMelSpectrogram
 
-from ..builder import VOCODERS
+# from ..builder import VOCODERS
 from .models import AttrDict, Generator
 
 
-@VOCODERS.register_module()
 class NsfHifiGAN(pl.LightningModule):
+    checkpoint_path: str
+    config_file: Optional[str]
+    use_natural_log: bool
+
     def __init__(
         self,
         checkpoint_path: str = "checkpoints/nsf_hifigan/model",
         config_file: Optional[str] = None,
         use_natural_log: bool = True,
+        project_root: str = ".",
         **kwargs,
     ):
         super().__init__()
 
+        checkpoint_path = Path(project_root) / checkpoint_path
+        logger.info(f"Loading NSF-HiFi-GAN from {checkpoint_path}")
+
         if config_file is None:
             config_file = Path(checkpoint_path).parent / "config.json"
+        logger.info(f"Loading config from {config_file}")
 
         with open(config_file) as f:
             data = f.read()

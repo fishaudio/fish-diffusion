@@ -132,7 +132,7 @@ dmypy.json
 .pyre/
 
 data
-dataset
+/dataset/
 .vscode
 
 *.pt
@@ -154,4 +154,6 @@ exp_*.sh
 .vscode
 exported
 pitches_editor
+outputs
 .pdm-python
+test

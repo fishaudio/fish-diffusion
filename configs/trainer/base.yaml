@@ -1,0 +1,16 @@
+accelerator: gpu
+devices: -1
+gradient_clip_val: 0.5
+log_every_n_steps: 10
+val_check_interval: 5000
+check_val_every_n_epoch: null
+max_steps: 300000
+precision: 16
+callbacks:
+  - _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    filename: "{epoch}-{step}-{valid_loss:.2f}"
+    every_n_train_steps: 10000
+    save_top_k: -1
+  - _target_: pytorch_lightning.callbacks.LearningRateMonitor
+    logging_interval: step
+strategy:  ${create_ddp_strategy:}

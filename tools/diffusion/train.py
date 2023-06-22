@@ -1,51 +1,47 @@
-from argparse import ArgumentParser
+from pathlib import Path
 
+import hydra
 import pytorch_lightning as pl
 import torch
-from loguru import logger
-from mmengine import Config
-from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
+from box import Box
+from cv2 import log
 
-from fish_diffusion.archs.diffsinger import DiffSingerLightning
+# Import resolvers to register them
+from hydra.utils import get_method, instantiate
+from omegaconf import DictConfig, OmegaConf
+from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.loggers.wandb import WandbLogger
+
+from fish_diffusion.archs.diffsinger.diffsinger import DiffSingerLightning
 from fish_diffusion.datasets.utils import build_loader_from_config
 
 torch.set_float32_matmul_precision("medium")
 
 
-if __name__ == "__main__":
-    pl.seed_everything(42, workers=True)
+# python train.py --config-name svc_huber_soft name=xxxx entity=xxx
+# Load the configuration file
+@hydra.main(config_name=None, config_path="../../configs")
+def train(cfg: DictConfig) -> None:
+    from loguru import logger
 
-    parser = ArgumentParser()
-    parser.add_argument("--config", type=str, required=True)
-    parser.add_argument("--resume", type=str, default=None)
-    parser.add_argument(
-        "--tensorboard",
-        action="store_true",
-        default=False,
-        help="Use tensorboard logger, default is wandb.",
-    )
-    parser.add_argument("--resume-id", type=str, default=None, help="Wandb run id.")
-    parser.add_argument("--entity", type=str, default=None, help="Wandb entity.")
-    parser.add_argument("--name", type=str, default=None, help="Wandb run name.")
-    parser.add_argument(
-        "--pretrained", type=str, default=None, help="Pretrained model."
-    )
-    parser.add_argument(
-        "--only-train-speaker-embeddings",
-        action="store_true",
-        default=False,
-        help="Only train speaker embeddings.",
-    )
+    project_root = cfg.project_root
 
-    args = parser.parse_args()
+    cfg = OmegaConf.to_container(cfg, resolve=True)  # type: ignore
+    cfg = Box(cfg)  # type: ignore
 
-    cfg = Config.fromfile(args.config)
-
+    # pl.seed_everything(594461, workers=True)
     model = DiffSingerLightning(cfg)
 
     # We only load the state_dict of the model, not the optimizer.
-    if args.pretrained:
-        state_dict = torch.load(args.pretrained, map_location="cpu")
+    if cfg.pretrained:
+        pretrained_path = project_root / Path(cfg.pretrained)
+        if not pretrained_path.exists():
+            logger.warning(
+                f"Pretrained model {pretrained_path} does not exist, skipping."
+            )
+            return
+        # todo: need to fix this
+        state_dict = torch.load(str(pretrained_path), map_location="cpu")
         if "state_dict" in state_dict:
             state_dict = state_dict["state_dict"]
 
@@ -66,7 +62,7 @@ if __name__ == "__main__":
 
         assert len(unexpected_keys) == 0, f"Unexpected keys: {unexpected_keys}"
 
-        if args.only_train_speaker_embeddings:
+        if cfg.only_train_speaker_embeddings:
             for name, param in model.named_parameters():
                 if "speaker_encoder" not in name:
                     param.requires_grad = False
@@ -75,24 +71,43 @@ if __name__ == "__main__":
                 "Only train speaker embeddings, all other parameters are frozen."
             )
 
+    log_dir = f"{cfg.run_dir}/logs" if cfg.run_dir else "logs"
+    Path(log_dir).mkdir(parents=True, exist_ok=True)
     logger = (
-        TensorBoardLogger("logs", name=cfg.model.type)
-        if args.tensorboard
+        TensorBoardLogger(log_dir, name=cfg.model.type)
+        if cfg.tensorboard
         else WandbLogger(
             project=cfg.model.type,
-            save_dir="logs",
+            save_dir=log_dir,
             log_model=True,
-            name=args.name,
-            entity=args.entity,
-            resume="must" if args.resume_id else False,
-            id=args.resume_id,
+            name=cfg.name,
+            entity=cfg.entity,
+            resume="must" if cfg.resume_id else False,
+            id=cfg.resume_id,
         )
     )
 
+    if cfg.trainer.strategy is None:
+        del cfg.trainer.strategy
+    else:
+        cfg.trainer.strategy.ddp_comm_hook = get_method(
+            cfg.trainer.strategy.ddp_comm_hook
+        )
+        cfg.trainer.strategy = instantiate(cfg.trainer.strategy)
+    # todo: check callbacks are correct
+    callbacks = [instantiate(cb) for cb in cfg.trainer.callbacks]
+    del cfg.trainer.callbacks
+
     trainer = pl.Trainer(
+        default_root_dir=cfg.project_root,
         logger=logger,
-        **cfg.trainer,
+        callbacks=callbacks,
+        **cfg.trainer.to_dict(),
     )
 
     train_loader, valid_loader = build_loader_from_config(cfg, trainer.num_devices)
-    trainer.fit(model, train_loader, valid_loader, ckpt_path=args.resume)
+    trainer.fit(model, train_loader, valid_loader, ckpt_path=cfg.resume)
+
+
+if __name__ == "__main__":
+    train()

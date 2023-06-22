@@ -1,26 +1,27 @@
-import argparse
+import os
 import random
 from concurrent.futures import ProcessPoolExecutor
 from copy import deepcopy
 from pathlib import Path
 from typing import Optional
 
+import click
 import librosa
 import numpy as np
 import torch
 import torch.multiprocessing as mp
 import torchcrepe
+from box import Box
 from fish_audio_preprocess.utils.file import AUDIO_EXTENSIONS, list_files
+from hydra.utils import instantiate
 from loguru import logger
-from mmengine import Config
+from omegaconf import DictConfig, OmegaConf
+
+# from mmengine import Config
 from tqdm import tqdm
 
-from fish_diffusion.modules.energy_extractors import ENERGY_EXTRACTORS
-from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
 from fish_diffusion.modules.feature_extractors.base import BaseFeatureExtractor
-from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.modules.pitch_extractors.builder import BasePitchExtractor
-from fish_diffusion.modules.vocoders import VOCODERS
 from fish_diffusion.modules.vocoders.nsf_hifigan.nsf_hifigan import NsfHifiGAN
 from fish_diffusion.utils.tensor import repeat_expand
 
@@ -37,6 +38,7 @@ def init(
 ]:
     global model_caches
     device = torch.device("cpu")
+    os.chdir(config.project_root)
 
     rank = mp.current_process()._identity
     rank = rank[0] if len(rank) > 0 else 0
@@ -49,7 +51,7 @@ def init(
 
     text_features_extractor = None
     if hasattr(config.preprocessing, "text_features_extractor"):
-        text_features_extractor = FEATURE_EXTRACTORS.build(
+        text_features_extractor = instantiate(
             config.preprocessing.text_features_extractor
         )
         text_features_extractor.to(device)
@@ -57,22 +59,20 @@ def init(
 
     pitch_extractor = None
     if hasattr(config.preprocessing, "pitch_extractor"):
-        if config.preprocessing.pitch_extractor.type == "CrepePitchExtractor":
+        if config.pitch_extractor_type == "CrepePitchExtractor":
             torchcrepe.load.model(device, "full")
 
-        pitch_extractor = PITCH_EXTRACTORS.build(config.preprocessing.pitch_extractor)
+        pitch_extractor = instantiate(config.preprocessing.pitch_extractor)
 
     energy_extractor = None
     if hasattr(config.preprocessing, "energy_extractor"):
-        energy_extractor = ENERGY_EXTRACTORS.build(
-            config.preprocessing.energy_extractor
-        )
+        energy_extractor = instantiate(config.preprocessing.energy_extractor)
         energy_extractor.to(device)
         energy_extractor.eval()
 
     vocoder = None
     if hasattr(config.model, "vocoder"):
-        vocoder = VOCODERS.build(config.model.vocoder)
+        vocoder = instantiate(config.model.vocoder)
         vocoder.to(device)
         vocoder.eval()
 
@@ -110,7 +110,8 @@ def process(
         "path": str(audio_path),
     }
 
-    audio, sr = librosa.load(str(audio_path), sr=config.sampling_rate, mono=True)
+    sampling_rate = config.sampling_rate
+    audio, sr = librosa.load(str(audio_path), sr=sampling_rate, mono=True)
 
     # If time_stretch is > 1, the audio length will be shorter (speed up)
     if time_stretch != 1.0:
@@ -135,7 +136,7 @@ def process(
 
     # Extract text features
     if text_features_extractor is not None:
-        if config.model.type == "DiffSinger":
+        if config.model_type == "DiffSinger":
             contents, phones2mel = text_features_extractor(audio_path, mel_length)
             sample["phones2mel"] = phones2mel.cpu().numpy()
         else:
@@ -161,12 +162,12 @@ def process(
     np.save(save_path, sample)
 
 
-def safe_process(args, config, audio_path: Path):
+def safe_process(config, audio_path: Path):
     try:
         # Baseline
         process(config, audio_path)
 
-        if args.no_augmentation or "augmentations" not in config.preprocessing:
+        if config.no_augmentation or "augmentations" not in config.preprocessing:
             return 1
 
         # Augmentation
@@ -200,59 +201,68 @@ def safe_process(args, config, audio_path: Path):
         logger.exception(e)
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
+# def parse_config():
+#     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--config", type=str, required=True)
-    parser.add_argument("--path", type=str, required=True)
-    parser.add_argument("--clean", action="store_true")
-    parser.add_argument("--num-workers", type=int, default=1)
-    parser.add_argument("--no-augmentation", action="store_true")
+#     parser.add_argument("--config", type=str, required=True)
+#     parser.add_argument("--path", type=str, required=True)
+#     parser.add_argument("--clean", action="store_true")
+#     parser.add_argument("--num-workers", type=int, default=1)
+#     parser.add_argument("--no-augmentation", action="store_true")
 
-    return parser.parse_args()
+#     return parser.parse_config()
 
 
-if __name__ == "__main__":
+def main(config: DictConfig) -> None:
+    project_root = config.project_root
+    # OmegaConf.set_struct(config, False)  # Allow changes to the config
+    # if config.model_type == "DiffSVC":
+    # OmegaConf.set_struct(config, True)
+
+    config = OmegaConf.to_container(config, resolve=True)
+    config = Box(config)
+
     mp.set_start_method("spawn", force=True)
 
-    args = parse_args()
+    # config = parse_args()
 
-    logger.info(f"Using {args.num_workers} workers")
+    logger.info(f"Using {config.num_workers} workers")
 
     if torch.cuda.is_available():
         logger.info(f"Found {torch.cuda.device_count()} GPUs")
     else:
         logger.warning("No GPU found, using CPU")
 
-    if args.clean:
+    path = Path(project_root) / config.path
+
+    if config.clean:
         logger.info("Cleaning *.npy files...")
 
-        files = list_files(args.path, {".npy"}, recursive=True, sort=True)
+        files = list_files(path, {".npy"}, recursive=True, sort=True)
         for f in files:
             f.unlink()
 
         logger.info("Done!")
 
-    config = Config.fromfile(args.config)
-    files = list_files(args.path, AUDIO_EXTENSIONS, recursive=True, sort=False)
+    files = list_files(path, AUDIO_EXTENSIONS, recursive=True, sort=False)
     logger.info(f"Found {len(files)} files, processing...")
 
     # Shuffle files will balance the workload of workers
     random.shuffle(files)
     total_samples, failed = 0, 0
 
-    if args.num_workers <= 1:
+    if config.num_workers <= 1:
         for audio_path in tqdm(files):
-            i = safe_process(args, config, audio_path)
+            i = safe_process(config, audio_path)
             if isinstance(i, int):
                 total_samples += i
             else:
                 failed += 1
     else:
         with ProcessPoolExecutor(
-            max_workers=args.num_workers,
+            max_workers=config.num_workers,
         ) as executor:
-            params = [(args, config, audio_path) for audio_path in files]
+            params = [(config, audio_path) for audio_path in files]
 
             for i in tqdm(executor.map(safe_process, *zip(*params)), total=len(params)):
                 if isinstance(i, int):
@@ -266,3 +276,20 @@ if __name__ == "__main__":
         f"Augmented samples: {total_samples} (x{total_samples / len(files):.2f})"
     )
     logger.info(f"Failed: {failed}")
+
+
+@click.command()
+@click.argument("config_path", type=click.Path(exists=True))
+@click.option("--clean", is_flag=True)
+@click.option("--num-workers", type=int)
+def load_config(config_path, clean, num_workers):
+    config = OmegaConf.load(config_path)
+    OmegaConf.set_struct(config, False)  # Allow changes to the config
+    config.clean = clean
+    config.num_workers = num_workers if num_workers is not None else config.num_workers
+    OmegaConf.set_struct(config, True)
+    main(config)
+
+
+if __name__ == "__main__":
+    load_config()

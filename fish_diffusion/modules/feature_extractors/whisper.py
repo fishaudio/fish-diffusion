@@ -9,7 +9,6 @@ from whisper import _MODELS, log_mel_spectrogram, pad_or_trim
 from whisper.model import AudioEncoder, LayerNorm, ResidualAttentionBlock, sinusoids
 
 from .base import BaseFeatureExtractor
-from .builder import FEATURE_EXTRACTORS
 
 _PRETRAINED_MODELS = {
     "aligned-whisper-cn-25k-v1": "https://github.com/fishaudio/fish-diffusion/releases/download/v1.2b0/aligned-whisper-cn-25k-v1.ckpt",
@@ -243,7 +242,6 @@ class AlignedWhisper(nn.Module):
         return x
 
 
-@FEATURE_EXTRACTORS.register_module()
 class AlignedWhisperForAudio(BaseFeatureExtractor):
     def __init__(
         self,
@@ -276,7 +274,6 @@ class AlignedWhisperForAudio(BaseFeatureExtractor):
         return features.transpose(1, 2)
 
 
-@FEATURE_EXTRACTORS.register_module()
 class AlignedWhisperForPhones(BaseFeatureExtractor):
     def __init__(
         self,

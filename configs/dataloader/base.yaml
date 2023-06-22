@@ -1,0 +1,10 @@
+train:
+  batch_size: 20
+  shuffle: true
+  num_workers: 2
+  persistent_workers: true
+valid:
+  batch_size: 2
+  shuffle: false
+  num_workers: 2
+  persistent_workers: true

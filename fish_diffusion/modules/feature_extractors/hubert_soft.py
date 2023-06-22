@@ -1,10 +1,8 @@
 import torch
 
 from .base import BaseFeatureExtractor
-from .builder import FEATURE_EXTRACTORS
 
 
-@FEATURE_EXTRACTORS.register_module()
 class HubertSoft(BaseFeatureExtractor):
     def __init__(self):
         super().__init__()

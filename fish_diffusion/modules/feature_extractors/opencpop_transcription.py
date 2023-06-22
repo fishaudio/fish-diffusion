@@ -5,10 +5,8 @@ import torch
 from torch.nn import functional as F
 
 from .base import BaseFeatureExtractor
-from .builder import FEATURE_EXTRACTORS
 
 
-@FEATURE_EXTRACTORS.register_module()
 class OpenCpopTranscriptionToPhonemesDuration(BaseFeatureExtractor):
     def __init__(self, phonemes: list[str], transcription_path: str):
         super().__init__()

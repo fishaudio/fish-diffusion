@@ -1,0 +1,136 @@
+trainer:
+  accelerator: gpu
+  devices: -1
+  gradient_clip_val: 0.5
+  log_every_n_steps: 10
+  val_check_interval: 5000
+  check_val_every_n_epoch: null
+  max_steps: 300000
+  precision: 16
+  callbacks:
+  - _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    filename: '{epoch}-{step}-{valid_loss:.2f}'
+    every_n_train_steps: 10000
+    save_top_k: -1
+  - _target_: pytorch_lightning.callbacks.LearningRateMonitor
+    logging_interval: step
+  # Warning: If you are training the model with fs2 (and see nan), you should either use bf16 or fp32
+  strategy: null
+model_type: DiffSVC
+text_features_extractor_type: HubertSoft
+pitch_extractor_type: ParselMouthPitchExtractor
+pretrained: null
+resume: null
+tensorboard: false
+resume_id: null
+entity: null
+name: null
+only_train_speaker_embeddings: false
+path: dataset
+clean: false
+num_workers: 8
+no_augmentation: true
+model:
+  type: DiffSVC
+  diffusion:
+    _target_: fish_diffusion.archs.diffsinger.diffusions.diffusion.GaussianDiffusion
+    mel_channels: 128
+    noise_schedule: linear
+    timesteps: 1000
+    max_beta: 0.01
+    s: 0.008
+    noise_loss: smoothed-l1
+    denoiser_target: fish_diffusion.modules.wavenet.WaveNet
+    denoiser_config:
+      mel_channels: 128
+      d_encoder: 257
+      residual_channels: 512
+      residual_layers: 20
+      dilation_cycle: 4
+      use_linear_bias: true
+    sampler_interval: 10
+    spec_min:
+    - -5
+    spec_max:
+    - 0
+  text_encoder:
+    _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
+    input_size: 256
+    output_size: 257
+  speaker_encoder:
+    _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
+    input_size: 3
+    output_size: 257
+    use_embedding: true
+  pitch_encoder:
+    _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
+    input_size: 1
+    output_size: 257
+    use_embedding: false
+    preprocessing:
+      _target_: fish_diffusion.utils.pitch.pitch_to_scale
+      _partial_: true
+  vocoder:
+    _target_: fish_diffusion.modules.vocoders.nsf_hifigan.nsf_hifigan.NsfHifiGAN
+    checkpoint_path: checkpoints/nsf_hifigan/model
+    sampling_rate: 44100
+    mel_channels: 128
+    use_natural_log: false
+preprocessing:
+  text_features_extractor:
+    _target_: fish_diffusion.modules.feature_extractors.hubert_soft.HubertSoft
+  pitch_extractor:
+    _target_: fish_diffusion.modules.pitch_extractors.parsel_mouth.ParselMouthPitchExtractor
+    keep_zeros: false
+dataset:
+  train:
+    _target_: fish_diffusion.datasets.concat.ConcatDataset
+    datasets:
+    - _target_: fish_diffusion.datasets.naive.NaiveSVCDataset
+      path: dataset/train/M1
+      speaker_id: 0
+    - _target_: fish_diffusion.datasets.naive.NaiveSVCDataset
+      path: dataset/train/opencpop
+      speaker_id: 1
+    - _target_: fish_diffusion.datasets.naive.NaiveSVCDataset
+      path: dataset/train/F1
+      speaker_id: 2
+    collate_fn: fish_diffusion.datasets.naive.NaiveSVCDataset.collate_fn
+  valid:
+    _target_: fish_diffusion.datasets.concat.ConcatDataset
+    datasets:
+    - _target_: fish_diffusion.datasets.naive.NaiveSVCDataset
+      path: dataset/valid/M1
+      speaker_id: 0
+    - _target_: fish_diffusion.datasets.naive.NaiveSVCDataset
+      path: dataset/valid/F1
+      speaker_id: 2
+    collate_fn: fish_diffusion.datasets.naive.NaiveSVCDataset.collate_fn
+dataloader:
+  train:
+    batch_size: 20
+    shuffle: true
+    num_workers: 2
+    persistent_workers: true
+  valid:
+    batch_size: 2
+    shuffle: false
+    num_workers: 2
+    persistent_workers: true
+scheduler:
+  _target_: torch.optim.lr_scheduler.LambdaLR
+  lr_lambda:
+    _target_: fish_diffusion.schedulers.warmup_cosine_scheduler.LambdaWarmUpCosineScheduler
+    warm_up_steps: 1000
+    lr_min: 0.0001
+    lr_max: 0.0008
+    lr_start: 1.0e-05
+    max_decay_steps: 150000
+optimizer:
+  _target_: torch.optim.AdamW
+  lr: 1.0
+  weight_decay: 0.01
+  betas:
+  - 0.9
+  - 0.98
+  eps: 1.0e-09

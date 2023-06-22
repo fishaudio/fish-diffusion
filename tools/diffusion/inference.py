@@ -8,16 +8,17 @@ import librosa
 import numpy as np
 import soundfile as sf
 import torch
+from box import Box
 from fish_audio_preprocess.utils import loudness_norm, separate_audio
+from hydra.utils import instantiate
 from loguru import logger
-from mmengine import Config
 from natsort import natsorted
+
+# from mmengine import Config
+from omegaconf import DictConfig, OmegaConf
 from torch import nn
 
 from fish_diffusion.archs.diffsinger.diffsinger import DiffSingerLightning
-from fish_diffusion.modules.energy_extractors import ENERGY_EXTRACTORS
-from fish_diffusion.modules.feature_extractors import FEATURE_EXTRACTORS
-from fish_diffusion.modules.pitch_extractors import PITCH_EXTRACTORS
 from fish_diffusion.utils.audio import separate_vocals, slice_audio
 from fish_diffusion.utils.inference import load_checkpoint
 from fish_diffusion.utils.tensor import repeat_expand
@@ -51,17 +52,13 @@ class SVCInference(nn.Module):
 
         self.config = config
 
-        self.text_features_extractor = FEATURE_EXTRACTORS.build(
+        self.text_features_extractor = instantiate(
             config.preprocessing.text_features_extractor
         )
-        self.pitch_extractor = PITCH_EXTRACTORS.build(
-            config.preprocessing.pitch_extractor
-        )
+        self.pitch_extractor = instantiate(config.preprocessing.pitch_extractor)
 
         if hasattr(config.preprocessing, "energy_extractor"):
-            self.energy_extractor = ENERGY_EXTRACTORS.build(
-                config.preprocessing.energy_extractor
-            )
+            self.energy_extractor = instantiate(config.preprocessing.energy_extractor)
 
         if os.path.isdir(checkpoint):
             # Find the latest checkpoint
@@ -551,7 +548,9 @@ if __name__ == "__main__":
     else:
         device = torch.device(args.device)
 
-    config = Config.fromfile(args.config)
+    # config = Config.fromfile(args.config)
+    config = OmegaConf.load(args.config)
+    config = Box(config)
 
     if args.speaker_mapping is not None:
         config.speaker_mapping = json.load(open(args.speaker_mapping))

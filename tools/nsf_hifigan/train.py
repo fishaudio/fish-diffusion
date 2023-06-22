@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import wandb
-from loguru import logger
+from loguru import logger as loguru_logger
 from mmengine import Config
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.nn import functional as F

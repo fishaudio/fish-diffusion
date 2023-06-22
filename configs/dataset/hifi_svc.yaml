@@ -1,0 +1,10 @@
+train:
+  _target_: fish_diffusion.datasets.hifisinger.HiFiSVCDataset
+  path: dataset/train
+  speaker_id: 0
+  segment_size: 16384
+valid:
+  _target_: fish_diffusion.datasets.hifisinger.HiFiSVCDataset
+  path: dataset/valid
+  speaker_id: 0
+  segment_size: 16384

@@ -1,0 +1,8 @@
+train:
+  _target_: fish_diffusion.datasets.naive.AudioFolderDataset
+  path: dataset/train
+  spkeaer_id: 0
+valid:
+  _target_: fish_diffusion.datasets.naive.AudioFolderDataset
+  path: dataset/valid
+  spkeaer_id: 0

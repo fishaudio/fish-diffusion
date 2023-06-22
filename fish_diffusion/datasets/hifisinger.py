@@ -1,11 +1,11 @@
 import numpy as np
 import torch
 
-from fish_diffusion.datasets.builder import DATASETS
+# from fish_diffusion.datasets.builder import DATASETS
 from fish_diffusion.datasets.naive import NaiveDataset
 
 
-@DATASETS.register_module()
+# @DATASETS.register_module()
 class HiFiSVCDataset(NaiveDataset):
     processing_pipeline = [
         dict(

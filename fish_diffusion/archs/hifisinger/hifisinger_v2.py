@@ -4,14 +4,13 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import wandb
-from mmengine.optim import OPTIMIZERS
+from hydra.utils import instantiate
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.nn import functional as F
 
 from fish_diffusion.modules.vocoders.nsf_hifigan.models import AttrDict
 from fish_diffusion.modules.vocoders.refinegan.mpd import MultiPeriodDiscriminator
 from fish_diffusion.modules.vocoders.refinegan.mrd import MultiResolutionDiscriminator
-from fish_diffusion.schedulers import LR_SCHEUDLERS
 from fish_diffusion.utils.audio import dynamic_range_compression, get_mel_transform
 from fish_diffusion.utils.viz import plot_mel
 
@@ -59,31 +58,17 @@ class HiFiSingerV2Lightning(pl.LightningModule):
         self.automatic_optimization = False
 
     def configure_optimizers(self):
-        optim_g = OPTIMIZERS.build(
-            {
-                "params": self.generator.parameters(),
-                **self.config.optimizer,
-            }
-        )
-        optim_d = OPTIMIZERS.build(
-            {
-                "params": itertools.chain(self.mrd.parameters(), self.mpd.parameters()),
-                **self.config.optimizer,
-            }
+        optim_g = instantiate(self.config.optimizer, params=self.generator.parameters())
+        optim_d = instantiate(
+            self.config.optimizer,
+            params=itertools.chain(
+                self.msd.parameters(),
+                self.mpd.parameters(),
+            ),
         )
 
-        scheduler_g = LR_SCHEUDLERS.build(
-            {
-                "optimizer": optim_g,
-                **self.config.scheduler,
-            }
-        )
-        scheduler_d = LR_SCHEUDLERS.build(
-            {
-                "optimizer": optim_d,
-                **self.config.scheduler,
-            }
-        )
+        scheduler_g = instantiate(self.config.scheduler, optimizer=optim_g)
+        scheduler_d = instantiate(self.config.scheduler, optimizer=optim_d)
 
         return [optim_g, optim_d], [scheduler_g, scheduler_d]
 

@@ -1,9 +1,6 @@
 from torch import nn
 
-from .builder import ENCODERS
 
-
-@ENCODERS.register_module()
 class NaiveProjectionEncoder(nn.Module):
     def __init__(
         self,

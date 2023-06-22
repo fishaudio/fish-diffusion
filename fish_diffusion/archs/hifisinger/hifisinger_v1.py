@@ -5,7 +5,8 @@ import pytorch_lightning as pl
 import torch
 import wandb
 from fish_audio_preprocess.utils.loudness_norm import loudness_norm
-from mmengine.optim import OPTIMIZERS
+from hydra.utils import instantiate
+from loguru import logger
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.nn import functional as F
 
@@ -17,7 +18,6 @@ from fish_diffusion.modules.vocoders.nsf_hifigan.models import (
     feature_loss,
     generator_loss,
 )
-from fish_diffusion.schedulers import LR_SCHEUDLERS
 from fish_diffusion.utils.audio import dynamic_range_compression, get_mel_transform
 from fish_diffusion.utils.viz import plot_mel
 
@@ -37,7 +37,7 @@ class HiFiSingerV1Lightning(pl.LightningModule):
 
         # This is for validation only
         self.mel_transform = get_mel_transform(
-            sample_rate=config.sampling_rate,
+            sample_rate=config.model.encoder.sampling_rate,
             n_fft=self.h.n_fft,
             hop_length=self.h.hop_size,
             win_length=self.h.win_size,
@@ -49,14 +49,14 @@ class HiFiSingerV1Lightning(pl.LightningModule):
         # The bellow are for training
         self.multi_scale_mels = [
             get_mel_transform(
-                sample_rate=config.sampling_rate,
+                sample_rate=config.model.encoder.sampling_rate,
                 n_fft=n_fft,
                 hop_length=hop_length,
                 win_length=win_length,
                 # Shouldn't ise fmin and fmax here
                 # Otherwise high frequency will be cut off
                 f_min=0,
-                f_max=config.sampling_rate // 2,
+                f_max=config.model.encoder.sampling_rate // 2,
                 n_mels=self.h.num_mels,
             )
             for (n_fft, hop_length, win_length) in self.h.multi_scale_mels
@@ -65,31 +65,17 @@ class HiFiSingerV1Lightning(pl.LightningModule):
         self.automatic_optimization = False
 
     def configure_optimizers(self):
-        optim_g = OPTIMIZERS.build(
-            {
-                "params": self.generator.parameters(),
-                **self.config.optimizer,
-            }
-        )
-        optim_d = OPTIMIZERS.build(
-            {
-                "params": itertools.chain(self.msd.parameters(), self.mpd.parameters()),
-                **self.config.optimizer,
-            }
+        optim_g = instantiate(self.config.optimizer, params=self.generator.parameters())
+        optim_d = instantiate(
+            self.config.optimizer,
+            params=itertools.chain(
+                self.msd.parameters(),
+                self.mpd.parameters(),
+            ),
         )
 
-        scheduler_g = LR_SCHEUDLERS.build(
-            {
-                "optimizer": optim_g,
-                **self.config.scheduler,
-            }
-        )
-        scheduler_d = LR_SCHEUDLERS.build(
-            {
-                "optimizer": optim_d,
-                **self.config.scheduler,
-            }
-        )
+        scheduler_g = instantiate(self.config.scheduler, optimizer=optim_g)
+        scheduler_d = instantiate(self.config.scheduler, optimizer=optim_d)
 
         return [optim_g, optim_d], [scheduler_g, scheduler_d]
 
@@ -171,11 +157,12 @@ class HiFiSingerV1Lightning(pl.LightningModule):
         y_df_hat_r, y_df_hat_g, fmap_f_r, fmap_f_g = self.mpd(y, y_g_hat)
         y_ds_hat_r, y_ds_hat_g, fmap_s_r, fmap_s_g = self.msd(y, y_g_hat)
         loss_fm_f = feature_loss(fmap_f_r, fmap_f_g)
+        # todo: check if this is correct
         loss_fm_s = feature_loss(fmap_s_r, fmap_s_g)
         loss_gen_f, _ = generator_loss(y_df_hat_g)
         loss_gen_s, _ = generator_loss(y_ds_hat_g)
         loss_gen_all = loss_gen_s + loss_gen_f + loss_fm_s + loss_fm_f + loss_aux * 45
-
+        # todo: check if this is correct
         self.manual_backward(loss_gen_all)
         optim_g.step()
 
@@ -283,12 +270,12 @@ class HiFiSingerV1Lightning(pl.LightningModule):
                         f"wavs": [
                             wandb.Audio(
                                 wav_gt,
-                                sample_rate=self.config.sampling_rate,
+                                sample_rate=self.config.model.encoder.sampling_rate,
                                 caption=f"gt",
                             ),
                             wandb.Audio(
                                 wav_prediction,
-                                sample_rate=self.config.sampling_rate,
+                                sample_rate=self.config.model.encoder.sampling_rate,
                                 caption=f"prediction",
                             ),
                         ],
@@ -305,13 +292,13 @@ class HiFiSingerV1Lightning(pl.LightningModule):
                     f"sample-{idx}/wavs/gt",
                     wav_gt,
                     self.global_step,
-                    sample_rate=self.config.sampling_rate,
+                    sample_rate=self.config.model.encoder.sampling_rate,
                 )
                 self.logger.experiment.add_audio(
                     f"sample-{idx}/wavs/prediction",
                     wav_prediction,
                     self.global_step,
-                    sample_rate=self.config.sampling_rate,
+                    sample_rate=self.config.model.encoder.sampling_rate,
                 )
 
             plt.close(image_mels)
