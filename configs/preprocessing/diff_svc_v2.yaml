@@ -2,4 +2,8 @@ text_features_extractor:
   _target_: fish_diffusion.modules.feature_extractors.hubert_soft.HubertSoft
 pitch_extractor:
   _target_: fish_diffusion.modules.pitch_extractors.parsel_mouth.ParselMouthPitchExtractor
+<<<<<<< HEAD
   keep_zeros: false
+=======
+  keep_zeros: false
+>>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658

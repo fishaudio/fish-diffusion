@@ -3,4 +3,7 @@ lr: 1.0
 weight_decay: 1e-2
 betas: [0.9, 0.98]
 eps: 1e-9
+<<<<<<< HEAD
 
+=======
+>>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658

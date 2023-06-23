@@ -2,4 +2,8 @@ defaults:
   - base
 
 gradient_clip_val: null
+<<<<<<< HEAD
 max_steps: 1e6
+=======
+max_steps: 1e6
+>>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658

@@ -14,8 +14,13 @@ pitch_encoder:
   input_size: 1
   output_size: ${hidden_size:}
   use_embedding: false
+<<<<<<< HEAD
   preprocessing: 
     _target_: fish_diffusion.utils.pitch.pitch_to_scale 
+=======
+  preprocessing:
+    _target_: fish_diffusion.utils.pitch.pitch_to_scale
+>>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658
 pitch_shift_encoder:
   _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
   input_size: 1
@@ -40,6 +45,10 @@ mpd:
 mrd:
   resolutions: [[1024, 120, 600], [2048, 240, 1200], [512, 50, 240]]
 multi_scale_mels:
+<<<<<<< HEAD
   - [${n_fft:}, ${hop_length:}, ${win_length:}]
+=======
+  - ["${n_fft:}", "${hop_length:}", "${win_length:}"]
+>>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658
   - [2048, 270, 1080]
   - [4096, 540, 2160]

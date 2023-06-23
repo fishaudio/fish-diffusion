@@ -1,4 +1,10 @@
 _target_: torch.optim.AdamW
+<<<<<<< HEAD
 lr: 2e-4 
 betas: [0.8, 0.99]
 eps: 1e-9
+=======
+lr: 2e-4
+betas: [0.8, 0.99]
+eps: 1e-9
+>>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658

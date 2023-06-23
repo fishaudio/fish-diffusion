@@ -43,7 +43,7 @@ class RefineGAN(pl.LightningModule):
             n_mels=config.num_mels,
         )
 
-        # The bellow are for training
+        # The below are for training
         self.multi_scale_mels = [
             get_mel_transform(
                 sample_rate=config.sampling_rate,

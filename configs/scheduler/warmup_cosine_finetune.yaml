@@ -1,8 +1,16 @@
 _target_: torch.optim.lr_scheduler.LambdaLR
+<<<<<<< HEAD
 lr_lambda: 
+=======
+lr_lambda:
+>>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658
   _target_: fish_diffusion.schedulers.warmup_cosine_scheduler.LambdaWarmUpCosineScheduler
   warm_up_steps: 1000
   lr_min: 1e-4
   lr_max: 4e-4
   lr_start: 1e-5
+<<<<<<< HEAD
   max_decay_steps: 5000
+=======
+  max_decay_steps: 5000
+>>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658

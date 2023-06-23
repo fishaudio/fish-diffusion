@@ -1,6 +1,6 @@
 # Quick FishSVC Guide
 
-> Updated: March 03 2023 (Lengyue)  
+> Updated: March 03 2023 (Lengyue)
 > Made & Updated: Kangarroar (Feb 01 2023)
 > Updated: May 17 2023 (OOPPEENN)
 
@@ -10,10 +10,10 @@ If you don't want to install the environment manually or don't have a powerful G
 1. You need to install conda on your PC, I recommend installing Miniconda if you don't want it to eat a lot of your disk space.
 
    The link for Miniconda is here: [https://docs.conda.io/en/latest/miniconda.html](https://docs.conda.io/en/latest/miniconda.html)
-   
+
    For Chinese users, you may need to get miniconda through the mirror source, and change the miniconda source according to the guide of the mirror station.
-   
-   The link for Miniconda is here: [https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/](https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/)  
+
+   The link for Miniconda is here: [https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/](https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/)
    The link for guide is here: [https://mirrors.tuna.tsinghua.edu.cn/help/anaconda/](https://mirrors.tuna.tsinghua.edu.cn/help/anaconda/)
 
 2. After installing Miniconda, open "Anaconda", then you will need to type
@@ -27,7 +27,7 @@ If you don't want to install the environment manually or don't have a powerful G
 3. Make sure that the next steps are in the virtual environment of Fish
 
    Install pdm to manage project dependencies
-   
+
    Windows:
    ```
    curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
@@ -36,7 +36,7 @@ If you don't want to install the environment manually or don't have a powerful G
    ```
    curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
    ```
-   For Chinese users, you may need to get pdm through the mirror source, and change the pdm source according to the guide of the mirror station.  
+   For Chinese users, you may need to get pdm through the mirror source, and change the pdm source according to the guide of the mirror station.
    The link for guide is here: [https://mirrors.tuna.tsinghua.edu.cn/help/pypi/](https://mirrors.tuna.tsinghua.edu.cn/help/pypi/)
 
  4. Once you have finished the base to set up the environment, proceed to download FishSVC from the [GitHub](https://github.com/fishaudio/fish-diffusion). You can either
@@ -49,12 +49,12 @@ If you don't want to install the environment manually or don't have a powerful G
    cd C:/Users/NAME/Documents/fish-difussion (example)
    ```
 
-  
+
 5. Run this command to update the dependencies and install the project
    ```
    pdm sync
    ```
-  
+
 6. Fish Diffusion requires the [FishAudio NSF-HiFiGAN](https://github.com/fishaudio/fish-diffusion/releases/tag/v2.0.0) vocoder to generate audio, there is an automatic download for it, just run the command
    ```
    python tools/download_nsf_hifigan.py
@@ -62,7 +62,7 @@ If you don't want to install the environment manually or don't have a powerful G
 
    It will start downloading the vocoder automatically and will put it on the checkpoints folder, wait until it's done or you can do a manual download for it. [Hifigan Link](https://github.com/openvpi/vocoders/releases/tag/nsf-hifigan-v1)
 
-  
+
 
 7.  FishSVC is installed!
 
@@ -98,10 +98,10 @@ python tools/preprocessing/extract_features.py --config configs/svc_content_vec.
 
   Once that is done you have your data prepared to start training!
 
-> It's recommened to copy the config file to a new one, so you don't mess up the original one.
+> It's recommended to copy the config file to a new one, so you don't mess up the original one.
 
 ## Dataset Preparation (Multi Speaker)
-Reference to [Dataset Configuration](https://fishaudio.github.io/fish-diffusion/pages/config.html#dataset). 
+Reference to [Dataset Configuration](https://fishaudio.github.io/fish-diffusion/pages/config.html#dataset).
 
 ## Training time!
 
@@ -204,10 +204,10 @@ python tools/diffusion/inference.py –-config configs/svc_hubert_soft.py \
 
 ## DIFF SVC CONVERSION TO FISH SVC
 
-This is pretty straightforward, conversion takes 2 minutes to run and it allows inference immediatly!
+This is pretty straightforward, conversion takes 2 minutes to run and it allows inference immediately!
 You first need to copy your DiffSVC checkpoint of the model you want to convert, in my case I created a specific folder called "conversion"
 
- 
+
 To run the conversion you need to use the following command:
 ```bash
 python tools/diffusion/diff_svc_converter.py --config configs/svc_hubert_soft_diff_svc.py \
@@ -223,7 +223,7 @@ python tools/diffusion/diff_svc_converter.py –-config configs/svc_hubert_soft_
 
 It will start running the conversion, if you run into a PyTorch error of size mismatch, you may need to change residual channels on your svc_hubert_soft_diff_svc.py
 
-  
+
 ***
 
 

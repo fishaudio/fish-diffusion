@@ -1,13 +1,25 @@
 text_features_extractor:
   _target_: fish_diffusion.modules.feature_extractors.content_vec.ContentVec
+<<<<<<< HEAD
 pitch_extractor: 
+=======
+pitch_extractor:
+>>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658
     _target_: fish_diffusion.modules.pitch_extractors.parsel_mouth.ParselMouthPitchExtractor
     keep_zeros: false
     f0_min : 40.0
     f0_max : 1600.0
+<<<<<<< HEAD
 energy_extractor: 
+=======
+energy_extractor:
+>>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658
     _target_: fish_diffusion.modules.energy_extractors.rms.RMSEnergyExtractor
 augmentations:
   - type: "FixedPitchShifting"
     key_shifts: [-5.0, 5.0]
+<<<<<<< HEAD
     probability: 0.75,
+=======
+    probability: 0.75,
+>>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658
