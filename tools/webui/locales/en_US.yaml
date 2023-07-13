@@ -85,5 +85,4 @@ main_ui:
     max_slice_duration_label: "Max Slice Duration"
     min_silence_duration_label: "Min Silence Duration"
     skip_steps_label: "Skip Steps"
-    inference_btn: "Inference"
     checkpoint_path_label: "Checkpoint Path"

@@ -85,5 +85,4 @@ main_ui:
     max_slice_duration_label: "最大片段持续时间"
     min_silence_duration_label: "最小静音持续时间"
     skip_steps_label: "跳过步骤"
-    inference_btn: "推理"
     checkpoint_path_label: "检查点路径"
