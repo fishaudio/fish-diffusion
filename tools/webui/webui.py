@@ -1,7 +1,9 @@
+from tabnanny import check
 import gradio as gr
 import os
 import subprocess
 from regex import P
+from sklearn.isotonic import spearmanr
 import yaml
 from pathlib import Path
 
@@ -92,7 +94,6 @@ class WebUI:
     ):
         # Construct the command
         command = [
-            env_prefix,
             "python",
             "tools/train.py",
             f"--config={config_path}",
@@ -119,6 +120,50 @@ class WebUI:
         ]
 
         return self.run_command(command, preprocess_log)
+
+    def start_inference(
+        self,
+        config_path,
+        ckpt_path,
+        input_path,
+        output_path,
+        speaker,
+        pitch_adjust,
+        pitches_path,
+        extract_vocals,
+        sampler_progress,
+        sampler_interval,
+        silence_threshold,
+        max_slice_duration,
+        min_silence_duration,
+        skip_steps,
+    ):
+        command = [
+            "python",
+            "tools/inference.py",
+            f"--config={config_path}",
+            f"--checkpoint={ckpt_path}",
+            f"--input={input_path}",
+            f"--output={output_path}",
+            f"--speaker={speaker}" if speaker != "" else "",
+            f"--pitch-adjust={pitch_adjust}" if pitch_adjust != "" else "",
+            f"--pitches={pitches_path}" if pitches_path != "" else "",
+            f"--extract-vocals={extract_vocals}" if extract_vocals != "" else "",
+            f"--sampler-progress={sampler_progress}" if sampler_progress != "" else "",
+            f"--sampler-interval={sampler_interval}" if sampler_interval != "" else "",
+            f"--silence-threshold={silence_threshold}"
+            if silence_threshold != ""
+            else "",
+            f"--max-slice-duration={max_slice_duration}"
+            if max_slice_duration != ""
+            else "",
+            f"--min-silence-duration={min_silence_duration}"
+            if min_silence_duration != ""
+            else "",
+            f"--skip-steps={skip_steps}" if skip_steps != "" else "",
+        ]
+        print(command)
+        return self.run_command(command)
 
     def main_ui(self):
         with gr.Blocks() as ui:
@@ -193,10 +238,16 @@ class WebUI:
             with gr.Tab(self.language_conf["main_ui"]["Train_tab"]["title"]):
                 # Map the Click options to Gradio components
                 config_path = gr.inputs.Textbox(
-                    label="Config Path",
+                    label=self.language_conf["main_ui"]["Train_tab"][
+                        "config_path_label"
+                    ],
                     default="./configs/diffsvc/svc_hubert_soft.yaml",
                 )
-                config_select_path = gr.inputs.File(label="Config Path")
+                config_select_path = gr.inputs.File(
+                    label=self.language_conf["main_ui"]["Train_tab"][
+                        "config_path_label"
+                    ]
+                )
                 with gr.Accordion(
                     self.language_conf["main_ui"]["Train_tab"]["preprocessing"][
                         "title"
@@ -206,7 +257,9 @@ class WebUI:
                     # Create a button for preprocessing
                     clean_checkbox = gr.inputs.Checkbox(label="Clean")
                     num_worker_textbox = gr.inputs.Textbox(
-                        label="Number of workers",
+                        label=self.language_conf["main_ui"]["Train_tab"][
+                            "preprocessing"
+                        ]["num_workers"],
                         default="8",
                         numeric=True,
                     )
@@ -215,14 +268,18 @@ class WebUI:
                             "btn"
                         ]
                     )
-                    # preprocessing_progress = gr.Progress()
                     preprocess_log = gr.inputs.Textbox(
-                        label="Preprocessing log",
+                        label=self.language_conf["main_ui"]["Train_tab"][
+                            "preprocessing"
+                        ]["logfile_label"],
                         default="preprocessing.log",
                     )
                     preprocessing_output = gr.Textbox(label="Preprocessing output")
                     log_viewer = gr.Textbox(
-                        label="Logs (updates every second)", lines=3
+                        label=self.language_conf["main_ui"]["Train_tab"][
+                            "preprocessing"
+                        ]["log_viewer_label"],
+                        lines=3,
                     )
                     config = config_path if config_path != "" else config_select_path
                     extract_features_button.click(
@@ -243,25 +300,42 @@ class WebUI:
                     )
 
                 entity = gr.inputs.Textbox(
-                    label="Entity for wandb", default="fish-audio"
+                    label=self.language_conf["main_ui"]["Train_tab"]["train"]["entity"],
+                    default="fish-audio",
                 )
                 tensorboard = gr.inputs.Checkbox(label="Log to tensorboard")
                 resume = gr.inputs.Checkbox(
-                    label="Resume training using the latest ckpt"
+                    label=self.language_conf["main_ui"]["Train_tab"]["train"]["resume"]
                 )
-                resume_id = gr.inputs.Textbox(label="Resume id for training")
-                checkpoint = gr.inputs.Textbox(label="Resume training ckpt file")
-                run_name = gr.inputs.Textbox(label="Run name for wandb")
-                pretrained = gr.inputs.Checkbox(label="Use pretrained")
+                resume_id = gr.inputs.Textbox(
+                    label=self.language_conf["main_ui"]["Train_tab"]["train"][
+                        "resume_id"
+                    ],
+                )
+                checkpoint = gr.inputs.Textbox(
+                    label=self.language_conf["main_ui"]["Train_tab"]["train"]["ckpt"]
+                )
+                run_name = gr.inputs.Textbox(
+                    label=self.language_conf["main_ui"]["Train_tab"]["train"][
+                        "run_name"
+                    ]
+                )
+                pretrained = gr.inputs.Checkbox(
+                    label=self.language_conf["main_ui"]["Train_tab"]["train"][
+                        "pretrained"
+                    ]
+                )
 
                 # Create a button to start the training
                 start_train_button = gr.Button(
                     self.language_conf["main_ui"]["Train_tab"]["train"]["btn"]
                 )
-                training_output = gr.Textbox(label="Training output")
+                training_output = gr.Textbox(
+                    label=self.language_conf["main_ui"]["Train_tab"]["train"]["output"]
+                )
 
                 train_log = gr.inputs.Textbox(
-                    label="Training log",
+                    label=self.language_conf["main_ui"]["Train_tab"]["train"]["log"],
                     default="train_ui.log",
                 )
                 # Define the function to run the training script and set it as the button click action
@@ -281,7 +355,10 @@ class WebUI:
                     outputs=training_output,
                 )
                 train_log_viewer = gr.Textbox(
-                    label="Logs (updates every second)", lines=3
+                    label=self.language_conf["main_ui"]["Train_tab"]["train"][
+                        "log_viewer_label"
+                    ],
+                    lines=3,
                 )
                 train_dep = ui.load(
                     self.show_log,
@@ -292,11 +369,135 @@ class WebUI:
             with gr.Tab(self.language_conf["main_ui"]["Inference_tab"]["title"]):
                 # Assuming the language_conf dict has the same structure as the previous example
                 gr.Markdown(self.language_conf["main_ui"]["Inference_tab"]["content"])
+                config_path = gr.inputs.Textbox(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "config_path_label"
+                    ],
+                    default="./configs/diffsvc/svc_hubert_soft.yaml",
+                )
+                config_select_path = gr.inputs.File(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "config_path_label"
+                    ]
+                )
+                cfg = config_path if config_path != "" else config_select_path
+                checkpoint_path = gr.inputs.Textbox(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "checkpoint_path_label"
+                    ],
+                    default="./checkpoints/svc_hubert_soft/best.ckpt",
+                )
+                checkpoint_select_path = gr.inputs.File(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "checkpoint_path_label"
+                    ]
+                )
+                ckpt = (
+                    checkpoint_path if checkpoint_path != "" else checkpoint_select_path
+                )
+                input_path = gr.inputs.Textbox(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "input_path_label"
+                    ],
+                    default="./data/audios/1.wav",
+                )
+                output_path = gr.inputs.Textbox(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "output_path_label"
+                    ],
+                    default="./data/audios/1.wav",
+                )
+                speaker = gr.inputs.Textbox(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "speaker_label"
+                    ],
+                    default="",
+                )
+                pitch_adjust = gr.inputs.Textbox(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "pitch_adjust_label"
+                    ],
+                    default="0",
+                )
+                pitches_path = gr.inputs.Textbox(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "pitches_path_label"
+                    ],
+                    default="",
+                )
+                extract_vocals = gr.inputs.Checkbox(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "extract_vocals_label"
+                    ],
+                    default=False,
+                )
+                sampler_progress = gr.inputs.Checkbox(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "sampler_progress_label"
+                    ],
+                    default=False,
+                )
+                sampler_interval = gr.inputs.Textbox(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "sampler_interval_label"
+                    ],
+                    default="0.1",
+                )
+                silence_threshold = gr.inputs.Textbox(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "silence_threshold_label"
+                    ],
+                    default="0.1",
+                )
+                max_slice_duration = gr.inputs.Textbox(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "max_slice_duration_label"
+                    ],
+                    default="10.0",
+                )
+                min_silence_duration = gr.inputs.Textbox(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "min_silence_duration_label"
+                    ],
+                    default="0.5",
+                )
+                skip_steps = gr.inputs.Textbox(
+                    label=self.language_conf["main_ui"]["Inference_tab"][
+                        "skip_steps_label"
+                    ],
+                    default="",
+                )
+                # Create a button to start the inference
+                start_inference_button = gr.Button(
+                    self.language_conf["main_ui"]["Inference_tab"]["inference_btn"]
+                )
+
+                inference_output = gr.Textbox(label="Inference output")
+
+                # Define the function to run the inference script and set it as the button click action
+                start_inference_button.click(
+                    fn=self.start_inference,
+                    inputs=[
+                        cfg,
+                        ckpt,
+                        input_path,
+                        output_path,
+                        speaker,
+                        pitch_adjust,
+                        pitches_path,
+                        extract_vocals,
+                        sampler_progress,
+                        sampler_interval,
+                        silence_threshold,
+                        max_slice_duration,
+                        min_silence_duration,
+                        skip_steps,
+                    ],
+                    outputs=inference_output,
+                )
 
         self.ui = ui
 
-
-# todo: click
 
 if __name__ == "__main__":
     webui = WebUI(EN_CONFIG)
