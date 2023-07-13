@@ -2,11 +2,7 @@ type: HiFiSVC
 hidden_size: ${hidden_size:}
 text_encoder:
   _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
-<<<<<<< HEAD
   input_size: 256 
-=======
-  input_size: 256
->>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658
   output_size: ${hidden_size:}
 speaker_encoder:
   _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
@@ -19,11 +15,7 @@ pitch_encoder:
   output_size: ${hidden_size:}
   use_embedding: false
   preprocessing:
-<<<<<<< HEAD
     _target_: fish_diffusion.utils.pitch.pitch_to_scale 
-=======
-    _target_: fish_diffusion.utils.pitch.pitch_to_scale
->>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658
 pitch_shift_encoder:
   _target_: fish_diffusion.modules.encoders.naive_projection.NaiveProjectionEncoder
   input_size: 1
@@ -53,7 +45,6 @@ encoder:
   fmin: 40
   fmax: 16000
   # The following parameters are used for training
-<<<<<<< HEAD
   multi_scale_mels: 
     - [2048, 512, 2048] # (n_fft, hop_size, win_size)
     - [2048, 270, 1080]
@@ -62,13 +53,3 @@ encoder:
     - [512, 50, 240]  # (n_fft, hop_size, win_size)
     - [1024, 120, 600]
     - [2048, 240, 1200]
-=======
-  multi_scale_mels:
-    - [2048, 512, 2048] # (n_fft, hop_size, win_size)
-    - [2048, 270, 1080]
-    - [4096, 540, 2160]
-  multi_scale_stfts:
-    - [512, 50, 240]  # (n_fft, hop_size, win_size)
-    - [1024, 120, 600]
-    - [2048, 240, 1200]
->>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658

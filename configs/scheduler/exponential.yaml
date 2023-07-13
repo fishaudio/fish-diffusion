@@ -1,6 +1,2 @@
 _target_: torch.optim.lr_scheduler.ExponentialLR
-<<<<<<< HEAD
 gamma: 0.999
-=======
-gamma: 0.999
->>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658

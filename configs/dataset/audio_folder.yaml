@@ -5,8 +5,4 @@ train:
 valid:
   _target_: fish_diffusion.datasets.naive.AudioFolderDataset
   path: dataset/valid
-<<<<<<< HEAD
   spkeaer_id: 0
-=======
-  spkeaer_id: 0
->>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658

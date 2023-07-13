@@ -7,8 +7,4 @@ valid:
   _target_: fish_diffusion.datasets.hifisinger.HiFiSVCDataset
   path: dataset/valid
   speaker_id: 0
-<<<<<<< HEAD
   segment_size: 16384
-=======
-  segment_size: 16384
->>>>>>> 5e45d3b84287944ccca7f4b9e3890f588665a658
