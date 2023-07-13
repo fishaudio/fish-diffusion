@@ -35,7 +35,8 @@ class ParselMouthPitchExtractor(BasePitchExtractor):
 
         # Pad zeros to the end
         if pad_to is not None:
-            total_pad = pad_to - f0.shape[0]
+            total_pad = pad_to - f0.shape[0] + 1
+            #print(pad_to,f0.shape[0])
             f0 = np.pad(f0, (total_pad // 2, total_pad - total_pad // 2), "constant")
 
         return self.post_process(x, sampling_rate, f0, pad_to)

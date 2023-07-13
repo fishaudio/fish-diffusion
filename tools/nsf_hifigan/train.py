@@ -1,6 +1,7 @@
 import itertools
 import json
 from argparse import ArgumentParser
+import numpy as np
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
@@ -152,13 +153,18 @@ class HSFHifiGAN(pl.LightningModule):
         # We referenced STFT and Mel-Spectrogram loss from SingGAN
         # L1 STFT Loss
         stft_config = [
+            (256, 25, 120),
             (512, 50, 240),
             (1024, 120, 600),
             (2048, 240, 1200),
+            (4096, 480, 2400)
         ]
 
         loss_stft = 0
-        for n_fft, hop_length, win_length in stft_config:
+        
+        tmp_stft_config = [stft_config[np.random.randint(0,5)] for i in range(3)]
+
+        for n_fft, hop_length, win_length in tmp_stft_config:
             y_stft = torch.stft(
                 y.squeeze(1), n_fft, hop_length, win_length, return_complex=True
             )

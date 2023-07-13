@@ -5,20 +5,20 @@
     "adam_b2": 0.99,
     "lr_decay": 0.999,
     "upsample_rates": [
-        8,
-        8,
-        2,
+        4,
+        4,
+	4,
         2,
         2
     ],
     "upsample_kernel_sizes": [
-        16,
-        16,
-        4,
+        8,
+        8,
+	8,
         4,
         4
     ],
-    "upsample_initial_channel": 512,
+    "upsample_initial_channel": 768,
     "resblock_kernel_sizes": [
         3,
         7,
@@ -53,7 +53,7 @@
     "segment_size": 16384,
     "num_mels": 128,
     "n_fft": 2048,
-    "hop_size": 512,
+    "hop_size": 256,
     "win_size": 2048,
     "sampling_rate": 44100,
     "fmin": 40,

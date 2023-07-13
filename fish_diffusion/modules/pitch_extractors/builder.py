@@ -7,17 +7,17 @@ from fish_diffusion.utils.tensor import interpolate, repeat_expand
 class BasePitchExtractor:
     def __init__(
         self,
-        hop_length: int = 512,
-        f0_min: float = 50.0,
-        f0_max: float = 1100.0,
+        hop_length: int = 256,
+        f0_min: float = 40.0,
+        f0_max: float = 2100.0,
         keep_zeros: bool = True,
     ):
         """Base pitch extractor.
 
         Args:
-            hop_length (int, optional): Hop length. Defaults to 512.
-            f0_min (float, optional): Minimum f0. Defaults to 50.0.
-            f0_max (float, optional): Maximum f0. Defaults to 1100.0.
+            hop_length (int, optional): Hop length. Defaults to 256
+            f0_min (float, optional): Minimum f0. Defaults to 40.0
+            f0_max (float, optional): Maximum f0. Defaults to 2100.0.
             keep_zeros (bool, optional): Whether keep zeros in pitch. Defaults to True.
         """
 

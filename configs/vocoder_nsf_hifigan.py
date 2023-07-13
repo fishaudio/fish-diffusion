@@ -28,7 +28,7 @@ trainer = dict(
 
 model = dict(
     type="NSF-HiFiGAN",
-    config="tools/nsf_hifigan/config_v1_256.json",
+    config="tools/nsf_hifigan/config_v2_256.json",
     # The following code are used for preprocessing
     vocoder=dict(
         type="NsfHifiGAN",
@@ -39,16 +39,16 @@ model = dict(
 dataset = dict(
     train=dict(
         type="NaiveVOCODERDataset",
-        path="/fs/nexus-scratch/lengyue/vocoder-data/train",
-        segment_size=32768,
+        path="/home/ai4/VocoderData/train256",
+        segment_size=16384,
         pitch_shift=[-12, 12],
-        loudness_shift=[0.1, 0.9],
+        loudness_shift=[0.1, 0.999],
         hop_length=hop_length,
         sampling_rate=sampling_rate,
     ),
     valid=dict(
         type="NaiveVOCODERDataset",
-        path="/fs/nexus-scratch/lengyue/vocoder-data/valid",
+        path="/home/ai4/VocoderData/val256",
         segment_size=None,
         pitch_shift=None,
         loudness_shift=None,
@@ -59,7 +59,7 @@ dataset = dict(
 
 dataloader = dict(
     train=dict(
-        batch_size=20,
+        batch_size=8,
         shuffle=True,
         num_workers=4,
         persistent_workers=True,
@@ -74,10 +74,10 @@ dataloader = dict(
 
 preprocessing = dict(
     pitch_extractor=dict(
-        type="HarvestPitchExtractor",
+        type="ParselMouthPitchExtractor",
         keep_zeros=False,
         f0_min=40.0,
-        f0_max=2000.0,
+        f0_max=2100.0,
         hop_length=hop_length,
     ),
 )
