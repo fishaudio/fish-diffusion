@@ -1,0 +1,17 @@
+generate_config:
+  model_options:
+    - "diff_svc_v2"
+    - "hifi_svc"
+    - "hifi_svc_v2"
+  optimizer_scheduler_options:
+    - "exponential"
+    - "step"
+    - "warmup_cosine"
+    - "warmup_cosine_finetune"
+  trainer_options:
+    - "base"
+    - "hifi_svc"
+  dataset_options:
+    - "audio_folder"
+    - "hifi_svc"
+    - "naive_svc"

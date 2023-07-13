@@ -1,0 +1,88 @@
+main_ui:
+  Intro_tab:
+    title: "介绍"
+    terms_of_use: "Fish Diffusion 使用条款"
+    terms_of_use_content: "1. 获取授权和知识产权侵权：用户完全负责获取他们在训练过程中使用的任何数据集所需的授权，并对由于使用输入源的任何侵权问题承担全部责任。Fish Diffusion 及其开发者对由于使用未授权数据集而可能出现的任何复杂问题概不负责。
+
+    2. BSD-3-Clause-Clear 许可：Fish Diffusion 在 BSD-3-Clause-Clear 许可下发布，该许可授予用户任何目的的使用权，包括商业应用。更多详细信息，请查看 LICENSE 文件。
+
+    3. 适当的归属：任何基于 Fish Diffusion 的衍生作品必须明确承认该项目及其许可。在分发 Fish Diffusion 的代码或传播此项目生成的结果时，用户有义务引用原作者和源代码（Fish Diffusion）。
+
+    4. 音视内容和 AI 生成披露：使用 Fish Diffusion 创建的所有衍生作品，包括音频或视频材料，必须明确承认使用了 Fish Diffusion 项目，并声明内容是 AI 生成的。如果包含第三方发布的视频或音频，必须提供原始链接。
+
+    6. 同意条款：通过持续使用 Fish Diffusion，用户明确同意本文件中规定的条款和条件。对于可能出现的任何后续问题，Fish Diffusion 及其开发者均不承担责任。"
+    content: "## 概述
+
+    使用扩散模型解决不同的语音生成任务。与原始 diffsvc 仓库相比，此仓库的优点和缺点如下：
+
+    + 支持多说话人
+
+    + 此仓库的代码结构更简单，更易于理解，所有模块都是解耦的
+
+    + 支持 [44.1khz Diff Singer 社区声码器](https://openvpi.github.io/vocoders/)
+
+    + 支持多机多设备训练，支持半精度训练，节省您的训练速度和内存
+    "
+  Generate_Config_tab:
+    title: "生成配置"
+    content: "生成训练和推理的配置文件。
+
+    默认设置应为：
+
+    + diff_svc_v2 + step + base
+
+    + hifi_svc + exponential + hifi_svc，
+    "
+    genrate_btn: "生成"
+    model_options:
+      - "diff_svc_v2"
+      - "hifi_svc"
+      - "hifi_svc_v2"
+    optimizer_scheduler_options:
+      - "exponential"
+      - "step"
+      - "warmup_cosine"
+      - "warmup_cosine_finetune"
+    trainer_options:
+      - "base"
+      - "hifi_svc"
+  Train_tab:
+    title: "训练和预处理"
+    config_path_label: "配置路径"
+    preprocessing:
+      title: "预处理"
+      btn: "提取特征"
+      show_log_btn: "刷新日志"
+      num_workers: "工作线程数"
+      logfile_label: "日志文件名"
+      log_viewer_label: "预处理日志查看器（实时更新）"
+    train:
+      title: "训练"
+      btn: "开始训练"
+      entity: "wandb 实体"
+      resume: "使用最新的 ckpt 恢复训练"
+      resume_id: "wandb 的恢复 ID"
+      ckpt: "检查点路径"
+      run_name: "wandb 的运行名称"
+      pretrained: "使用预训练模型"
+      output: "输出路径"
+      log: "训练的 UI 日志路径"
+      log_viewer_label: "训练日志查看器（实时更新）"
+  Inference_tab:
+    title: "推理"
+    content: ""
+    inference_btn: "推理"
+    config_path_label: "配置路径"
+    input_path_label: "输入路径"
+    output_path_label: "输出路径"
+    speaker_label: "说话人"
+    pitch_adjust_label: "音调调整"
+    pitches_path_label: "音调路径"
+    extract_vocals_label: "提取人声"
+    sampler_progress_label: "采样器进度"
+    sampler_interval_label: "采样器间隔"
+    silence_threshold_label: "静音阈值"
+    max_slice_duration_label: "最大片段持续时间"
+    min_silence_duration_label: "最小静音持续时间"
+    skip_steps_label: "跳过步骤"
+    checkpoint_path_label: "检查点路径"
