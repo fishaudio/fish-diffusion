@@ -30,7 +30,7 @@ class WebUI:
 
         self.main_ui()
 
-    def lauch(self, *args, **kwargs):
+    def launch(self, *args, **kwargs):
         self.ui.queue(concurrency_count=10).launch(*args, **kwargs)
 
     def show_log(self, log: str):
@@ -502,7 +502,7 @@ class WebUI:
 
 if __name__ == "__main__":
     webui = WebUI(EN_CONFIG)
-    webui.lauch(
+    webui.launch(
         server_name="100.70.71.133",
         server_port=7860,
     )
