@@ -1,5 +1,5 @@
 main_ui:
-  Intro_tab: 
+  Intro_tab:
     title: "介绍"
     terms_of_use: "Fish Diffusion 使用条款"
     terms_of_use_content: "1. 获取授权和知识产权侵权：用户完全负责获取他们在训练过程中使用的任何数据集所需的授权，并对由于使用输入源的任何侵权问题承担全部责任。Fish Diffusion 及其开发者对由于使用未授权数据集而可能出现的任何复杂问题概不负责。
