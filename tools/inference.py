@@ -1,9 +1,9 @@
-import torch
 from pathlib import Path
-from box import Box
 
 import click
 import hydra
+import torch
+from box import Box
 from loguru import logger
 from omegaconf import OmegaConf
 

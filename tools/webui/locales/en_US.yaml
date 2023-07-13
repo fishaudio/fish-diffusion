@@ -1,5 +1,5 @@
 main_ui:
-  Intro_tab: 
+  Intro_tab:
     title: "Intro"
     terms_of_use: "Terms of Use for Fish Diffusion"
     terms_of_use_content: "1. Obtaining Authorization and Intellectual Property Infringement: The user is solely accountable for acquiring the necessary authorization for any datasets utilized in their training process and assumes full responsibility for any infringement issues arising from the utilization of the input source. Fish Diffusion and its developers disclaim all responsibility for any complications that may emerge due to the utilization of unauthorized datasets.
@@ -16,7 +16,7 @@ main_ui:
     Using Diffusion Model to solve different voice generating tasks. Compared with the original diffsvc repository, the advantages and disadvantages of this repository are as follows:
 
     + Support multi-speaker
-    
+
     + The code structure of this repository is simpler and easier to understand, and all modules are decoupled
 
     + Support [44.1khz Diff Singer community vocoder](https://openvpi.github.io/vocoders/)
@@ -26,8 +26,8 @@ main_ui:
   Generate_Config_tab:
     title: "Generate Config"
     content: "Generate config file for training and inference.
-    
-    The Default setting should be: 
+
+    The Default setting should be:
 
     + diff_svc_v2 + step + base
 

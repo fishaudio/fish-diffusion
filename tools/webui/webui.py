@@ -1,11 +1,12 @@
-from tabnanny import check
-import gradio as gr
 import os
 import subprocess
+from pathlib import Path
+from tabnanny import check
+
+import gradio as gr
+import yaml
 from regex import P
 from sklearn.isotonic import spearmanr
-import yaml
-from pathlib import Path
 
 CN_CONFIG = "locales/zh_CN.yaml"
 EN_CONFIG = "locales/en_US.yaml"
