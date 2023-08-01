@@ -8,6 +8,7 @@ from ipatok import tokenise
 phonemes_dict = yaml.safe_load(Path(__file__).with_name("symbols.yaml").open())
 # print(phonemes_dict.keys())
 
+
 # todo: add <bos>, <eos>, <pad>, <unk>, <bar> tokens
 def text_to_sequence(text):
     seq = []
