@@ -167,7 +167,7 @@ Currently, this repo supports ParselMouth, Crepe, Harvest, and Dio. However, we 
 - If your dataset is small and you want it to be more robust, Crepe is probably good for you. 
 - Otherwise, you should use ParselMouth since it is much faster.
 
-Here are some comparisions:
+Here are some comparisons:
 
 <div style="display: flex; justify-content: space-between; align-items: center;">
     <img src="https://s2.loli.net/2023/02/14/pq3UjBalWRPVS9u.png" width="50%">

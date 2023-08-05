@@ -35,6 +35,7 @@ dependencies = [
     "torchaudio<3.0.0,>=2.0.0",
     "pytorch-lightning<3.0.0,>=2.0.2",
     "fastapi==0.88.0",
+    "pre-commit>=3.3.3",
 ]
 
 [tool.pdm]

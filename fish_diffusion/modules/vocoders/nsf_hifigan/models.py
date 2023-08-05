@@ -202,7 +202,7 @@ class SineGen(torch.nn.Module):
         """f0_values: (batchsize, length, dim)
         where dim indicates fundamental tone and overtones
         """
-        # convert to F0 in rad. The interger part n can be ignored
+        # convert to F0 in rad. The integer part n can be ignored
         # because 2 * np.pi * n doesn't affect phase
         rad_values = (f0_values / self.sampling_rate) % 1
 
@@ -304,7 +304,7 @@ class SourceModuleHnNSF(torch.nn.Module):
     add_noise_std: std of additive Gaussian noise (default: 0.003)
         note that amplitude of noise in unvoiced is decided
         by sine_amp
-    voiced_threshold: threhold to set U/V given F0 (default: 0)
+    voiced_threshold: threshold to set U/V given F0 (default: 0)
     Sine_source, noise_source = SourceModuleHnNSF(F0_sampled)
     F0_sampled (batchsize, length, 1)
     Sine_source (batchsize, length, 1)

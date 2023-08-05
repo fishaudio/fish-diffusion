@@ -54,7 +54,7 @@ class HSFHifiGAN(pl.LightningModule):
             n_mels=self.h.num_mels,
         )
 
-        # The bellow are for training
+        # The below are for training
         self.multi_scale_mels = [
             get_mel_transform(
                 sample_rate=self.h.sampling_rate,
