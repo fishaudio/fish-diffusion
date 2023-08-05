@@ -7,7 +7,7 @@ lambda_func = LambdaWarmUpCosineScheduler(
     val_final=1e-5,
     val_base=8e-4,
     val_start=1e-5,
-    max_decay_steps=500000,
+    max_decay_steps=300000,
 )
 
 optimizer = dict(
