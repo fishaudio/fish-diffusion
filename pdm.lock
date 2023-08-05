@@ -1418,7 +1418,7 @@ summary = "World timezone definitions, modern and historical"
 
 [[package]]
 name = "pyworld"
-version = "0.3.3"
+version = "0.3.4"
 summary = "PyWorld: a Python wrapper for WORLD vocoder"
 dependencies = [
     "cython>=0.24",
@@ -2018,7 +2018,7 @@ dependencies = [
 lock_version = "4.2"
 cross_platform = true
 groups = ["default", "dev", "docs"]
-content_hash = "sha256:0674863195314ce13ba1b289443e8010fc6e40c1020f51affefae752924f55c2"
+content_hash = "sha256:d6ce43c59039b692259520c94c701dafe29cbe8f18008f0c2be5ed6915fb9000"
 
 [metadata.files]
 "absl-py 1.4.0" = [
@@ -3819,15 +3819,16 @@ content_hash = "sha256:0674863195314ce13ba1b289443e8010fc6e40c1020f51affefae7529
     {url = "https://files.pythonhosted.org/packages/5e/32/12032aa8c673ee16707a9b6cdda2b09c0089131f35af55d443b6a9c69c1d/pytz-2023.3.tar.gz", hash = "sha256:1d8ce29db189191fb55338ee6d0387d82ab59f3d00eac103412d64e0ebd0c588"},
     {url = "https://files.pythonhosted.org/packages/7f/99/ad6bd37e748257dd70d6f85d916cafe79c0b0f5e2e95b11f7fbc82bf3110/pytz-2023.3-py2.py3-none-any.whl", hash = "sha256:a151b3abb88eda1d4e34a9814df37de2a80e301e68ba0fd856fb9b46bfbbbffb"},
 ]
-"pyworld 0.3.3" = [
-    {url = "https://files.pythonhosted.org/packages/43/27/2e49bc083fa3c6fcba587fe30130807878736fc6d2f4208d1a9a01179d1e/pyworld-0.3.3-cp36-cp36m-win32.whl", hash = "sha256:31ae535614a74706269e1994f1a8c74be9d347201717fcba67de334b11d0845e"},
-    {url = "https://files.pythonhosted.org/packages/52/9e/055068edd29ebd220b5c3129a7d324384bc05459fcde6c29a866f6ac91ba/pyworld-0.3.3.tar.gz", hash = "sha256:a3a81755983dfa2299a9e2947752582ddcc84a5c277b04f4595ce4406372d1e5"},
-    {url = "https://files.pythonhosted.org/packages/6c/bf/31e05e6d916d7df5732a58059e93e6e4a60f7f9415621f9f92105c6e1076/pyworld-0.3.3-cp310-cp310-win_amd64.whl", hash = "sha256:729a675a7d2d0cde6bf9a02f39c059f0341e1ed1735e739a8c4cedf5043ff374"},
-    {url = "https://files.pythonhosted.org/packages/7a/3b/624f6b588b734c0f2eeaed3e8de74033527b6f2fb68ba87ad791775f12fe/pyworld-0.3.3-cp36-cp36m-win_amd64.whl", hash = "sha256:b89df0a7175cab83193cfba73a2790073dc673ac0685d8cfcaec579aba530507"},
-    {url = "https://files.pythonhosted.org/packages/7a/dc/90c5d807261faf3620926b9dc6ff5da45d42ee3d0ee55893da72faddd72a/pyworld-0.3.3-cp37-cp37m-win32.whl", hash = "sha256:de42cc127402cd07025798fd89abf2fb32d304cca139feecd08b9b6206b5fb2f"},
-    {url = "https://files.pythonhosted.org/packages/8f/68/fd8cc401e6718793c101e13b4f916cb427e04edc08daa60b4d8637f52b5f/pyworld-0.3.3-cp37-cp37m-win_amd64.whl", hash = "sha256:be5409b8f93eb8b478507191928d116898f874b3a981714391b71c06dd72bc38"},
-    {url = "https://files.pythonhosted.org/packages/bd/52/32548c227f64ad9c047cf183d68b176078652de1b47a70c534019694a181/pyworld-0.3.3-cp38-cp38-win_amd64.whl", hash = "sha256:ebdced4728c690c0e71823da39e8fee094212e9933e95ddbaaa85b4a72d56fa1"},
-    {url = "https://files.pythonhosted.org/packages/ed/70/26c5b1d0f5b36eb31d018a8714afab4d6a3e022347b9d99d2002b269500f/pyworld-0.3.3-cp39-cp39-win_amd64.whl", hash = "sha256:850da60e4c045d5c805c85035c781546ab10e22e990f0d1aa8a09ca8cf5cca47"},
+"pyworld 0.3.4" = [
+    {url = "https://files.pythonhosted.org/packages/19/ea/1bfca6081a452f5b60195290551335215e079f6e79cb31282c387a6a7b20/pyworld-0.3.4-cp37-cp37m-win32.whl", hash = "sha256:8c0a4c6ef1d3ba7742b4cf773c2733743392ce525d75efda4b832abb623d8689"},
+    {url = "https://files.pythonhosted.org/packages/1f/a0/94bef26b6e270cf8a0c795c906fcb6dddf6095b48f390b4729185d7c1eeb/pyworld-0.3.4.tar.gz", hash = "sha256:106c70ee7a7d8c9ba488d8022f2033706929a40f0264256b8e87da5aab98303a"},
+    {url = "https://files.pythonhosted.org/packages/37/26/f5d1c0f52acda4b69ab8ea1c3493fc5bcb92b38b1f95267297f09d5e2204/pyworld-0.3.4-cp38-cp38-win_amd64.whl", hash = "sha256:a1aa7ec78e4575c231bc374c825a3c5c1fefdff5c83932dcf90b7d333c156c2e"},
+    {url = "https://files.pythonhosted.org/packages/50/12/fe87126a1bf833adb3b862fab1c4f13f8af0f0bd33f69e3a6e59f794f31c/pyworld-0.3.4-cp37-cp37m-win_amd64.whl", hash = "sha256:235ce1c9b97986897cf60544c6d46a5eef814688b1aa0ea9d88e9877e6df015f"},
+    {url = "https://files.pythonhosted.org/packages/79/99/70bf2c6d88259f87018b3d759d78dc35af41100da2bf8ab50dfc6d43d396/pyworld-0.3.4-cp36-cp36m-win_amd64.whl", hash = "sha256:34db25abde77cc231605d0f3748742cf9535156ee239fd861241a66d43c5134c"},
+    {url = "https://files.pythonhosted.org/packages/98/a1/16c9e76aba0765799f72469db8aad01818f588e04014595935c71bfa6d96/pyworld-0.3.4-cp36-cp36m-win32.whl", hash = "sha256:ebd9f918f54fb5dd6a16059635d904b56a5165e7e5207ab1b4fa0fb839b4efa7"},
+    {url = "https://files.pythonhosted.org/packages/b7/57/383c3f32da87f41d2d1bab739e2926a3c7accde71f006d64486d2d5064de/pyworld-0.3.4-cp311-cp311-win_amd64.whl", hash = "sha256:61292a4dced5f4a0677aa7afdd5c601df79e70771aa63bbdd8279e6a1d0f5d7a"},
+    {url = "https://files.pythonhosted.org/packages/ca/05/74b6d5dc70a812e1cd62929d58894042d7963c9b1fd809e37f04ffc0deea/pyworld-0.3.4-cp310-cp310-win_amd64.whl", hash = "sha256:699d2478b31215893152f67bb3eef244ed77fd3b8ac6757428fbcf7f8e1a057c"},
+    {url = "https://files.pythonhosted.org/packages/fe/fe/c9f98cfb6136519f6f2ff3f1adb2b9c95175068f918a97c7d5d2e9e43552/pyworld-0.3.4-cp39-cp39-win_amd64.whl", hash = "sha256:fddbbb9aec3f2341279237a907b8b625fa099086205b24aa740008becbd7e3d4"},
 ]
 "pyyaml 6.0" = [
     {url = "https://files.pythonhosted.org/packages/02/25/6ba9f6bb50a3d4fbe22c1a02554dc670682a07c8701d1716d19ddea2c940/PyYAML-6.0-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:f84fbc98b019fef2ee9a1cb3ce93e3187a6df0b2538a651bfb890254ba9f90b5"},
