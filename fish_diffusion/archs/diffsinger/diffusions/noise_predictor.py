@@ -3,6 +3,10 @@ from functools import partial
 import numpy as np
 import torch
 from torch import nn
+from tqdm import tqdm
+
+from .uni_pc import NoiseScheduleVP, UniPC
+from .uni_pc import model_wrapper as unipc_model_wrapper
 
 
 def extract(a, t, n_dims=3):
@@ -142,3 +146,64 @@ class PLMSNoisePredictor(nn.Module):
             + noise_list[-2] * 37
             - noise_list[-3] * 9
         ) / 24
+
+
+class UNIPCNoisePredictor(nn.Module):
+    def __init__(self, betas, condition_key="conditioner"):
+        super().__init__()
+
+        # 1. Define the noise schedule.
+        self.noise_schedule = NoiseScheduleVP(
+            schedule="discrete", betas=torch.from_numpy(betas)
+        )
+        self.condition_key = condition_key
+
+    @torch.jit.unused
+    def build_tqdm(self, denoise_fn, steps):
+        bar = tqdm(total=steps)
+
+        def my_wrapper(*args, **kwargs):
+            result = denoise_fn(*args, **kwargs)
+            bar.update(1)
+            return result
+
+        return my_wrapper, bar
+
+    @torch.jit.unused
+    def close_tqdm(self, bar):
+        bar.close()
+
+    @torch.jit.unused  # Not support jit as of now
+    def forward(self, denoise_fn, x, cond, progress=False, sampler_interval=10):
+        steps = self.noise_schedule.total_N // sampler_interval
+
+        if progress:
+            denoise_fn, bar = self.build_tqdm(denoise_fn, steps)
+
+        # 2. Convert your discrete-time `model` to the continuous-time
+        # noise prediction model. Here is an example for a diffusion model
+        # `model` with the noise prediction type ("noise") .
+        model_fn = unipc_model_wrapper(
+            denoise_fn,
+            self.noise_schedule,
+            model_type="noise",  # or "x_start" or "v" or "score"
+            model_kwargs={self.condition_key: cond},
+        )
+
+        # 3. Define uni_pc and sample by multistep UniPC.
+        # You can adjust the `steps` to balance the computation
+        # costs and the sample quality.
+        uni_pc = UniPC(model_fn, self.noise_schedule, variant="bh2")
+
+        x = uni_pc.sample(
+            x,
+            steps=steps,
+            order=2,
+            skip_type="time_uniform",
+            method="multistep",
+        )
+
+        if progress:
+            self.close_tqdm(bar)
+
+        return x

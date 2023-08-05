@@ -36,6 +36,7 @@ dependencies = [
     "pytorch-lightning<3.0.0,>=2.0.2",
     "fastapi==0.88.0",
     "pre-commit>=3.3.3",
+    "onnx>=1.14.0",
 ]
 
 [tool.pdm]

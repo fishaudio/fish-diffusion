@@ -8,7 +8,11 @@ from torch import nn
 from tqdm import tqdm
 
 from .builder import DENOISERS, DIFFUSIONS
-from .noise_predictor import NaiveNoisePredictor, PLMSNoisePredictor
+from .noise_predictor import (
+    NaiveNoisePredictor,
+    PLMSNoisePredictor,
+    UNIPCNoisePredictor,
+)
 
 
 def get_noise_schedule_list(schedule_mode, timesteps, max_beta=0.01, s=0.008):
@@ -28,7 +32,7 @@ def get_noise_schedule_list(schedule_mode, timesteps, max_beta=0.01, s=0.008):
 
 
 def extract(a, t, x_shape):
-    b, *_ = t.shape
+    b = t.shape[0]
     out = a.gather(-1, t)
     return out.reshape(b, *((1,) * (len(x_shape) - 1)))
 
@@ -56,6 +60,7 @@ class GaussianDiffusion(nn.Module):
         spec_stats_path="dataset/stats.json",
         spec_min=None,
         spec_max=None,
+        noise_predictor=None,
     ):
         super().__init__()
 
@@ -105,6 +110,12 @@ class GaussianDiffusion(nn.Module):
 
         self.naive_noise_predictor = NaiveNoisePredictor(betas=betas)
         self.plms_noise_predictor = PLMSNoisePredictor(betas=betas)
+        self.unipc_noise_predictor = UNIPCNoisePredictor(betas=betas)
+
+        if noise_predictor is None:
+            noise_predictor = "naive" if sampler_interval == 1 else "plms"
+
+        self.noise_predictor = noise_predictor
 
     def q_sample(self, x_start, t, noise=None):
         if noise is None:
@@ -187,9 +198,15 @@ class GaussianDiffusion(nn.Module):
         progress: bool = False,
         skip_steps: int = 0,
         original_mel: torch.Tensor = None,
+        noise_predictor: str = None,
     ):
         if sampler_interval is None:
             sampler_interval = self.sampler_interval
+
+        if noise_predictor is None:
+            noise_predictor = self.noise_predictor
+
+        noise_predictor = noise_predictor.lower()
 
         device = features.device
         features = features.transpose(1, 2)
@@ -216,57 +233,72 @@ class GaussianDiffusion(nn.Module):
             device=device,
         ).flip(0)[:, None]
 
-        if progress:
+        if progress and noise_predictor in ("naive", "plms"):
             chunks = self._use_tqdm(chunks)
 
         # If using naive sampling
-        if sampler_interval == 1:
+        if noise_predictor == "naive":
             for t in chunks:
                 noise = self.denoise_fn(x, t, features)
                 x = self.naive_noise_predictor(x=x, t=t, noise=noise)
 
             return self.denorm_spec(x.transpose(1, 2))
 
-        # Hard part: PLMS sampling
-        # Credit: OpenVPI's implementation
+        if noise_predictor == "unipc":
+            # UNIPC sampling
+            x = self.unipc_noise_predictor(
+                denoise_fn=self.denoise_fn,
+                x=x,
+                cond=features,
+                progress=progress,
+                sampler_interval=sampler_interval,
+            )
 
-        plms_noise_stage = torch.tensor(0, dtype=torch.long, device=device)
-        noise_list = torch.zeros((0, *shape), device=device)
+            return self.denorm_spec(x.transpose(1, 2))
 
-        for t in chunks:
-            noise_pred = self.denoise_fn(x, t, features)
-            t_prev = t - sampler_interval
-            t_prev = t_prev * (t_prev > 0)
+        if noise_predictor == "plms":
+            # Hard part: PLMS sampling
+            # Credit: OpenVPI's implementation
 
-            if plms_noise_stage == 0:
-                x_pred = self.plms_noise_predictor(x, noise_pred, t, t_prev)
-                noise_pred_prev = self.denoise_fn(x_pred, t_prev, features)
-                noise_pred_prime = self.plms_noise_predictor.predict_stage0(
-                    noise_pred, noise_pred_prev
-                )
-            elif plms_noise_stage == 1:
-                noise_pred_prime = self.plms_noise_predictor.predict_stage1(
-                    noise_pred, noise_list
-                )
-            elif plms_noise_stage == 2:
-                noise_pred_prime = self.plms_noise_predictor.predict_stage2(
-                    noise_pred, noise_list
-                )
-            else:
-                noise_pred_prime = self.plms_noise_predictor.predict_stage3(
-                    noise_pred, noise_list
-                )
+            plms_noise_stage = torch.tensor(0, dtype=torch.long, device=device)
+            noise_list = torch.zeros((0, *shape), device=device)
 
-            noise_pred = noise_pred.unsqueeze(0)
-            if plms_noise_stage < 3:
-                noise_list = torch.cat((noise_list, noise_pred), dim=0)
-                plms_noise_stage = plms_noise_stage + 1
-            else:
-                noise_list = torch.cat((noise_list[-2:], noise_pred), dim=0)
+            for t in chunks:
+                noise_pred = self.denoise_fn(x, t, features)
+                t_prev = t - sampler_interval
+                t_prev = t_prev * (t_prev > 0)
 
-            x = self.plms_noise_predictor(x, noise_pred_prime, t, t_prev)
+                if plms_noise_stage == 0:
+                    x_pred = self.plms_noise_predictor(x, noise_pred, t, t_prev)
+                    noise_pred_prev = self.denoise_fn(x_pred, t_prev, features)
+                    noise_pred_prime = self.plms_noise_predictor.predict_stage0(
+                        noise_pred, noise_pred_prev
+                    )
+                elif plms_noise_stage == 1:
+                    noise_pred_prime = self.plms_noise_predictor.predict_stage1(
+                        noise_pred, noise_list
+                    )
+                elif plms_noise_stage == 2:
+                    noise_pred_prime = self.plms_noise_predictor.predict_stage2(
+                        noise_pred, noise_list
+                    )
+                else:
+                    noise_pred_prime = self.plms_noise_predictor.predict_stage3(
+                        noise_pred, noise_list
+                    )
 
-        return self.denorm_spec(x.transpose(1, 2))
+                noise_pred = noise_pred.unsqueeze(1)
+                if plms_noise_stage < 3:
+                    noise_list = torch.cat((noise_list, noise_pred), dim=0)
+                    plms_noise_stage = plms_noise_stage + 1
+                else:
+                    noise_list = torch.cat((noise_list[-2:], noise_pred), dim=0)
+
+                x = self.plms_noise_predictor(x, noise_pred_prime, t, t_prev)
+
+            return self.denorm_spec(x.transpose(1, 2))
+
+        raise NotImplementedError(f"Unknown noise predictor: {noise_predictor}")
 
     def norm_spec(self, x):
         return (x - self.spec_min) / (self.spec_max - self.spec_min) * 2 - 1

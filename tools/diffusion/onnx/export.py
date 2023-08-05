@@ -45,7 +45,9 @@ def export_feature_embedding(model, device):
 
     n_frames = 10
     speakers = torch.tensor([0], dtype=torch.long, device=device)
-    text_features = torch.randn((n_frames, 256), device=device)
+    text_features = torch.randn(
+        (n_frames, model.model.text_encoder.input_size), device=device
+    )
     pitches = torch.rand((n_frames,), device=device)
     pitch_shift = None
 
@@ -213,9 +215,9 @@ class FeatureExtractorWrapper(torch.nn.Module):
 
 
 def export_feature_extractor(config, device):
-    if config.preprocessing.text_features_extractor.type == "ContentVec":
-        logger.warning("ContentVec is not supported in ONNX. Skip exporting.")
-        return
+    # if config.preprocessing.text_features_extractor.type == "ContentVec":
+    #     logger.warning("ContentVec is not supported in ONNX. Skip exporting.")
+    #     return
 
     feature_extractor = FEATURE_EXTRACTORS.build(
         config.preprocessing.text_features_extractor

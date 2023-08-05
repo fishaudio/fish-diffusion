@@ -89,6 +89,7 @@ class SVCInference(nn.Module):
         speakers: torch.Tensor = 0,
         sampler_progress: bool = False,
         sampler_interval: Optional[int] = None,
+        noise_predictor: Optional[str] = None,
         pitches: Optional[torch.Tensor] = None,
         skip_steps: int = 0,
     ):
@@ -111,32 +112,8 @@ class SVCInference(nn.Module):
 
         pitches *= 2 ** (pitch_adjust / 12)
 
-        # audio = librosa.effects.pitch_shift(
-        #     audio.cpu().numpy(), sr, pitch_adjust, bins_per_octave=12
-        # )
-        # audio = torch.from_numpy(audio).to(torch.float32).to(self.device)
-
         # Extract and process text features
         text_features = self.text_features_extractor(audio, sr)[0]
-        # print(text_features.shape) # (1024, 1043)
-
-        # import numpy as np
-        # import faiss
-        # kmeans_centroids = np.load("kmeans.npy")
-        # print(kmeans_centroids.shape) # (500, 1024)
-
-        # text_features_np = text_features.cpu().numpy().T
-        # # Retrieve the closest centroid
-        # # indexk = faiss.IndexFlatL2(1024)
-        # # indexk.add(kmeans_centroids)
-        # _, I = index.search(text_features_np, 1)
-        # # _, IK = indexk.search(text_features_np, 1)
-        # #  * 0.5 + kmeans_centroids[IK] * 0.5
-
-        # text_features = torch.from_numpy(XX[I]).to(self.device)
-        # print(text_features.shape) # (1043, 1, 1024)
-        # text_features = text_features.squeeze(1).T
-
         text_features = repeat_expand(text_features, mel_len).T
 
         # Pitch shift should always be 0 for inference to avoid distortion
@@ -173,6 +150,7 @@ class SVCInference(nn.Module):
             features["features"],
             progress=sampler_progress,
             sampler_interval=sampler_interval,
+            noise_predictor=noise_predictor,
             skip_steps=skip_steps,
             original_mel=original_mel,
         )
@@ -250,6 +228,7 @@ class SVCInference(nn.Module):
         extract_vocals=True,
         sampler_progress=False,
         sampler_interval=None,
+        noise_predictor=None,
         gradio_progress=None,
         min_silence_duration=0,
         pitches_path=None,
@@ -267,6 +246,7 @@ class SVCInference(nn.Module):
             extract_vocals: extract vocals
             sampler_progress: show sampler progress
             sampler_interval: sampler interval
+            noise_predictor: noise predictor, can be naive, unipc, plms
             gradio_progress: gradio progress callback
             min_silence_duration: minimum silence duration
             pitches_path: disable pitch extraction and use the pitch from the given path
@@ -300,6 +280,7 @@ class SVCInference(nn.Module):
                     extract_vocals=extract_vocals,
                     sampler_interval=sampler_interval,
                     sampler_progress=sampler_progress,
+                    noise_predictor=noise_predictor,
                     gradio_progress=gradio_progress,
                     min_silence_duration=min_silence_duration,
                 )
@@ -384,6 +365,7 @@ class SVCInference(nn.Module):
                 speakers=speakers,
                 sampler_progress=sampler_progress,
                 sampler_interval=sampler_interval,
+                noise_predictor=noise_predictor,
                 pitches=pitches_segment,
                 skip_steps=skip_steps,
             )
@@ -496,6 +478,14 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--noise_predictor",
+        type=str,
+        default=None,
+        required=False,
+        help="Noise predictor, can be naive, unipc, plms",
+    )
+
+    parser.add_argument(
         "--device",
         type=str,
         default=None,
@@ -590,6 +580,7 @@ if __name__ == "__main__":
             extract_vocals=args.extract_vocals,
             sampler_progress=args.sampler_progress,
             sampler_interval=args.sampler_interval,
+            noise_predictor=args.noise_predictor,
             silence_threshold=args.silence_threshold,
             max_slice_duration=args.max_slice_duration,
             min_silence_duration=args.min_silence_duration,

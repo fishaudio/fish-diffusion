@@ -36,7 +36,10 @@ class ContentVec(BaseFeatureExtractor):
 
     @torch.no_grad()
     def _forward(self, audio):
-        audio = audio[None].to(self.device)
+        if audio.dim() == 1:
+            audio = audio[None]
+
+        audio = audio.to(self.device)
         assert audio.dim() == 2
 
         if self.output_layer is not None and self.output_layer >= 0:
