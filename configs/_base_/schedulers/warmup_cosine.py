@@ -4,7 +4,7 @@ from fish_diffusion.schedulers.warmup_cosine_scheduler import (
 
 lambda_func = LambdaWarmUpCosineScheduler(
     warm_up_steps=1000,
-    val_final=1e-5,
+    val_final=2e-5,
     val_base=8e-4,
     val_start=1e-5,
     max_decay_steps=300000,
