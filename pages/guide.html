@@ -347,7 +347,7 @@ You may want to change every how many steps you want to save the ckpt! By defaul
     <span class="n">check_val_every_n_epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">max_steps</span><span class="o">=</span><span class="mi">300000</span><span class="p">,</span>
     <span class="c1"># Warning: If you are training the model with fs2 (and see nan), you should either use bf16 or fp32</span>
-    <span class="n">precision</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">precision</span><span class="o">=</span><span class="s2">&quot;16-mixed&quot;</span><span class="p">,</span>
     <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span>
         <span class="n">ModelCheckpoint</span><span class="p">(</span>
             <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{epoch}</span><span class="s2">-</span><span class="si">{step}</span><span class="s2">-</span><span class="si">{valid_loss:.2f}</span><span class="s2">&quot;</span><span class="p">,</span>
