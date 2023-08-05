@@ -170,8 +170,17 @@ class DiffSingerLightning(pl.LightningModule):
 
         self.model = DiffSinger(config.model)
         self.config = config
+        self.ema_momentum = config.get("ema_momentum", None)
 
-        # 音频编码器, 将梅尔谱转换为音频
+        if self.ema_momentum is not None:
+            self.ema_model = DiffSinger(config.model)
+            self.ema_model.load_state_dict(self.model.state_dict())
+            self.ema_model.eval()
+
+            for param in self.ema_model.parameters():
+                param.requires_grad = False
+
+        # Vocoder, converting mel / hidden features to audio
         self.vocoder = VOCODERS.build(config.model.vocoder)
         self.vocoder.freeze()
 
@@ -193,12 +202,18 @@ class DiffSingerLightning(pl.LightningModule):
         return [optimizer], dict(scheduler=scheduler, interval="step")
 
     def _step(self, batch, batch_idx, mode):
+        model = (
+            self.ema_model
+            if self.ema_momentum is not None and mode == "valid"
+            else self.model
+        )
+
         assert batch["pitches"].shape[1] == batch["mel"].shape[1]
 
         pitches = batch["pitches"].clone()
         batch_size = batch["speaker"].shape[0]
 
-        output = self.model(
+        output = model(
             speakers=batch["speaker"],
             contents=batch["contents"],
             contents_lens=batch["contents_lens"],
@@ -217,7 +232,7 @@ class DiffSingerLightning(pl.LightningModule):
         if mode != "valid":
             return output["loss"]
 
-        x = self.model.diffusion(output["features"])
+        x = model.diffusion(output["features"])
 
         for idx, (gt_mel, gt_pitch, predict_mel, predict_mel_len) in enumerate(
             zip(batch["mel"], pitches, x, batch["mel_lens"])
@@ -280,7 +295,24 @@ class DiffSingerLightning(pl.LightningModule):
         return output["loss"]
 
     def training_step(self, batch, batch_idx):
-        return self._step(batch, batch_idx, mode="train")
+        loss = self._step(batch, batch_idx, mode="train")
+
+        if self.ema_momentum is None:
+            return loss
+
+        # Update EMA
+        ema_params_list, params_list = [], []
+        for ema_param, param in zip(
+            self.ema_model.parameters(), self.model.parameters()
+        ):
+            ema_params_list.append(ema_param.data)
+            params_list.append(param.data)
+
+        # Update student_ema
+        torch._foreach_mul_(ema_params_list, self.ema_momentum)
+        torch._foreach_add_(ema_params_list, params_list, alpha=1.0 - self.ema_momentum)
+
+        return loss
 
     def validation_step(self, batch, batch_idx):
         return self._step(batch, batch_idx, mode="valid")
