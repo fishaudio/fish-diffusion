@@ -91,6 +91,7 @@ def process(
     idx: int = 0,
     key_shift: float = 0,
     time_stretch: float = 1.0,
+    loudness: Optional[float] = None,
 ):
     if model_caches is None:
         init(config)
@@ -111,6 +112,14 @@ def process(
     }
 
     audio, sr = librosa.load(str(audio_path), sr=config.sampling_rate, mono=True)
+
+    # Change loudness
+    max_loudness = np.max(np.abs(audio))
+
+    if loudness is not None:
+        audio = audio * (loudness / (max_loudness + 1e-5))
+    elif max_loudness > 1.0:
+        audio = audio / (max_loudness + 1e-5)
 
     # If time_stretch is > 1, the audio length will be shorter (speed up)
     if time_stretch != 1.0:
@@ -193,6 +202,10 @@ def safe_process(args, config, audio_path: Path):
                     assert len(augmentation.factors) == 2
                     factor = random.uniform(*augmentation.factors)
                     process(config, audio_path, idx=aug_count, time_stretch=factor)
+                elif augmentation.type == "RandomLoudness":
+                    assert len(augmentation.loudnesses) == 2
+                    loudness = random.uniform(*augmentation.loudnesses)
+                    process(config, audio_path, idx=aug_count, loudness=loudness)
 
         return aug_count + 1
     except Exception as e:
