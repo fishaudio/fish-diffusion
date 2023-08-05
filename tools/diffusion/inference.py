@@ -151,8 +151,13 @@ class SVCInference(nn.Module):
 
         # Predict
         contents_lens = torch.tensor([mel_len]).to(self.device)
+        model = (
+            self.model.ema_model
+            if hasattr(self.model, "ema_model")
+            else self.model.model
+        )
 
-        features = self.model.model.forward_features(
+        features = model.forward_features(
             speakers=speakers.to(self.device),
             contents=text_features[None].to(self.device),
             contents_lens=contents_lens,
@@ -164,7 +169,7 @@ class SVCInference(nn.Module):
             energy=energy,
         )
 
-        result = self.model.model.diffusion(
+        result = model.diffusion(
             features["features"],
             progress=sampler_progress,
             sampler_interval=sampler_interval,
