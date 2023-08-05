@@ -10,6 +10,7 @@ from fish_diffusion.modules.pitch_extractors import (
     DioPitchExtractor,
     HarvestPitchExtractor,
     ParselMouthPitchExtractor,
+    RMVPitchExtractor,
 )
 from fish_diffusion.utils.audio import get_mel_from_audio
 
@@ -37,6 +38,7 @@ mel = (
 logger.info(f"Got mel spectrogram with shape {mel.shape}")
 
 extractors = {
+    "RMVPE": RMVPitchExtractor,
     "Crepe": CrepePitchExtractor,
     "ParselMouth": ParselMouthPitchExtractor,
     "Harvest": HarvestPitchExtractor,
@@ -51,7 +53,7 @@ for idx, (name, extractor) in enumerate(extractors.items()):
         "keep_zeros": False,
     }
 
-    pitch_extractor = extractor(f0_min=40.0, f0_max=1600, **extra_kwargs)
+    pitch_extractor = extractor(f0_min=40.0, f0_max=1600, **extra_kwargs).to(device)
     f0 = pitch_extractor(audio, sr, pad_to=mel.shape[-1]).cpu().numpy()
     f0 = f_to_mel(f0)
     f0[f0 <= 0] = float("nan")

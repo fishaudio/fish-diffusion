@@ -1,13 +1,14 @@
 import numpy as np
 import torch
 from mmengine import Registry
+from torch import nn
 
 from fish_diffusion.utils.tensor import interpolate, repeat_expand
 
 PITCH_EXTRACTORS = Registry("pitch_extractors")
 
 
-class BasePitchExtractor:
+class BasePitchExtractor(nn.Module):
     def __init__(
         self,
         hop_length: int = 512,
@@ -23,6 +24,7 @@ class BasePitchExtractor:
             f0_max (float, optional): Maximum f0. Defaults to 1100.0.
             keep_zeros (bool, optional): Whether keep zeros in pitch. Defaults to True.
         """
+        super().__init__()
 
         self.hop_length = hop_length
         self.f0_min = f0_min
