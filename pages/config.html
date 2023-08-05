@@ -218,7 +218,7 @@
         <article role="main">
           <section id="configuration">
 <h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading">#</a></h1>
-<p>Since fish diffusion supports various modules, writing a good config file is essential. There are many examples in the configs folder.
+<p>Since fish diffusion supports various modules, writing a good config file is essential. There are many examples in the configs folder.<br />
 To begin with, you should create a config file <code class="docutils literal notranslate"><span class="pre">exp_xxxxxx.py</span></code> in the <code class="docutils literal notranslate"><span class="pre">configs</span></code> folder with the following code:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">_base_</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;./_base_/archs/diff_svc_v2.py&quot;</span><span class="p">,</span>  <span class="c1"># Using Diff SVC v2 architecture</span>
@@ -293,8 +293,8 @@ To begin with, you should create a config file <code class="docutils literal not
 
 </pre></div>
 </div>
-<p>Since this is a Python script, you can load dataset from any folder you like.
-But… What if I have 100+ speakers? I can’t setup manually and I don’t know how to write Python code :(
+<p>Since this is a Python script, you can load dataset from any folder you like.<br />
+But… What if I have 100+ speakers? I can’t setup manually and I don’t know how to write Python code :(<br />
 Don’t worry. You can use the following folder structure and scripts:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>dataset
 ├───train
@@ -372,7 +372,7 @@ Don’t worry. You can use the following folder structure and scripts:</p>
 </div>
 <p>After editing the config, you need to rerun the preprocessing command.</p>
 <blockquote>
-<div><p>Note: You should not use <code class="docutils literal notranslate"><span class="pre">RandomPitchShifting</span></code> and <code class="docutils literal notranslate"><span class="pre">RandomTimeStretching</span></code> at the same time.
+<div><p>Note: You should not use <code class="docutils literal notranslate"><span class="pre">RandomPitchShifting</span></code> and <code class="docutils literal notranslate"><span class="pre">RandomTimeStretching</span></code> at the same time.<br />
 RandomTimeStretching is not tested yet (as of 2023-03-03).</p>
 </div></blockquote>
 </section>
