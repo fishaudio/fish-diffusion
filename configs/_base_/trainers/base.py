@@ -14,7 +14,7 @@ trainer = dict(
     check_val_every_n_epoch=None,
     max_steps=300000,
     # Warning: If you are training the model with fs2 (and see nan), you should either use bf16 or fp32
-    precision=16,
+    precision="16-mixed",
     callbacks=[
         ModelCheckpoint(
             filename="{epoch}-{step}-{valid_loss:.4f}",
