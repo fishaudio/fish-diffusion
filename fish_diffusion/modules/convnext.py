@@ -25,7 +25,7 @@ class ConvNeXtBlock(nn.Module):
         dim: int,
         intermediate_dim: int,
         dilation: int = 1,
-        layer_scale_init_value: Optional[float] = None,
+        layer_scale_init_value: Optional[float] = 1e-6,
     ):
         super().__init__()
         self.dwconv = nn.Conv1d(

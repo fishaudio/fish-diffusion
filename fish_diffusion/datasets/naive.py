@@ -28,14 +28,24 @@ class NaiveDataset(Dataset):
     def __len__(self):
         return len(self.paths)
 
-    def __getitem__(self, idx):
+    def get_item(self, idx):
         x = np.load(self.paths[idx], allow_pickle=True).item()
         x["speaker"] = self.speaker_id
 
         return transform_pipeline(self.processing_pipeline, x)
 
+    def __getitem__(self, idx):
+        try:
+            return self.get_item(idx)
+        except Exception:
+            print(f"Error when loading {self.paths[idx]}, skipping...")
+            return None
+
     @classmethod
     def collate_fn(cls, data):
+        # Remove None
+        data = [x for x in data if x is not None]
+
         return transform_pipeline(cls.collating_pipeline, data)
 
 

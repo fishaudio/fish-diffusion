@@ -9,6 +9,7 @@ trainer = dict(
     accelerator="gpu",
     devices=-1,
     gradient_clip_val=0.5,
+    gradient_clip_algorithm="norm",
     log_every_n_steps=10,
     val_check_interval=5000,
     check_val_every_n_epoch=None,
