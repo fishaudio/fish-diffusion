@@ -6,7 +6,7 @@ groups = ["default", "dev", "docs"]
 cross_platform = true
 static_urls = false
 lock_version = "4.3"
-content_hash = "sha256:8f45aec4fb7ae47b6e4d96912f700bc83d533cd0fe43636d508fdca2238ecb47"
+content_hash = "sha256:45cffafb8c1555686cc0e6037f766ede6c9154f7e27b2af8bd5f6f8533eefb1b"
 
 [[package]]
 name = "absl-py"

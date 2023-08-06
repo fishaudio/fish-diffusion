@@ -37,6 +37,7 @@ dependencies = [
     "fastapi==0.88.0",
     "pre-commit>=3.3.3",
     "onnx>=1.14.0",
+    "faiss-cpu>=1.7.4",
     "autofaiss>=2.15.8",
 ]
 
