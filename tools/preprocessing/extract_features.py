@@ -61,6 +61,8 @@ def init(
             torchcrepe.load.model(device, "full")
 
         pitch_extractor = PITCH_EXTRACTORS.build(config.preprocessing.pitch_extractor)
+        pitch_extractor.to(device)
+        pitch_extractor.eval()
 
     energy_extractor = None
     if hasattr(config.preprocessing, "energy_extractor"):
