@@ -287,7 +287,7 @@ class GaussianDiffusion(nn.Module):
                         noise_pred, noise_list
                     )
 
-                noise_pred = noise_pred.unsqueeze(1)
+                noise_pred = noise_pred.unsqueeze(0)
                 if plms_noise_stage < 3:
                     noise_list = torch.cat((noise_list, noise_pred), dim=0)
                     plms_noise_stage = plms_noise_stage + 1
