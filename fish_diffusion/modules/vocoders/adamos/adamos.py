@@ -41,6 +41,7 @@ class ADaMoSHiFiGANV1(pl.LightningModule):
             post_conv_kernel_size=13,
         )
         self.use_natural_log = use_natural_log
+        self.sampling_rate = 44100
 
         ckpt_state = torch.load(checkpoint_path, map_location="cpu")
 
@@ -91,11 +92,11 @@ class ADaMoSHiFiGANV1(pl.LightningModule):
 
     def wav2spec(self, wav_torch, sr=None, key_shift=0, speed=1.0):
         if sr is None:
-            sr = self.h.sampling_rate
+            sr = self.sampling_rate
 
-        if sr != self.h.sampling_rate:
+        if sr != self.sampling_rate:
             _wav_torch = librosa.resample(
-                wav_torch.cpu().numpy(), orig_sr=sr, target_sr=self.h.sampling_rate
+                wav_torch.cpu().numpy(), orig_sr=sr, target_sr=self.sampling_rate
             )
             wav_torch = torch.from_numpy(_wav_torch).to(wav_torch.device)
 
