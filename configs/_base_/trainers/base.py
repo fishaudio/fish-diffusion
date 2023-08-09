@@ -13,7 +13,7 @@ trainer = dict(
     log_every_n_steps=10,
     val_check_interval=5000,
     check_val_every_n_epoch=None,
-    max_steps=300000,
+    max_steps=1_000_000,
     # Warning: If you are training the model with fs2 (and see nan), you should either use bf16 or fp32
     precision="16-mixed",
     callbacks=[

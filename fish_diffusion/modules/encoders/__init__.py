@@ -3,6 +3,7 @@ from .builder import ENCODERS
 from .fast_speech import FastSpeech2Encoder
 from .identity import IdentityEncoder
 from .naive_projection import NaiveProjectionEncoder
+from .pitch_quant import QuantizedPitchEncoder
 from .similar_cluster import SimilarClusterEncoder
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "IdentityEncoder",
     "AttentionEncoder",
     "SimilarClusterEncoder",
+    "QuantizedPitchEncoder",
 ]
