@@ -26,6 +26,7 @@ from fish_diffusion.utils.audio import dynamic_range_compression, get_mel_transf
 from fish_diffusion.utils.viz import plot_mel
 
 torch.set_float32_matmul_precision("medium")
+torch.backends.cudnn.allow_tf32 = True
 
 
 class HSFHifiGAN(pl.LightningModule):

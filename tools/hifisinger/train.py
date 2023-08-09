@@ -10,6 +10,7 @@ from fish_diffusion.archs.hifisinger import HiFiSingerV1Lightning, HiFiSingerV2L
 from fish_diffusion.datasets.utils import build_loader_from_config
 
 torch.set_float32_matmul_precision("medium")
+torch.backends.cudnn.allow_tf32 = True
 
 
 if __name__ == "__main__":
