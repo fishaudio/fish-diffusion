@@ -113,7 +113,7 @@ class GaussianDiffusion(nn.Module):
         self.unipc_noise_predictor = UNIPCNoisePredictor(betas=betas)
 
         if noise_predictor is None:
-            noise_predictor = "naive" if sampler_interval == 1 else "plms"
+            noise_predictor = "naive" if sampler_interval == 1 else "unipc"
 
         self.noise_predictor = noise_predictor
 

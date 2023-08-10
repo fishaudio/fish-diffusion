@@ -55,6 +55,32 @@ if __name__ == "__main__":
             k: v for k, v in state_dict.items() if not k.startswith("vocoder.")
         }
 
+        # If model.speaker_encoder.embedding.weight doesn't match, we need to drop it.
+        if state_dict.get("model.speaker_encoder.embedding.weight") is not None:
+            if (
+                state_dict["model.speaker_encoder.embedding.weight"].shape
+                != model.model.speaker_encoder.embedding.weight.shape
+            ):
+                logger.warning(f"Speaker embedding mismatch, rebuilding from scratch.")
+                del state_dict["model.speaker_encoder.embedding.weight"]
+
+        # Remove ema model if it doesn't exist
+        if getattr(model, "ema_model", None) is None and any(
+            k.startswith("ema_model.") for k in state_dict.keys()
+        ):
+            logger.warning(f"EMA model doesn't exist, removing from state_dict.")
+            state_dict = {
+                k: v for k, v in state_dict.items() if not k.startswith("ema_model.")
+            }
+
+        # Do the same for the EMA model.
+        if state_dict.get("ema_model.speaker_encoder.embedding.weight") is not None:
+            if (
+                state_dict["ema_model.speaker_encoder.embedding.weight"].shape
+                != model.ema_model.speaker_encoder.embedding.weight.shape
+            ):
+                del state_dict["ema_model.speaker_encoder.embedding.weight"]
+
         result = model.load_state_dict(state_dict, strict=False)
 
         missing_keys = set(result.missing_keys)
