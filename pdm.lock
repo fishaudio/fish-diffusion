@@ -805,6 +805,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "loralib"
+version = "0.1.1"
+requires_python = ">=3.6"
+summary = "PyTorch implementation of low-rank adaptation (LoRA), a parameter-efficient approach to adapt a large pre-trained deep learning model which obtains performance on-par with full model fine-tuning."
+
+[[package]]
 name = "markdown"
 version = "3.4.3"
 requires_python = ">=3.7"
@@ -2028,7 +2034,7 @@ dependencies = [
 lock_version = "4.2"
 cross_platform = true
 groups = ["default", "dev", "docs"]
-content_hash = "sha256:895eb780d5dc294ea3bbf4d3888c291269037f0dccad58dbccc6e76d7cae32fa"
+content_hash = "sha256:d1bb9335219ac087562a4f95969832d6df3595d8c677130b45416a2248615484"
 
 [metadata.files]
 "absl-py 1.4.0" = [
@@ -3012,6 +3018,10 @@ content_hash = "sha256:895eb780d5dc294ea3bbf4d3888c291269037f0dccad58dbccc6e76d7
 "loguru 0.6.0" = [
     {url = "https://files.pythonhosted.org/packages/75/1f/d3818863e4be96bd641c4643c535a98f0fa2a12efa7c8ba35f763fa778ee/loguru-0.6.0.tar.gz", hash = "sha256:066bd06758d0a513e9836fd9c6b5a75bfb3fd36841f4b996bc60b547a309d41c"},
     {url = "https://files.pythonhosted.org/packages/fe/21/e1d1da2586865a159fc73b611f36bdd50b6c4043cb6132d3d5e972988028/loguru-0.6.0-py3-none-any.whl", hash = "sha256:4e2414d534a2ab57573365b3e6d0234dfb1d84b68b7f3b948e6fb743860a77c3"},
+]
+"loralib 0.1.1" = [
+    {url = "https://files.pythonhosted.org/packages/7a/74/72bf3c0930e2372d268796810455bebfda66b75b0ef3dcf634947dce027c/loralib-0.1.1.tar.gz", hash = "sha256:6a3dadecc14a7e38e603e86eac3529b3c440f0855c3eed8855f051c6df35635a"},
+    {url = "https://files.pythonhosted.org/packages/8e/f5/2f6b453c81984a77d261f3f2b94715c63bba46c7a8b0d37445bbe8e74353/loralib-0.1.1-py3-none-any.whl", hash = "sha256:d641322de153588a4592aa2535ac1fd820344dfa43cdc7dd8f11c0956b740d7c"},
 ]
 "markdown 3.4.3" = [
     {url = "https://files.pythonhosted.org/packages/9a/a1/1352b0e5a3c71a79fa9265726e2217f69df9fd4de0bcb5725cc61f62a5df/Markdown-3.4.3-py3-none-any.whl", hash = "sha256:065fd4df22da73a625f14890dd77eb8040edcbd68794bcd35943be14490608b2"},

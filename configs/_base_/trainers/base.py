@@ -32,7 +32,6 @@ if torch.cuda.is_available() and torch.cuda.device_count() > 1:
     process_group_backend = "nccl" if sys.platform != "win32" else "gloo"
 
     trainer["strategy"] = DDPStrategy(
-        find_unused_parameters=True,
         process_group_backend=process_group_backend,
         gradient_as_bucket_view=True,
         ddp_comm_hook=default.fp16_compress_hook,

@@ -87,6 +87,7 @@ class ConvNext(nn.Module):
         condition_dim=256,
         num_layers=20,
         dilation_cycle=4,
+        gradient_checkpointing=False,
     ):
         super(ConvNext, self).__init__()
 
@@ -119,6 +120,8 @@ class ConvNext(nn.Module):
             nn.Conv1d(dim, mel_channels, kernel_size=1),
         )
 
+        self.gradient_checkpointing = gradient_checkpointing
+
     def forward(self, x, diffusion_step, conditioner):
         """
 
@@ -143,7 +146,12 @@ class ConvNext(nn.Module):
         condition = self.conditioner_projection(conditioner)
 
         for layer in self.residual_layers:
-            x = layer(x, condition, diffusion_step)
+            if self.training and self.gradient_checkpointing:
+                x = torch.utils.checkpoint.checkpoint(
+                    layer, x, condition, diffusion_step
+                )
+            else:
+                x = layer(x, condition, diffusion_step)
 
         x = self.output_projection(x)  # [B, 128, T]
 

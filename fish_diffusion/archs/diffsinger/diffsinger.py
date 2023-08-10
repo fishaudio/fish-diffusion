@@ -1,8 +1,10 @@
+import loralib
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import wandb
+from loguru import logger
 from mmengine.optim import OPTIMIZERS
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from torch.nn import functional as F
@@ -171,18 +173,54 @@ class DiffSingerLightning(pl.LightningModule):
         self.model = DiffSinger(config.model)
         self.config = config
         self.ema_momentum = config.get("ema_momentum", None)
+        self.lora = config.get("lora", False)
+        self.lora_rank = config.get("lora_rank", 16)
+
+        if self.lora:
+            self.build_lora(self.model)
 
         if self.ema_momentum is not None:
             self.ema_model = DiffSinger(config.model)
+
+            if self.lora:
+                self.build_lora(self.ema_model)
+
             self.ema_model.load_state_dict(self.model.state_dict())
             self.ema_model.eval()
 
             for param in self.ema_model.parameters():
                 param.requires_grad = False
 
+        if self.lora:
+            loralib.mark_only_lora_as_trainable(self.model)
+
         # Vocoder, converting mel / hidden features to audio
         self.vocoder = VOCODERS.build(config.model.vocoder)
         self.vocoder.freeze()
+
+    def build_lora(self, module):
+        if not self.lora:
+            return
+
+        for name, child in module.named_children():
+            if isinstance(child, nn.Linear):
+                setattr(
+                    module,
+                    name,
+                    loralib.Linear(
+                        child.in_features, child.out_features, self.lora_rank
+                    ),
+                )
+            elif isinstance(child, nn.Embedding):
+                setattr(
+                    module,
+                    name,
+                    loralib.Embedding(
+                        child.num_embeddings, child.embedding_dim, self.lora_rank
+                    ),
+                )
+            else:
+                self.build_lora(child)
 
     def configure_optimizers(self):
         optimizer = OPTIMIZERS.build(

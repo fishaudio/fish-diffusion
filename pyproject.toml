@@ -37,6 +37,7 @@ dependencies = [
     "fastapi==0.88.0",
     "pre-commit>=3.3.3",
     "onnx>=1.14.0",
+    "loralib>=0.1.1",
 ]
 
 [tool.pdm]
