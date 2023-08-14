@@ -228,7 +228,7 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    mp.set_start_method("spawn", force=True)
+    # mp.set_start_method("spawn", force=True)
 
     args = parse_args()
 

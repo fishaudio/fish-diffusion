@@ -55,6 +55,18 @@ if __name__ == "__main__":
             k: v for k, v in state_dict.items() if not k.startswith("vocoder.")
         }
 
+        if getattr(model, "ema_model", None) is None and any(
+            k.startswith("ema_model.") for k in state_dict.keys()
+        ):
+            logger.warning(
+                f"EMA model doesn't exist in config, drop all models and replace with ema_model."
+            )
+            state_dict = {
+                k.replace("ema_model.", "model."): v
+                for k, v in state_dict.items()
+                if k.startswith("ema_model.")
+            }
+
         # If model.speaker_encoder.embedding.weight doesn't match, we need to drop it.
         if state_dict.get("model.speaker_encoder.embedding.weight") is not None:
             if (
@@ -63,15 +75,6 @@ if __name__ == "__main__":
             ):
                 logger.warning(f"Speaker embedding mismatch, rebuilding from scratch.")
                 del state_dict["model.speaker_encoder.embedding.weight"]
-
-        # Remove ema model if it doesn't exist
-        if getattr(model, "ema_model", None) is None and any(
-            k.startswith("ema_model.") for k in state_dict.keys()
-        ):
-            logger.warning(f"EMA model doesn't exist, removing from state_dict.")
-            state_dict = {
-                k: v for k, v in state_dict.items() if not k.startswith("ema_model.")
-            }
 
         # Do the same for the EMA model.
         if state_dict.get("ema_model.speaker_encoder.embedding.weight") is not None:
