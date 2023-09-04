@@ -33,6 +33,7 @@ class HiFiSingerSVCInference(SVCInference):
         speakers: torch.Tensor = 0,
         sampler_progress: bool = False,
         sampler_interval: Optional[int] = None,
+        noise_predictor: Optional[str] = None,
         pitches: Optional[torch.Tensor] = None,
         skip_steps: int = 0,  # not used
     ):
