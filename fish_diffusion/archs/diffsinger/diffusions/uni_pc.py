@@ -394,15 +394,21 @@ class UniPC:
         if order == 3:
             K = steps // 3 + 1
             if steps % 3 == 0:
-                orders = [3,] * (
+                orders = [
+                    3,
+                ] * (
                     K - 2
                 ) + [2, 1]
             elif steps % 3 == 1:
-                orders = [3,] * (
+                orders = [
+                    3,
+                ] * (
                     K - 1
                 ) + [1]
             else:
-                orders = [3,] * (
+                orders = [
+                    3,
+                ] * (
                     K - 1
                 ) + [2]
         elif order == 2:
@@ -413,7 +419,9 @@ class UniPC:
                 ] * K
             else:
                 K = steps // 2 + 1
-                orders = [2,] * (
+                orders = [
+                    2,
+                ] * (
                     K - 1
                 ) + [1]
         elif order == 1:
