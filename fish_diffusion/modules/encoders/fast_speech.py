@@ -745,7 +745,10 @@ class EncSALayer(nn.Module):
         if self.num_heads > 0:
             residual = x
             x = self.layer_norm1(x)
-            x, _, = self.self_attn(
+            (
+                x,
+                _,
+            ) = self.self_attn(
                 query=x, key=x, value=x, key_padding_mask=encoder_padding_mask
             )
             x = F.dropout(x, self.dropout, training=self.training)

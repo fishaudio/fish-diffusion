@@ -15,7 +15,7 @@ class DiscriminatorP(nn.Module):
         stride: int = 3,
         use_spectral_norm: bool = False,
         leaky_relu_slope: float = 0.2,
-        channels: Optional[list[int]] = None
+        channels: Optional[list[int]] = None,
     ) -> None:
         super(DiscriminatorP, self).__init__()
 
