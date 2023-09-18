@@ -100,7 +100,6 @@ model = dict(
 dataset = dict(
     _delete_=True,
     train=dict(
-        _delete_=True,  # Delete the default train dataset
         type="ConcatDataset",
         datasets=mixin_datasets,
         collate_fn=NaiveTTSDataset.collate_fn,
