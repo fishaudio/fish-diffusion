@@ -26,6 +26,9 @@ train_datasets = [
 
 for name, path in mixin_datasets:
     for speaker_path in sorted(Path(path).iterdir()):
+        if not any(speaker_path.glob("*.npy")):
+            continue
+
         speaker_name = f"{name}-{speaker_path.name}"
         if speaker_name not in speaker_mapping:
             speaker_mapping[speaker_name] = len(speaker_mapping)
@@ -101,7 +104,7 @@ dataset = dict(
     _delete_=True,
     train=dict(
         type="ConcatDataset",
-        datasets=mixin_datasets,
+        datasets=train_datasets,
         collate_fn=NaiveTTSDataset.collate_fn,
     ),
     valid=dict(
