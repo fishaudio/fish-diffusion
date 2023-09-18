@@ -4,10 +4,8 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import wandb
-from loguru import logger
 from mmengine.optim import OPTIMIZERS
 from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
-from torch.nn import functional as F
 
 from fish_diffusion.modules.encoders import ENCODERS
 from fish_diffusion.modules.vocoders import VOCODERS
@@ -16,6 +14,7 @@ from fish_diffusion.schedulers import LR_SCHEUDLERS
 from fish_diffusion.utils.viz import viz_synth_sample
 
 from .diffusions import DIFFUSIONS
+from .grad_tts import GradTTS
 
 
 class DiffSinger(nn.Module):
@@ -125,7 +124,6 @@ class DiffSinger(nn.Module):
 
         return dict(
             features=features,
-            src_masks=src_masks,
             mel_masks=mel_masks,
         )
 
@@ -160,6 +158,9 @@ class DiffSinger(nn.Module):
             features["features"], mel, features["mel_masks"]
         )
 
+        if "loss" in features and features["loss"] is not None:
+            output_dict["loss"] = output_dict["loss"] + features["loss"]
+
         # For validation
         output_dict["features"] = features["features"]
 
@@ -170,7 +171,8 @@ class DiffSingerLightning(pl.LightningModule):
     def __init__(self, config):
         super().__init__()
 
-        self.model = DiffSinger(config.model)
+        model_fn = GradTTS if config.model.type == "GradTTS" else DiffSinger
+        self.model = model_fn(config.model)
         self.config = config
         self.ema_momentum = config.get("ema_momentum", None)
         self.lora = config.get("lora", False)
@@ -180,7 +182,7 @@ class DiffSingerLightning(pl.LightningModule):
             self.build_lora(self.model)
 
         if self.ema_momentum is not None:
-            self.ema_model = DiffSinger(config.model)
+            self.ema_model = model_fn(config.model)
 
             if self.lora:
                 self.build_lora(self.ema_model)
@@ -246,9 +248,12 @@ class DiffSingerLightning(pl.LightningModule):
             else self.model
         )
 
-        assert batch["pitches"].shape[1] == batch["mel"].shape[1]
+        if "pitches" not in batch:
+            batch["pitches"] = pitches = None
+        else:
+            assert batch["pitches"].shape[1] == batch["mel"].shape[1]
+            pitches = batch["pitches"].clone()
 
-        pitches = batch["pitches"].clone()
         batch_size = batch["speaker"].shape[0]
 
         output = model(
@@ -267,17 +272,29 @@ class DiffSingerLightning(pl.LightningModule):
 
         self.log(f"{mode}_loss", output["loss"], batch_size=batch_size, sync_dist=True)
 
+        # If we need to log other metrics
+        for k, v in output.get("metrics", {}).items():
+            self.log(
+                f"{mode}_{k}",
+                v,
+                batch_size=batch_size,
+                sync_dist=True,
+            )
+
         if mode != "valid":
             return output["loss"]
 
         x = model.diffusion(output["features"])
+
+        if pitches is None:
+            pitches = [None] * batch_size
 
         for idx, (gt_mel, gt_pitch, predict_mel, predict_mel_len) in enumerate(
             zip(batch["mel"], pitches, x, batch["mel_lens"])
         ):
             image_mels, wav_reconstruction, wav_prediction = viz_synth_sample(
                 gt_mel=gt_mel,
-                gt_pitch=gt_pitch[:, 0],
+                gt_pitch=gt_pitch[:, 0] if gt_pitch is not None else None,
                 predict_mel=predict_mel,
                 predict_mel_len=predict_mel_len,
                 vocoder=self.vocoder,
