@@ -1,3 +1,4 @@
+from .bert_tokenizer import BertTokenizer
 from .builder import FEATURE_EXTRACTORS
 from .chinese_hubert import ChineseHubertSoft
 from .content_vec import ContentVec
@@ -12,4 +13,5 @@ __all__ = [
     "OpenCpopTranscriptionToPhonemesDuration",
     "AlignedWhisper",
     "ContentVec",
+    "BertTokenizer",
 ]

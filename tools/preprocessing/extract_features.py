@@ -149,6 +149,8 @@ def process(
         if config.model.type == "DiffSinger":
             contents, phones2mel = text_features_extractor(audio_path, mel_length)
             sample["phones2mel"] = phones2mel.cpu().numpy()
+        if config.model.type == "GradTTS":
+            contents = text_features_extractor(audio_path)
         else:
             contents = text_features_extractor(audio, sr)[0]
             contents = repeat_expand(contents, mel_length)
