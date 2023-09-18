@@ -1,5 +1,9 @@
 # Warning: This config is developing, and subject to change.
 
+from pathlib import Path
+
+from fish_diffusion.datasets.naive import NaiveTTSDataset
+
 _base_ = [
     "./_base_/trainers/base.py",
     "./_base_/schedulers/warmup_cosine.py",
@@ -7,8 +11,35 @@ _base_ = [
 ]
 
 speaker_mapping = {
-    "default": 0,
+    "aria": 0,
 }
+
+# Process SVC mixin datasets
+mixin_datasets = [
+    ("VCTK", "dataset/tts/vctk"),
+    ("Genshin", "dataset/tts/genshin"),
+]
+train_datasets = [
+    dict(
+        type="NaiveTTSDataset",
+        path="dataset/tts/aria",
+        speaker_id=speaker_mapping["aria"],
+    )
+]
+
+for name, path in mixin_datasets:
+    for speaker_path in sorted(Path(path).iterdir()):
+        speaker_name = f"{name}-{speaker_path.name}"
+        if speaker_name not in speaker_mapping:
+            speaker_mapping[speaker_name] = len(speaker_mapping)
+
+        mixin_datasets.append(
+            dict(
+                type="NaiveTTSDataset",
+                path=str(speaker_path),
+                speaker_id=speaker_mapping[speaker_name],
+            )
+        )
 
 sampling_rate = 44100
 mel_channels = 128
@@ -39,7 +70,7 @@ model = dict(
     ),
     speaker_encoder=dict(
         type="NaiveProjectionEncoder",
-        input_size=10,
+        input_size=len(speaker_mapping),
         output_size=bert_dim,
         use_embedding=True,
     ),
@@ -72,14 +103,15 @@ model = dict(
 dataset = dict(
     _delete_=True,
     train=dict(
-        type="NaiveTTSDataset",
-        path="dataset/tts/train",
-        speaker_id=speaker_mapping["default"],
+        _delete_=True,  # Delete the default train dataset
+        type="ConcatDataset",
+        datasets=mixin_datasets,
+        collate_fn=NaiveTTSDataset.collate_fn,
     ),
     valid=dict(
         type="NaiveTTSDataset",
         path="dataset/tts/valid",
-        speaker_id=speaker_mapping["default"],
+        speaker_id=speaker_mapping["aria"],
     ),
 )
 
@@ -87,6 +119,6 @@ preprocessing = dict(
     text_features_extractor=dict(
         type="BertTokenizer",
         model_name="xlm-roberta-large",
-        transcription_path="dataset/tts/aria.list",
+        transcription_path="dataset/tts/vctk.list",
     ),
 )
