@@ -122,6 +122,8 @@ def transform_pipeline(pipeline, data):
             for k, t in step["keys"]:
                 if isinstance(data[k], np.ndarray):
                     data[k] = torch.from_numpy(data[k]).type(t)
+                elif isinstance(data[k], torch.Tensor):
+                    data[k] = data[k].type(t)
                 else:
                     data[k] = torch.tensor(data[k], dtype=t)
         elif step["type"] == "Transpose":

@@ -38,18 +38,21 @@ def viz_synth_sample(
     return_image=False,
 ):
     mel_len = predict_mel_len.item()
-    pitch = gt_pitch[:mel_len]
+    pitch = gt_pitch[:mel_len] if gt_pitch is not None else None
     mel_target = gt_mel[:mel_len].float().detach().T
     mel_prediction = predict_mel[:mel_len].float().detach().T
 
-    fig_mels = plot_mel(
-        [
-            mel_prediction.cpu().numpy(),
-            mel_target.cpu().numpy(),
-            (mel_prediction - mel_target).abs().cpu().numpy(),
-        ],
-        ["Sampled Spectrogram", "Ground-Truth Spectrogram", "Difference"],
-    )
+    mels = [
+        mel_prediction.cpu().numpy(),
+        mel_target.cpu().numpy(),
+    ]
+    titles = ["Sampled Spectrogram", "Ground-Truth Spectrogram"]
+
+    if mel_prediction.shape == mel_target.shape:
+        mels.append((mel_prediction - mel_target).abs().cpu().numpy())
+        titles.append("Difference")
+
+    fig_mels = plot_mel(mels, titles)
 
     wav_reconstruction = vocoder.spec2wav(mel_target, pitch)
     wav_prediction = vocoder.spec2wav(mel_prediction, pitch)
