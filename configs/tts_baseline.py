@@ -15,10 +15,7 @@ speaker_mapping = {
 }
 
 # Process SVC mixin datasets
-mixin_datasets = [
-    ("VCTK", "dataset/tts/vctk"),
-    ("Genshin", "dataset/tts/genshin"),
-]
+mixin_datasets = [("VCTK", "dataset/tts/vctk"), ("Genshin", "dataset/tts/genshin")]
 train_datasets = [
     dict(
         type="NaiveTTSDataset",
@@ -33,7 +30,7 @@ for name, path in mixin_datasets:
         if speaker_name not in speaker_mapping:
             speaker_mapping[speaker_name] = len(speaker_mapping)
 
-        mixin_datasets.append(
+        train_datasets.append(
             dict(
                 type="NaiveTTSDataset",
                 path=str(speaker_path),
