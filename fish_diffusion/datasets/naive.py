@@ -246,3 +246,34 @@ class NaiveSVSDataset(NaiveDataset):
             keys=[("pitches", -1), ("time_stretch", -1), ("key_shift", -1)],
         ),
     ]
+
+
+@DATASETS.register_module()
+class NaiveTTSDataset(NaiveDataset):
+    processing_pipeline = [
+        dict(
+            type="PickKeys",
+            keys=[
+                "path",
+                "mel",
+                "contents",
+                "speaker",
+            ],
+        ),
+        dict(type="Transpose", keys=[("mel", 1, 0)]),
+    ]
+
+    collating_pipeline = [
+        dict(type="ListToDict"),
+        dict(
+            type="PadStack",
+            keys=[("mel", -2), ("contents", -1)],
+        ),
+        dict(
+            type="ToTensor",
+            keys=[
+                ("speaker", torch.int64),
+                ("contents", torch.int64),
+            ],
+        ),
+    ]
