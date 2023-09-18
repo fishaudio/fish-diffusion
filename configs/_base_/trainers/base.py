@@ -34,5 +34,6 @@ if torch.cuda.is_available() and torch.cuda.device_count() > 1:
     trainer["strategy"] = DDPStrategy(
         process_group_backend=process_group_backend,
         gradient_as_bucket_view=True,
+        find_unused_parameters=True,
         ddp_comm_hook=default.fp16_compress_hook,
     )
