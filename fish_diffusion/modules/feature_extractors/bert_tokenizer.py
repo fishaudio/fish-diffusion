@@ -27,7 +27,7 @@ class BertTokenizer(BaseFeatureExtractor):
         for i in open(transcription_path):
             id, text = i.split("|")
 
-            results[id] = text
+            results[id] = text.strip()
 
         return results
 
