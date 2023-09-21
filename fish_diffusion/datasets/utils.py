@@ -137,8 +137,6 @@ def transform_pipeline(pipeline, data):
                 else:
                     data[k] = data[k].unsqueeze(*args)
         elif step["type"] == "FilterByLength":
-            for i in data:
-                print(i[step["key"]].shape)
             data = [
                 i
                 for i in data
