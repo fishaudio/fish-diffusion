@@ -16,7 +16,7 @@ trainer = dict(
     max_steps=2_000_000,
     # Warning: If you are training the model with fs2 (and see nan), you should either use bf16 or fp32
     precision="32",
-    accumulate_grad_batches=4,
+    accumulate_grad_batches=1,
     callbacks=[
         ModelCheckpoint(
             filename="{epoch}-{step}-{valid_loss:.4f}",
@@ -36,5 +36,6 @@ if torch.cuda.is_available() and torch.cuda.device_count() > 1:
         process_group_backend=process_group_backend,
         gradient_as_bucket_view=True,
         find_unused_parameters=True,
+        static_graph=True,
         ddp_comm_hook=default.fp16_compress_hook,
     )
