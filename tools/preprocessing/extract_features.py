@@ -214,7 +214,7 @@ def safe_process(args, config, audio_path: Path):
         return aug_count + 1
     except Exception as e:
         logger.error(f"Error processing {audio_path}")
-        logger.exception(e)
+        # logger.exception(e)
 
 
 def parse_args():

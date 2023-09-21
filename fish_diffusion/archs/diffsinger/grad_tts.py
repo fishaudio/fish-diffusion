@@ -23,6 +23,10 @@ class GradTTS(nn.Module):
         if getattr(model_config, "speaker_encoder", None):
             self.speaker_encoder = ENCODERS.build(model_config.speaker_encoder)
 
+        self.current_mas_noise_scale = nn.Parameter(
+            torch.tensor(1e-2, dtype=torch.float32), requires_grad=False
+        )
+
     @staticmethod
     def get_mask_from_lengths(lengths, max_len=None):
         batch_size = lengths.shape[0]
@@ -116,7 +120,8 @@ class GradTTS(nn.Module):
         if speaker_embed is not None:
             features += speaker_embed
 
-        mu_x = self.mel_encoder(features, src_masks).transpose(1, 2)
+        stats_p = self.mel_encoder(features, src_masks).transpose(1, 2)
+        mu_p, logs_p = torch.split(stats_p, stats_p.shape[1] // 2, dim=1)
         logw = self.duration_predictor(features.detach(), src_masks).transpose(1, 2)
         x_mask = src_masks.unsqueeze(1)
 
@@ -139,7 +144,8 @@ class GradTTS(nn.Module):
             ).unsqueeze(1)
 
             # Align encoded text and get mu_y
-            mu_y = torch.matmul(attn.squeeze(1).transpose(1, 2), mu_x.transpose(1, 2))
+            z_p = mu_p + torch.randn_like(mu_p) * torch.exp(logs_p) * 0.667
+            mu_y = torch.matmul(attn.squeeze(1).transpose(1, 2), z_p.transpose(1, 2))
             mel_features = mu_y[:, :y_max_length, :]
 
             return dict(
@@ -147,38 +153,56 @@ class GradTTS(nn.Module):
                 mel_masks=mel_masks,
             )
 
-        y = mel.transpose(1, 2)
+        z_p = mel.transpose(1, 2)
         y_mask = (~mel_masks).float().unsqueeze(1)
         attn_mask = x_mask.unsqueeze(-1) * y_mask.unsqueeze(2)
 
         # Use MAS to find most likely alignment `attn` between text and mel-spectrogram
         with torch.no_grad():
-            const = -0.5 * math.log(2 * math.pi) * mel.shape[-1]
-            factor = -0.5 * torch.ones(mu_x.shape, dtype=mu_x.dtype, device=mu_x.device)
-            y_square = torch.matmul(factor.transpose(1, 2), y**2)
-            y_mu_double = torch.matmul(2.0 * (factor * mu_x).transpose(1, 2), y)
-            mu_square = torch.sum(factor * (mu_x**2), 1).unsqueeze(-1)
-            log_prior = y_square - y_mu_double + mu_square + const
+            # negative cross-entropy
+            s_p_sq_r = torch.exp(-2 * logs_p)  # [b, d, t]
+            neg_cent1 = torch.sum(
+                -0.5 * math.log(2 * math.pi) - logs_p, [1], keepdim=True
+            )  # [b, 1, t_s]
+            neg_cent2 = torch.matmul(
+                -0.5 * (z_p**2).transpose(1, 2), s_p_sq_r
+            )  # [b, t_t, d] x [b, d, t_s] = [b, t_t, t_s]
+            neg_cent3 = torch.matmul(
+                z_p.transpose(1, 2), (mu_p * s_p_sq_r)
+            )  # [b, t_t, d] x [b, d, t_s] = [b, t_t, t_s]
+            neg_cent4 = torch.sum(
+                -0.5 * (mu_p**2) * s_p_sq_r, [1], keepdim=True
+            )  # [b, 1, t_s]
+            neg_cent = neg_cent1 + neg_cent2 + neg_cent3 + neg_cent4
 
-            attn = maximum_path(log_prior, attn_mask.squeeze(1))
-            attn = attn.detach()
+            # Noise scale
+            epsilon = (
+                torch.std(neg_cent)
+                * torch.randn_like(neg_cent)
+                * self.current_mas_noise_scale
+            )
+            neg_cent = neg_cent + epsilon
+
+            attn_mask = torch.unsqueeze(x_mask, 2) * torch.unsqueeze(y_mask, -1)
+            attn = maximum_path(neg_cent, attn_mask.squeeze(1)).unsqueeze(1).detach()
 
         # Compute loss between predicted log-scaled durations and those obtained from MAS
-        logw_ = torch.log(1e-8 + torch.sum(attn.unsqueeze(1), -1)) * x_mask
-
+        logw_ = torch.log(1e-8 + attn.sum(2)) * x_mask
         dur_loss = torch.sum((logw - logw_) ** 2) / torch.sum(src_masks)
 
         # Align encoded text with mel-spectrogram and get mu_y segment
-        mu_y = torch.matmul(attn.squeeze(1).transpose(1, 2), mu_x.transpose(1, 2))
+        mu_p = torch.matmul(attn.squeeze(1), mu_p.transpose(1, 2)).transpose(1, 2)
+        logs_p = torch.matmul(attn.squeeze(1), logs_p.transpose(1, 2)).transpose(1, 2)
+        z_p_hat = mu_p + torch.randn_like(mu_p) * torch.exp(logs_p) * 0.667
 
         # Compute loss between aligned encoder outputs and mel-spectrogram
         prior_loss = torch.sum(
-            0.5 * ((y - mu_y.transpose(1, 2)) ** 2 + math.log(2 * math.pi)) * y_mask
+            0.5 * ((z_p - z_p_hat) ** 2 + math.log(2 * math.pi)) * y_mask
         )
-        prior_loss = prior_loss / (torch.sum(y_mask) * mel.shape[-1])
+        prior_loss = prior_loss / (torch.sum(y_mask) * z_p.shape[-2])
 
         return dict(
-            features=mu_y,
+            features=z_p_hat.transpose(1, 2),
             mel_masks=mel_masks,
             loss=dur_loss + prior_loss,
             metrics={
@@ -231,6 +255,16 @@ class GradTTS(nn.Module):
             metrics = output_dict.get("metrics", {})
             metrics.update(features["metrics"])
             output_dict["metrics"] = metrics
+
+        if self.training:
+            output_dict["metrics"]["noise_scale"] = float(self.current_mas_noise_scale)
+
+            # Update MAS noise scale
+            self.current_mas_noise_scale -= 2e-6
+            if self.current_mas_noise_scale < 0.0:
+                self.current_mas_noise_scale -= (
+                    self.current_mas_noise_scale
+                )  # clip to 0
 
         # For validation
         output_dict["features"] = features["features"]
