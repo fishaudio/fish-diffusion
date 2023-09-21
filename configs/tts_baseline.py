@@ -82,7 +82,7 @@ model = dict(
     mel_encoder=dict(
         type="TransformerEncoder",
         input_size=bert_dim,
-        output_size=mel_channels,
+        output_size=mel_channels * 2,
         hidden_size=bert_dim,
         num_layers=4,
     ),
@@ -111,6 +111,12 @@ dataset = dict(
         type="NaiveTTSDataset",
         path="dataset/tts/valid",
         speaker_id=speaker_mapping["aria"],
+    ),
+)
+
+dataloader = dict(
+    train=dict(
+        batch_size=5,
     ),
 )
 
