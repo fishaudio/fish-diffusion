@@ -126,20 +126,21 @@ class GaussianDiffusion(nn.Module):
             + extract(self.sqrt_one_minus_alphas_cumprod, t, x_start.shape) * noise
         )
 
-    def p_losses(self, x_start, t, cond, noise=None, mask=None):
+    def p_losses(self, x_start, t, cond, noise=None, x_masks=None, cond_masks=None):
         if noise is None:
             noise = torch.randn_like(x_start)
 
         noised_mel = self.q_sample(x_start=x_start, t=t, noise=noise)
         epsilon = self.denoise_fn(noised_mel, t, cond)
 
-        if mask is not None:
-            # mask: (B, N) -> (B, 1, N)
-            mask = mask[:, None, :]
-
+        if x_masks is not None:
             # Apply mask
-            noised_mel = noised_mel.masked_fill(mask, 0.0)
-            epsilon = epsilon.masked_fill(mask, 0.0)
+            noised_mel = noised_mel.masked_fill(x_masks[:, None, :], 0.0)
+            epsilon = epsilon.masked_fill(x_masks[:, None, :], 0.0)
+
+        if cond_masks is not None:
+            # Apply mask
+            cond = cond.masked_fill(cond_masks[:, None, :], 0.0)
 
         loss = self.get_mel_loss(self.noise_loss, noise, epsilon)
 
@@ -168,7 +169,7 @@ class GaussianDiffusion(nn.Module):
 
         return loss
 
-    def train_step(self, features, mel, mel_mask=None):
+    def train_step(self, features, mel, x_masks=None, cond_masks=None):
         # Cond 基本就是 hubert / fs2 参数
         b, *_, device = *features.shape, features.device
         features = features.transpose(1, 2)
@@ -177,7 +178,9 @@ class GaussianDiffusion(nn.Module):
         t = torch.randint(0, self.num_timesteps, (b,), device=device).long()
         x = self.norm_spec(mel).transpose(1, 2)  # [B, M, T]
 
-        noised_mels, epsilon, loss = self.p_losses(x, t, features, mask=mel_mask)
+        noised_mels, epsilon, loss = self.p_losses(
+            x, t, features, x_masks=x_masks, cond_masks=cond_masks
+        )
 
         return dict(
             loss=loss,
@@ -199,6 +202,8 @@ class GaussianDiffusion(nn.Module):
         skip_steps: int = 0,
         original_mel: torch.Tensor = None,
         noise_predictor: str = None,
+        x_masks: torch.Tensor = None,
+        cond_masks: torch.Tensor = None,
     ):
         if sampler_interval is None:
             sampler_interval = self.sampler_interval
@@ -212,7 +217,8 @@ class GaussianDiffusion(nn.Module):
         features = features.transpose(1, 2)
 
         if original_mel is None:
-            shape = (features.shape[0], self.mel_bins, features.shape[2])
+            temp = x_masks or features
+            shape = (temp.shape[0], self.mel_bins, temp.shape[-1])
             x = torch.randn(shape, device=device)
         else:
             x = self.norm_spec(original_mel)
@@ -239,7 +245,9 @@ class GaussianDiffusion(nn.Module):
         # If using naive sampling
         if noise_predictor == "naive":
             for t in chunks:
-                noise = self.denoise_fn(x, t, features)
+                noise = self.denoise_fn(
+                    x, t, features, x_masks=x_masks, cond_masks=cond_masks
+                )
                 x = self.naive_noise_predictor(x=x, t=t, noise=noise)
 
             return self.denorm_spec(x.transpose(1, 2))
@@ -252,6 +260,8 @@ class GaussianDiffusion(nn.Module):
                 cond=features,
                 progress=progress,
                 sampler_interval=sampler_interval,
+                x_masks=x_masks,
+                cond_masks=cond_masks,
             )
 
             return self.denorm_spec(x.transpose(1, 2))
@@ -264,7 +274,9 @@ class GaussianDiffusion(nn.Module):
             noise_list = torch.zeros((0, *shape), device=device)
 
             for t in chunks:
-                noise_pred = self.denoise_fn(x, t, features)
+                noise_pred = self.denoise_fn(
+                    x, t, features, x_masks=x_masks, cond_masks=cond_masks
+                )
                 t_prev = t - sampler_interval
                 t_prev = t_prev * (t_prev > 0)
 

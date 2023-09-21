@@ -174,7 +174,16 @@ class UNIPCNoisePredictor(nn.Module):
         bar.close()
 
     @torch.jit.unused  # Not support jit as of now
-    def forward(self, denoise_fn, x, cond, progress=False, sampler_interval=10):
+    def forward(
+        self,
+        denoise_fn,
+        x,
+        cond,
+        progress=False,
+        sampler_interval=10,
+        x_masks=None,
+        cond_masks=None,
+    ):
         steps = self.noise_schedule.total_N // sampler_interval
 
         if progress:
@@ -187,7 +196,11 @@ class UNIPCNoisePredictor(nn.Module):
             denoise_fn,
             self.noise_schedule,
             model_type="noise",  # or "x_start" or "v" or "score"
-            model_kwargs={self.condition_key: cond},
+            model_kwargs={
+                self.condition_key: cond,
+                "x_masks": x_masks,
+                "cond_masks": cond_masks,
+            },
         )
 
         # 3. Define uni_pc and sample by multistep UniPC.

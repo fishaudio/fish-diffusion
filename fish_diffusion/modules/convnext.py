@@ -56,8 +56,8 @@ class ConvNeXtBlock(nn.Module):
         x: torch.Tensor,
         condition: Optional[torch.Tensor] = None,
         diffusion_step: Optional[torch.Tensor] = None,
-        x_mask: Optional[torch.Tensor] = None,
-        condition_mask: Optional[torch.Tensor] = None,
+        x_masks: Optional[torch.Tensor] = None,
+        cond_masks: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         residual = x
 
@@ -65,13 +65,13 @@ class ConvNeXtBlock(nn.Module):
             x = x + self.diffusion_step_projection(diffusion_step)
 
         if condition is not None:
-            if condition_mask is not None:
-                condition = condition.masked_fill(condition_mask[:, None, :], 0.0)
+            if cond_masks is not None:
+                condition = condition.masked_fill(cond_masks[:, None, :], 0.0)
 
             x = x + self.condition_projection(condition)
 
-        if x_mask is not None:
-            x = x.masked_fill(x_mask[:, None, :], 0.0)
+        if x_masks is not None:
+            x = x.masked_fill(x_masks[:, None, :], 0.0)
 
         x = self.dwconv(x)
         x = x.transpose(1, 2)  # (B, C, T) -> (B, T, C)
@@ -85,8 +85,8 @@ class ConvNeXtBlock(nn.Module):
 
         x = residual + x
 
-        if x_mask is not None:
-            x = x.masked_fill(x_mask[:, None, :], 0.0)
+        if x_masks is not None:
+            x = x.masked_fill(x_masks[:, None, :], 0.0)
 
         return x
 
@@ -122,7 +122,7 @@ class CrossAttentionBlock(nn.TransformerDecoderLayer):
 
         return emb
 
-    def forward(self, x, condition, diffusion_step, x_mask=None, condition_mask=None):
+    def forward(self, x, condition, diffusion_step, x_masks=None, cond_masks=None):
         if diffusion_step is not None:
             x = x + self.diffusion_step_projection(diffusion_step)
 
@@ -138,8 +138,8 @@ class CrossAttentionBlock(nn.TransformerDecoderLayer):
             .forward(
                 tgt=x,
                 memory=condition,
-                tgt_key_padding_mask=x_mask,
-                memory_key_padding_mask=condition_mask,
+                tgt_key_padding_mask=x_masks,
+                memory_key_padding_mask=cond_masks,
             )
             .transpose(1, 2)
         )
@@ -201,14 +201,14 @@ class ConvNext(nn.Module):
         self.gradient_checkpointing = gradient_checkpointing
         self.cross_attention = cross_attention
 
-    def forward(self, x, diffusion_step, conditioner, x_mask=None, condition_mask=None):
+    def forward(self, x, diffusion_step, conditioner, x_masks=None, cond_masks=None):
         """
 
         :param x: [B, M, T]
         :param diffusion_step: [B,]
         :param conditioner: [B, M, E]
-        :param x_mask: [B, T] bool mask
-        :param condition_mask: [B, E] bool mask
+        :param x_masks: [B, T] bool mask
+        :param cond_masks: [B, E] bool mask
         :return:
         """
 
@@ -226,11 +226,11 @@ class ConvNext(nn.Module):
         diffusion_step = self.diffusion_embedding(diffusion_step).unsqueeze(-1)
         condition = self.conditioner_projection(conditioner)
 
-        if x_mask is not None:
-            x = x.masked_fill(x_mask[:, None, :], 0.0)
+        if x_masks is not None:
+            x = x.masked_fill(x_masks[:, None, :], 0.0)
 
-        if condition_mask is not None:
-            condition = condition.masked_fill(condition_mask[:, None, :], 0.0)
+        if cond_masks is not None:
+            condition = condition.masked_fill(cond_masks[:, None, :], 0.0)
 
         for layer in self.residual_layers:
             is_cross_layer = isinstance(layer, CrossAttentionBlock)
@@ -242,14 +242,14 @@ class ConvNext(nn.Module):
 
             if self.training and self.gradient_checkpointing:
                 x = torch.utils.checkpoint.checkpoint(
-                    layer, x, temp_condition, diffusion_step, x_mask, condition_mask
+                    layer, x, temp_condition, diffusion_step, x_masks, cond_masks
                 )
             else:
-                x = layer(x, temp_condition, diffusion_step, x_mask, condition_mask)
+                x = layer(x, temp_condition, diffusion_step, x_masks, cond_masks)
 
         x = self.output_projection(x)  # [B, 128, T]
-        if x_mask is not None:
-            x = x.masked_fill(x_mask[:, None, :], 0.0)
+        if x_masks is not None:
+            x = x.masked_fill(x_masks[:, None, :], 0.0)
 
         return x[:, None] if use_4_dim else x
 
@@ -268,9 +268,9 @@ if __name__ == "__main__":
     x = torch.randn(8, 128, 1024).cuda()
     diffusion_step = torch.randint(0, 1000, (8,)).cuda()
     conditioner = torch.randn(8, 256, 256).cuda()
-    x_mask = torch.randint(0, 2, (8, 1024)).bool().cuda()
-    condition_mask = torch.randint(0, 2, (8, 256)).bool().cuda()
-    y = model(x, diffusion_step, conditioner, x_mask, condition_mask)
+    x_masks = torch.randint(0, 2, (8, 1024)).bool().cuda()
+    cond_masks = torch.randint(0, 2, (8, 256)).bool().cuda()
+    y = model(x, diffusion_step, conditioner, x_masks, cond_masks)
     print(y.shape)
 
     torch.cuda.empty_cache()
