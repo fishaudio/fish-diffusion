@@ -217,7 +217,7 @@ class GaussianDiffusion(nn.Module):
         features = features.transpose(1, 2)
 
         if original_mel is None:
-            temp = x_masks or features
+            temp = features if x_masks is None else x_masks
             shape = (temp.shape[0], self.mel_bins, temp.shape[-1])
             x = torch.randn(shape, device=device)
         else:

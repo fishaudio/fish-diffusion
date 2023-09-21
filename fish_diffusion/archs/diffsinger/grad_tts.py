@@ -106,6 +106,7 @@ class GradTTS(nn.Module):
         return dict(
             features=features,
             x_masks=mel_masks,
+            x_lens=mel_lens,
             cond_masks=src_masks,
             loss=duration_loss,
             metrics={
@@ -163,5 +164,8 @@ class GradTTS(nn.Module):
 
         # For validation
         output_dict["features"] = features["features"]
+        output_dict["x_masks"] = features["x_masks"]
+        output_dict["x_lens"] = features["x_lens"]
+        output_dict["cond_masks"] = features["cond_masks"]
 
         return output_dict

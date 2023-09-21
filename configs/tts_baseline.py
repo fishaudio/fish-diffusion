@@ -10,7 +10,7 @@ _base_ = [
     "./_base_/datasets/naive_svc.py",
 ]
 
-speaker_mapping = {}
+speakers = []
 
 # Process SVC mixin datasets
 mixin_datasets = [
@@ -26,17 +26,25 @@ for name, path in mixin_datasets:
             continue
 
         speaker_name = f"{name}-{speaker_path.name}"
-        if speaker_name not in speaker_mapping:
-            speaker_mapping[speaker_name] = len(speaker_mapping)
+        if speaker_name not in speakers:
+            speakers.append(speaker_name)
 
         train_datasets.append(
             dict(
                 type="NaiveTTSDataset",
                 path=str(speaker_path),
-                speaker_id=speaker_mapping[speaker_name],
+                speaker_id=speaker_name,
             )
         )
 
+# Sort speakers
+speakers.sort()
+speaker_mapping = {speaker: i for i, speaker in enumerate(speakers)}
+
+for dataset in train_datasets:
+    dataset["speaker_id"] = speaker_mapping[dataset["speaker_id"]]
+
+# Config model
 sampling_rate = 44100
 mel_channels = 128
 bert_dim = 768
@@ -71,7 +79,7 @@ model = dict(
     ),
     speaker_encoder=dict(
         type="NaiveProjectionEncoder",
-        input_size=len(speaker_mapping),
+        input_size=10000,  # len(speaker_mapping),
         output_size=bert_dim,
         use_embedding=True,
     ),
