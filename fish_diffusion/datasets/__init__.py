@@ -3,6 +3,7 @@ from .concat import ConcatDataset
 from .hifisinger import HiFiSVCDataset
 from .naive import NaiveDataset, NaiveSVCDataset
 from .repeat import RepeatDataset
+from .sample import SampleDataset
 
 __all__ = [
     "DATASETS",
@@ -11,4 +12,5 @@ __all__ = [
     "NaiveDataset",
     "NaiveSVCDataset",
     "HiFiSVCDataset",
+    "SampleDataset",
 ]
