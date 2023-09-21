@@ -3,6 +3,7 @@ from typing import Optional
 
 import torch
 import torch.nn.functional as F
+import torch.utils.checkpoint
 from torch import nn
 
 from fish_diffusion.modules.wavenet import DiffusionEmbedding
@@ -55,14 +56,22 @@ class ConvNeXtBlock(nn.Module):
         x: torch.Tensor,
         condition: Optional[torch.Tensor] = None,
         diffusion_step: Optional[torch.Tensor] = None,
+        x_mask: Optional[torch.Tensor] = None,
+        condition_mask: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         residual = x
 
-        x = (
-            x
-            + self.diffusion_step_projection(diffusion_step)
-            + self.condition_projection(condition)
-        )
+        if diffusion_step is not None:
+            x = x + self.diffusion_step_projection(diffusion_step)
+
+        if condition is not None:
+            if condition_mask is not None:
+                condition = condition.masked_fill(condition_mask[:, None, :], 0.0)
+
+            x = x + self.condition_projection(condition)
+
+        if x_mask is not None:
+            x = x.masked_fill(x_mask[:, None, :], 0.0)
 
         x = self.dwconv(x)
         x = x.transpose(1, 2)  # (B, C, T) -> (B, T, C)
@@ -75,7 +84,65 @@ class ConvNeXtBlock(nn.Module):
         x = x.transpose(1, 2)  # (B, T, C) -> (B, C, T)
 
         x = residual + x
+
+        if x_mask is not None:
+            x = x.masked_fill(x_mask[:, None, :], 0.0)
+
         return x
+
+
+class CrossAttentionBlock(nn.TransformerDecoderLayer):
+    def __init__(
+        self,
+        dim: int,
+        intermediate_dim: int,
+        nhead: int = 8,
+    ):
+        super().__init__(
+            d_model=dim,
+            nhead=nhead,
+            dim_feedforward=intermediate_dim,
+            activation="gelu",
+            batch_first=True,
+        )
+
+        self.diffusion_step_projection = nn.Conv1d(dim, dim, 1)
+        self.register_buffer("positional_embedding", self.get_embedding(dim))
+
+    def get_embedding(self, embedding_dim, num_embeddings=4096):
+        half_dim = embedding_dim // 2
+        emb = math.log(10000) / (half_dim - 1)
+        emb = torch.exp(torch.arange(half_dim, dtype=torch.float) * -emb)
+        emb = torch.arange(num_embeddings, dtype=torch.float).unsqueeze(
+            1
+        ) * emb.unsqueeze(0)
+        emb = torch.cat([torch.sin(emb), torch.cos(emb)], dim=1).view(
+            num_embeddings, -1
+        )
+
+        return emb
+
+    def forward(self, x, condition, diffusion_step, x_mask=None, condition_mask=None):
+        if diffusion_step is not None:
+            x = x + self.diffusion_step_projection(diffusion_step)
+
+        # Apply positional encoding to both x and condition
+        x = x.transpose(1, 2)
+        condition = condition.transpose(1, 2)
+
+        x = x + self.positional_embedding[: x.size(1)][None]
+        condition = condition + self.positional_embedding[: condition.size(1)][None]
+
+        return (
+            super()
+            .forward(
+                tgt=x,
+                memory=condition,
+                tgt_key_padding_mask=x_mask,
+                memory_key_padding_mask=condition_mask,
+            )
+            .transpose(1, 2)
+        )
 
 
 class ConvNext(nn.Module):
@@ -88,6 +155,8 @@ class ConvNext(nn.Module):
         num_layers=20,
         dilation_cycle=4,
         gradient_checkpointing=False,
+        cross_attention=False,
+        cross_every_n_layers=5,
     ):
         super(ConvNext, self).__init__()
 
@@ -104,16 +173,25 @@ class ConvNext(nn.Module):
             nn.Conv1d(dim * mlp_factor, dim, 1),
         )
 
-        self.residual_layers = nn.ModuleList(
-            [
+        self.residual_layers = nn.ModuleList([])
+
+        for i in range(num_layers):
+            if cross_attention and i % cross_every_n_layers == 0:
+                self.residual_layers.append(
+                    CrossAttentionBlock(
+                        dim=dim,
+                        intermediate_dim=dim * mlp_factor,
+                    )
+                )
+
+            self.residual_layers.append(
                 ConvNeXtBlock(
                     dim=dim,
                     intermediate_dim=dim * mlp_factor,
                     dilation=2 ** (i % dilation_cycle),
                 )
-                for i in range(num_layers)
-            ]
-        )
+            )
+
         self.output_projection = nn.Sequential(
             nn.Conv1d(dim, dim, kernel_size=1),
             nn.GELU(),
@@ -121,13 +199,16 @@ class ConvNext(nn.Module):
         )
 
         self.gradient_checkpointing = gradient_checkpointing
+        self.cross_attention = cross_attention
 
-    def forward(self, x, diffusion_step, conditioner):
+    def forward(self, x, diffusion_step, conditioner, x_mask=None, condition_mask=None):
         """
 
         :param x: [B, M, T]
         :param diffusion_step: [B,]
-        :param conditioner: [B, M, T]
+        :param conditioner: [B, M, E]
+        :param x_mask: [B, T] bool mask
+        :param condition_mask: [B, E] bool mask
         :return:
         """
 
@@ -145,14 +226,55 @@ class ConvNext(nn.Module):
         diffusion_step = self.diffusion_embedding(diffusion_step).unsqueeze(-1)
         condition = self.conditioner_projection(conditioner)
 
+        if x_mask is not None:
+            x = x.masked_fill(x_mask[:, None, :], 0.0)
+
+        if condition_mask is not None:
+            condition = condition.masked_fill(condition_mask[:, None, :], 0.0)
+
         for layer in self.residual_layers:
+            is_cross_layer = isinstance(layer, CrossAttentionBlock)
+            temp_condition = (
+                condition
+                if ((self.cross_attention is False) or is_cross_layer)
+                else None
+            )
+
             if self.training and self.gradient_checkpointing:
                 x = torch.utils.checkpoint.checkpoint(
-                    layer, x, condition, diffusion_step
+                    layer, x, temp_condition, diffusion_step, x_mask, condition_mask
                 )
             else:
-                x = layer(x, condition, diffusion_step)
+                x = layer(x, temp_condition, diffusion_step, x_mask, condition_mask)
 
         x = self.output_projection(x)  # [B, 128, T]
+        if x_mask is not None:
+            x = x.masked_fill(x_mask[:, None, :], 0.0)
 
         return x[:, None] if use_4_dim else x
+
+
+if __name__ == "__main__":
+    import torch
+
+    gpu_memory_usage = torch.cuda.memory_allocated() / 1024**3
+    torch.cuda.empty_cache()
+    torch.cuda.synchronize()
+
+    model = ConvNext(
+        cross_attention=True,
+        gradient_checkpointing=True,
+    ).cuda()
+    x = torch.randn(8, 128, 1024).cuda()
+    diffusion_step = torch.randint(0, 1000, (8,)).cuda()
+    conditioner = torch.randn(8, 256, 256).cuda()
+    x_mask = torch.randint(0, 2, (8, 1024)).bool().cuda()
+    condition_mask = torch.randint(0, 2, (8, 256)).bool().cuda()
+    y = model(x, diffusion_step, conditioner, x_mask, condition_mask)
+    print(y.shape)
+
+    torch.cuda.empty_cache()
+    torch.cuda.synchronize()
+
+    gpu_memory_usage = torch.cuda.memory_allocated() / 1024**3 - gpu_memory_usage
+    print(f"GPU memory usage: {gpu_memory_usage:.2f} GB")

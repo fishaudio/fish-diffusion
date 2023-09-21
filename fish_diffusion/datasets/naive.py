@@ -264,7 +264,7 @@ class NaiveTTSDataset(NaiveDataset):
     ]
 
     collating_pipeline = [
-        dict(type="FilterByLength", key="mel", dim=0, min_length=1, max_length=1024),
+        dict(type="FilterByLength", key="mel", dim=0, min_length=1, max_length=2048),
         dict(type="ListToDict"),
         dict(
             type="PadStack",
