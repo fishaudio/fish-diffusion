@@ -124,7 +124,8 @@ class DiffSinger(nn.Module):
 
         return dict(
             features=features,
-            mel_masks=mel_masks,
+            x_masks=mel_masks,
+            cond_masks=mel_masks,
         )
 
     def forward(
@@ -155,7 +156,10 @@ class DiffSinger(nn.Module):
         )
 
         output_dict = self.diffusion.train_step(
-            features["features"], mel, features["mel_masks"]
+            features["features"],
+            mel,
+            x_masks=features["x_masks"],
+            cond_masks=features["cond_masks"],
         )
 
         if "loss" in features and features["loss"] is not None:
@@ -284,7 +288,11 @@ class DiffSingerLightning(pl.LightningModule):
         if mode != "valid":
             return output["loss"]
 
-        x = model.diffusion(output["features"])
+        x = model.diffusion(
+            output["features"],
+            x_masks=output.get("x_masks", None),
+            cond_masks=output.get("cond_masks", None),
+        )
 
         if pitches is None:
             pitches = [None] * batch_size

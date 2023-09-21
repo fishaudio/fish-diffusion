@@ -10,23 +10,19 @@ _base_ = [
     "./_base_/datasets/naive_svc.py",
 ]
 
-speaker_mapping = {
-    "aria": 0,
-}
+speaker_mapping = {}
 
 # Process SVC mixin datasets
-mixin_datasets = [("VCTK", "dataset/tts/vctk"), ("Genshin", "dataset/tts/genshin")]
-train_datasets = [
-    dict(
-        type="NaiveTTSDataset",
-        path="dataset/tts/aria",
-        speaker_id=speaker_mapping["aria"],
-    )
+mixin_datasets = [
+    ("LibriTTS-100", "dataset/LibriTTS/train-clean-100"),
+    ("LibriTTS-360", "dataset/LibriTTS/train-clean-360"),
+    ("LibriTTS-500", "dataset/LibriTTS/train-other-500"),
 ]
+train_datasets = []
 
 for name, path in mixin_datasets:
     for speaker_path in sorted(Path(path).iterdir()):
-        if not any(speaker_path.glob("*.npy")):
+        if not any(speaker_path.rglob("*.npy")):
             continue
 
         speaker_name = f"{name}-{speaker_path.name}"
@@ -43,10 +39,12 @@ for name, path in mixin_datasets:
 
 sampling_rate = 44100
 mel_channels = 128
-bert_dim = 1024
+bert_dim = 768
+gradient_checkpointing = True
 
 model = dict(
     type="GradTTS",
+    gradient_checkpointing=gradient_checkpointing,
     diffusion=dict(
         type="GaussianDiffusion",
         mel_channels=mel_channels,
@@ -56,13 +54,16 @@ model = dict(
         s=0.008,
         noise_loss="smoothed-l1",
         denoiser=dict(
-            type="WaveNetDenoiser",
+            type="ConvNextDenoiser",
+            dim=512,
+            mlp_factor=4,
             mel_channels=mel_channels,
-            d_encoder=mel_channels,
-            residual_channels=512,
-            residual_layers=20,
+            condition_dim=bert_dim,
+            num_layers=20,
             dilation_cycle=4,
-            use_linear_bias=True,
+            gradient_checkpointing=gradient_checkpointing,
+            cross_attention=True,
+            cross_every_n_layers=5,
         ),
         sampler_interval=10,
         spec_min=[-5],
@@ -76,15 +77,8 @@ model = dict(
     ),
     text_encoder=dict(
         type="BertEncoder",
-        model_name="xlm-roberta-large",
+        model_name="xlm-roberta-base",
         pretrained=True,
-    ),
-    mel_encoder=dict(
-        type="TransformerEncoder",
-        input_size=bert_dim,
-        output_size=mel_channels * 2,
-        hidden_size=bert_dim,
-        num_layers=4,
     ),
     duration_predictor=dict(
         type="TransformerEncoder",
@@ -108,22 +102,27 @@ dataset = dict(
         collate_fn=NaiveTTSDataset.collate_fn,
     ),
     valid=dict(
-        type="NaiveTTSDataset",
-        path="dataset/tts/valid",
-        speaker_id=speaker_mapping["aria"],
+        type="SampleDataset",
+        num_samples=8,
+        dataset=dict(
+            type="ConcatDataset",
+            datasets=train_datasets,
+            collate_fn=NaiveTTSDataset.collate_fn,
+        ),
+        collate_fn=NaiveTTSDataset.collate_fn,
     ),
 )
 
 dataloader = dict(
     train=dict(
-        batch_size=5,
+        batch_size=8,
     ),
 )
 
 preprocessing = dict(
     text_features_extractor=dict(
         type="BertTokenizer",
-        model_name="xlm-roberta-large",
-        transcription_path="dataset/tts/vctk.list",
+        model_name="xlm-roberta-base",
+        label_suffix=".normalized.txt",
     ),
 )

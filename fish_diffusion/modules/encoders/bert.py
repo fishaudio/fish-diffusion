@@ -30,15 +30,15 @@ class BertEncoder(nn.Module):
 
         self.output_size = output_size
 
-    def forward(self, x, x_mask):
-        x = self.bert(x, x_mask).last_hidden_state
+    def forward(self, attention_mask=None, *args, **kwargs):
+        x = self.bert(*args, attention_mask=attention_mask, **kwargs).last_hidden_state
 
         if self.proj is not None:
             x = self.proj(x)
 
-        if x_mask.dim() == 2:
-            x_mask = x_mask.unsqueeze(-1)
+        if attention_mask.dim() == 2:
+            attention_mask = attention_mask.unsqueeze(-1)
 
-        x = x * x_mask
+        x = x * attention_mask
 
         return x
