@@ -214,7 +214,9 @@ def safe_process(args, config, audio_path: Path):
         return aug_count + 1
     except Exception as e:
         logger.error(f"Error processing {audio_path}")
-        # logger.exception(e)
+
+        if args.debug:
+            logger.exception(e)
 
 
 def parse_args():
@@ -225,6 +227,7 @@ def parse_args():
     parser.add_argument("--clean", action="store_true")
     parser.add_argument("--num-workers", type=int, default=1)
     parser.add_argument("--no-augmentation", action="store_true")
+    parser.add_argument("--debug", action="store_true")
 
     return parser.parse_args()
 
