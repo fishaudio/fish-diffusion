@@ -34,13 +34,16 @@ def viz_synth_sample(
     gt_pitch,
     predict_mel,
     predict_mel_len,
+    gt_mel_len,
     vocoder,
     return_image=False,
 ):
-    mel_len = predict_mel_len.item()
-    pitch = gt_pitch[:mel_len] if gt_pitch is not None else None
-    mel_target = gt_mel[:mel_len].float().detach().T
-    mel_prediction = predict_mel[:mel_len].float().detach().T
+    predict_mel_len = predict_mel_len.item()
+    gt_mel_len = gt_mel_len.item()
+
+    pitch = gt_pitch[:gt_mel_len] if gt_pitch is not None else None
+    mel_target = gt_mel[:gt_mel_len].float().detach().T
+    mel_prediction = predict_mel[:predict_mel_len].float().detach().T
 
     mels = [
         mel_prediction.cpu().numpy(),

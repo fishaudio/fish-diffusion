@@ -125,6 +125,7 @@ class DiffSinger(nn.Module):
         return dict(
             features=features,
             x_masks=mel_masks,
+            x_lens=mel_lens,
             cond_masks=mel_masks,
         )
 
@@ -167,6 +168,9 @@ class DiffSinger(nn.Module):
 
         # For validation
         output_dict["features"] = features["features"]
+        output_dict["x_masks"] = features["x_masks"]
+        output_dict["x_lens"] = features["x_lens"]
+        output_dict["cond_masks"] = features["cond_masks"]
 
         return output_dict
 
@@ -290,21 +294,28 @@ class DiffSingerLightning(pl.LightningModule):
 
         x = model.diffusion(
             output["features"],
-            x_masks=output.get("x_masks", None),
-            cond_masks=output.get("cond_masks", None),
+            x_masks=output["x_masks"],
+            cond_masks=output["cond_masks"],
         )
 
         if pitches is None:
             pitches = [None] * batch_size
 
-        for idx, (gt_mel, gt_pitch, predict_mel, predict_mel_len) in enumerate(
-            zip(batch["mel"], pitches, x, batch["mel_lens"])
+        for idx, (
+            gt_mel,
+            gt_pitch,
+            predict_mel,
+            predict_mel_len,
+            gt_mel_len,
+        ) in enumerate(
+            zip(batch["mel"], pitches, x, output["x_lens"], batch["mel_lens"])
         ):
             image_mels, wav_reconstruction, wav_prediction = viz_synth_sample(
                 gt_mel=gt_mel,
                 gt_pitch=gt_pitch[:, 0] if gt_pitch is not None else None,
                 predict_mel=predict_mel,
                 predict_mel_len=predict_mel_len,
+                gt_mel_len=gt_mel_len,
                 vocoder=self.vocoder,
                 return_image=False,
             )
