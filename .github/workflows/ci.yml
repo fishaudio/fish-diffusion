@@ -18,9 +18,6 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
-    # Only run this job if the lint job is successful and the current branch is main
-    needs: lint
-    if: ${{ github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
