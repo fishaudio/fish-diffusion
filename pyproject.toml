@@ -12,7 +12,7 @@ dependencies = [
     "soundfile<1.0.0,>=0.11.0",
     "librosa<1.0.0,>=0.9.1",
     "numba<1.0.0,>=0.56.4",
-    "fish-audio-preprocess>=0.2.2",
+    "fish-audio-preprocess==0.2.3",
     "wandb<1.0.0,>=0.13.9",
     "transformers<5.0.0,>=4.27.4",
     "torchcrepe>=0.0.19",
