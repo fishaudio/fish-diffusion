@@ -363,10 +363,11 @@ class TransformerDecoderDenoiser(nn.Module):
             if self.training and self.gradient_checkpointing:
                 x = torch.utils.checkpoint.checkpoint(
                     layer,
-                    tgt=x,
-                    memory=condition,
-                    tgt_key_padding_mask=x_masks,
-                    memory_key_padding_mask=cond_masks,
+                    x,
+                    condition,
+                    x_masks,
+                    cond_masks,
+                    use_reentrant=False,
                 )
             else:
                 x = layer(
