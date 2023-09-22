@@ -12,7 +12,7 @@ lambda_func = LambdaWarmUpCosineScheduler(
 
 optimizer = dict(
     type="AdamW",
-    lr=2e-5,
+    lr=1.0,
     weight_decay=1e-2,
     betas=(0.9, 0.98),
     eps=1e-9,
