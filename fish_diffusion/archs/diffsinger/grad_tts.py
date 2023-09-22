@@ -55,17 +55,7 @@ class GradTTS(nn.Module):
         phones2mel=None,
         energy=None,
     ):
-        src_masks = (
-            self.get_mask_from_lengths(contents_lens, contents_max_len)
-            if contents_lens is not None
-            else None
-        )
-
-        mel_masks = (
-            self.get_mask_from_lengths(mel_lens, mel_max_len)
-            if mel_lens is not None
-            else None
-        )
+        src_masks = self.get_mask_from_lengths(contents_lens, contents_max_len)
 
         features = self.text_encoder.bert.embeddings.word_embeddings(contents)[
             :, 0, :, :
@@ -93,15 +83,15 @@ class GradTTS(nn.Module):
         )
 
         # Predict durations
-        durations = self.duration_predictor(features, src_masks_float)
-        log_durations = durations[:, 0, 0]
+        log_durations = self.duration_predictor(features[:, 0, :])[..., 0]
         duration_loss = F.smooth_l1_loss(log_durations, torch.log(mel_lens.float()))
 
         if self.training is False:
             mel_lens = torch.round(torch.exp(torch.clamp(log_durations, 1, 8))).long()
             mel_lens = torch.clamp(mel_lens, 10, 2048)
             mel_max_len = torch.max(mel_lens).item()
-            mel_masks = self.get_mask_from_lengths(mel_lens, mel_max_len)
+
+        mel_masks = self.get_mask_from_lengths(mel_lens, mel_max_len)
 
         return dict(
             features=features,

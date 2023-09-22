@@ -108,6 +108,8 @@ class CrossAttentionBlock(nn.TransformerDecoderLayer):
 
         self.diffusion_step_projection = nn.Conv1d(dim, dim, 1)
         self.register_buffer("positional_embedding", self.get_embedding(dim))
+        self.position_scale_query = nn.Parameter(torch.ones(1))
+        self.position_scale_key = nn.Parameter(torch.ones(1))
 
     def get_embedding(self, embedding_dim, num_embeddings=4096):
         half_dim = embedding_dim // 2
@@ -130,8 +132,13 @@ class CrossAttentionBlock(nn.TransformerDecoderLayer):
         x = x.transpose(1, 2)
         condition = condition.transpose(1, 2)
 
-        x = x + self.positional_embedding[: x.size(1)][None]
-        condition = condition + self.positional_embedding[: condition.size(1)][None]
+        # self.get_embedding(dim)
+        x = x + self.positional_embedding[: x.size(1)][None] * self.position_scale_query
+        condition = (
+            condition
+            + self.positional_embedding[: condition.size(1)][None]
+            * self.position_scale_key
+        )
 
         return (
             super()
