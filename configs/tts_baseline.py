@@ -89,11 +89,9 @@ model = dict(
         pretrained=True,
     ),
     duration_predictor=dict(
-        type="TransformerEncoder",
+        type="NaiveProjectionEncoder",
         input_size=bert_dim,
         output_size=1,
-        hidden_size=bert_dim,
-        num_layers=1,
     ),
     vocoder=dict(
         type="ADaMoSHiFiGANV1",
@@ -123,6 +121,9 @@ dataset = dict(
 
 dataloader = dict(
     train=dict(
+        batch_size=8,
+    ),
+    valid=dict(
         batch_size=8,
     ),
 )

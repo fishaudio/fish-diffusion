@@ -15,7 +15,7 @@ trainer = dict(
     check_val_every_n_epoch=None,
     max_steps=2_000_000,
     # Warning: If you are training the model with fs2 (and see nan), you should either use bf16 or fp32
-    precision="32",
+    precision="bf16-mixed",
     accumulate_grad_batches=1,
     callbacks=[
         ModelCheckpoint(
