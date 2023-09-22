@@ -121,7 +121,7 @@ dataset = dict(
 
 dataloader = dict(
     train=dict(
-        batch_size=8,
+        batch_size=16,
     ),
     valid=dict(
         batch_size=8,
