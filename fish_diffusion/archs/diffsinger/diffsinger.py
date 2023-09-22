@@ -240,6 +240,9 @@ class DiffSingerLightning(pl.LightningModule):
             }
         )
 
+        if getattr(self.config, "scheduler", None) is None:
+            return optimizer
+
         scheduler = LR_SCHEUDLERS.build(
             {
                 "optimizer": optimizer,
