@@ -105,7 +105,9 @@ def export_diffusion(config, model, device):
     step = torch.randint(
         0, config.model.diffusion.timesteps, (1,), device=device, dtype=torch.long
     )
-    cond = torch.randn((1, config.hidden_size, n_frames), device=device)
+    cond = torch.randn(
+        (1, config.model.diffusion.denoiser.condition_dim, n_frames), device=device
+    )
 
     model.diffusion.denoise_fn = torch.jit.trace(
         model.diffusion.denoise_fn, (x, step, cond), check_trace=True
@@ -146,7 +148,9 @@ def export_diffusion(config, model, device):
 
     logger.info("PLMS noise predictor traced.")
 
-    condition = torch.rand((1, 20, config.hidden_size), device=device)
+    condition = torch.rand(
+        (1, 20, config.model.diffusion.denoiser.condition_dim), device=device
+    )
     sampler_interval = torch.tensor(100, dtype=torch.long, device=device)
 
     torch.manual_seed(0)
