@@ -3,6 +3,9 @@
 from pathlib import Path
 
 from fish_diffusion.datasets.naive import NaiveTTSDataset
+from fish_diffusion.schedulers.warmup_cosine_scheduler import (
+    LambdaWarmUpCosineScheduler,
+)
 
 _base_ = [
     "./_base_/trainers/base.py",
@@ -48,7 +51,7 @@ for dataset in train_datasets:
 sampling_rate = 44100
 mel_channels = 128
 bert_dim = 768
-gradient_checkpointing = True
+gradient_checkpointing = False
 
 model = dict(
     type="GradTTS",
@@ -62,23 +65,23 @@ model = dict(
         s=0.008,
         noise_loss="smoothed-l1",
         denoiser=dict(
-            type="TransformerDecoderDenoiser",
-            dim=512,
-            mlp_factor=4,
-            mel_channels=mel_channels,
-            condition_dim=bert_dim,
-            num_layers=12,
-            gradient_checkpointing=gradient_checkpointing,
-            # type="ConvNextDenoiser",
+            # type="TransformerDecoderDenoiser",
             # dim=512,
             # mlp_factor=4,
             # mel_channels=mel_channels,
             # condition_dim=bert_dim,
-            # num_layers=20,
-            # dilation_cycle=4,
+            # num_layers=40,
             # gradient_checkpointing=gradient_checkpointing,
-            # cross_attention=True,
-            # cross_every_n_layers=5,
+            type="ConvNextDenoiser",
+            dim=384,
+            mlp_factor=4,
+            mel_channels=mel_channels,
+            condition_dim=bert_dim,
+            num_layers=20,
+            dilation_cycle=4,
+            gradient_checkpointing=gradient_checkpointing,
+            cross_attention=True,
+            cross_every_n_layers=10,
         ),
         sampler_interval=10,
         spec_min=[-5],
@@ -92,7 +95,7 @@ model = dict(
     ),
     text_encoder=dict(
         type="BertEncoder",
-        model_name="xlm-roberta-base",
+        model_name="bert-base-cased",
         pretrained=True,
     ),
     duration_predictor=dict(
@@ -138,18 +141,30 @@ dataloader = dict(
 preprocessing = dict(
     text_features_extractor=dict(
         type="BertTokenizer",
-        model_name="xlm-roberta-base",
+        model_name="bert-base-cased",
         label_suffix=".normalized.txt",
     ),
+)
+
+lambda_func = LambdaWarmUpCosineScheduler(
+    warm_up_steps=10000,
+    val_final=1e-5,
+    val_base=1e-4,
+    val_start=0,
+    max_decay_steps=300000,
 )
 
 optimizer = dict(
     _delete_=True,
     type="AdamW",
-    lr=2e-5,
+    lr=1.0,
     weight_decay=1e-2,
-    betas=(0.9, 0.98),
-    eps=1e-9,
+    betas=(0.9, 0.999),
+    eps=1e-6,
 )
 
-scheduler = None
+scheduler = dict(
+    _delete_=True,
+    type="LambdaLR",
+    lr_lambda=lambda_func,
+)
