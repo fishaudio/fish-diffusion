@@ -281,7 +281,13 @@ class DiffSingerLightning(pl.LightningModule):
             energy=batch.get("energy", None),
         )
 
-        self.log(f"{mode}_loss", output["loss"], batch_size=batch_size, sync_dist=True)
+        self.log(
+            f"{mode}_loss",
+            output["loss"],
+            batch_size=batch_size,
+            sync_dist=True,
+            prog_bar=True,
+        )
 
         # If we need to log other metrics
         for k, v in output.get("metrics", {}).items():
