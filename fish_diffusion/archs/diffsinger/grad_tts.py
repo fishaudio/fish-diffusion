@@ -18,6 +18,7 @@ class GradTTS(nn.Module):
         self.text_encoder = ENCODERS.build(model_config.text_encoder)
         self.diffusion = DIFFUSIONS.build(model_config.diffusion)
         self.duration_predictor = ENCODERS.build(model_config.duration_predictor)
+        self.bert_query = nn.Parameter(torch.randn(1, 1, self.text_encoder.output_size))
 
         if getattr(model_config, "speaker_encoder", None):
             self.speaker_encoder = ENCODERS.build(model_config.speaker_encoder)
@@ -55,11 +56,29 @@ class GradTTS(nn.Module):
         phones2mel=None,
         energy=None,
     ):
-        src_masks = self.get_mask_from_lengths(contents_lens, contents_max_len)
+        if self.training is False:
+            # Random 20% size change
+            mel_lens = torch.round(
+                mel_lens * (0.8 + 0.4 * torch.rand(1, device=mel_lens.device))
+            ).long()
+            mel_max_len = torch.max(mel_lens).item()
 
-        features = self.text_encoder.bert.embeddings.word_embeddings(contents)[
+        # Build text features
+        text_features = self.text_encoder.bert.embeddings.word_embeddings(contents)[
             :, 0, :, :
         ]
+        text_masks = self.get_mask_from_lengths(contents_lens, contents_max_len)
+
+        # Build Query features
+        query_lengths = (mel_lens / 10).ceil().long()  # 512 * 10 / 44100 = 0.116 sec
+        max_query_length = torch.max(query_lengths).item()
+        mel_queries = self.bert_query.expand(mel.shape[0], max_query_length, -1)
+        mel_masks = self.get_mask_from_lengths(query_lengths, max_query_length)
+
+        # Concatenate text and query features
+        # This will waste memory, is there any better way?
+        features = torch.cat([text_features, mel_queries], dim=1)
+        src_masks = torch.cat([text_masks, mel_masks], dim=1)
 
         if speakers.ndim in [2, 3] and torch.is_floating_point(speakers):
             speaker_embed = speakers
@@ -82,26 +101,21 @@ class GradTTS(nn.Module):
             output_hidden_states=True,
         )
 
-        # Predict durations
-        log_durations = self.duration_predictor(features[:, 0, :])[..., 0]
-        duration_loss = F.smooth_l1_loss(log_durations, torch.log(mel_lens.float()))
+        # Let's extract query features
+        features = features[:, -max_query_length:, :]
 
-        if self.training is False:
-            mel_lens = torch.round(torch.exp(torch.clamp(log_durations, 1, 8))).long()
-            mel_lens = torch.clamp(mel_lens, 10, 2048)
-            mel_max_len = torch.max(mel_lens).item()
+        # Repeat to match mel length
+        features = features.repeat_interleave(10, dim=1)
 
+        # Truncate to match mel length
+        features = features[:, :mel_max_len, :]
         mel_masks = self.get_mask_from_lengths(mel_lens, mel_max_len)
 
         return dict(
             features=features,
             x_masks=mel_masks,
             x_lens=mel_lens,
-            cond_masks=src_masks,
-            loss=duration_loss,
-            metrics={
-                "duration_loss": duration_loss,
-            },
+            cond_masks=mel_masks,
         )
 
     def forward(

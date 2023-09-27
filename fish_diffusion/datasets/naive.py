@@ -1,3 +1,5 @@
+import platform
+import warnings
 from pathlib import Path
 from typing import Optional
 
@@ -18,9 +20,35 @@ class NaiveDataset(Dataset):
 
     collating_pipeline = []
 
-    def __init__(self, path="dataset", speaker_id=0):
-        self.paths = list_files(path, {".npy"}, recursive=True, sort=True)
-        self.dataset_path = Path(path)
+    def __init__(
+        self, path: str = "dataset", speaker_id: int = 0, cache_list: bool = False
+    ) -> None:
+        path = Path(path)
+        if cache_list and platform.system() != "Linux":
+            warnings.warn(
+                "Caching npy list is only supported on Linux, "
+                + "since it uses `mtime` to check if the file is updated."
+                + "Please use `cache_list=False` on other platforms."
+            )
+            cache_list = False
+
+        self.paths = None
+        cache_file = path / "filelist.cache"
+        if (
+            cache_list
+            and cache_file.exists()
+            and path.stat().st_mtime < cache_file.stat().st_mtime
+        ):
+            self.paths = open(cache_file).read().splitlines()
+
+        if self.paths is None:
+            self.paths = list_files(path, {".npy"}, recursive=True, sort=True)
+
+            if cache_list:
+                with open(cache_file, "w") as f:
+                    f.write("\n".join([str(x) for x in self.paths]))
+
+        self.dataset_path = path
         self.speaker_id = speaker_id
 
         assert len(self.paths) > 0, f"No files found in {path}, please check your path."

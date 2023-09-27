@@ -37,6 +37,7 @@ for name, path in mixin_datasets:
                 type="NaiveTTSDataset",
                 path=str(speaker_path),
                 speaker_id=speaker_name,
+                cache_list=True,
             )
         )
 
@@ -65,23 +66,13 @@ model = dict(
         s=0.008,
         noise_loss="smoothed-l1",
         denoiser=dict(
-            # type="TransformerDecoderDenoiser",
-            # dim=512,
-            # mlp_factor=4,
-            # mel_channels=mel_channels,
-            # condition_dim=bert_dim,
-            # num_layers=40,
-            # gradient_checkpointing=gradient_checkpointing,
-            type="ConvNextDenoiser",
-            dim=384,
-            mlp_factor=4,
+            type="WaveNetDenoiser",
             mel_channels=mel_channels,
-            condition_dim=bert_dim,
-            num_layers=20,
+            d_encoder=bert_dim,
+            residual_channels=512,
+            residual_layers=20,
             dilation_cycle=4,
-            gradient_checkpointing=gradient_checkpointing,
-            cross_attention=True,
-            cross_every_n_layers=10,
+            use_linear_bias=True,
         ),
         sampler_interval=10,
         spec_min=[-5],
@@ -149,9 +140,9 @@ preprocessing = dict(
 lambda_func = LambdaWarmUpCosineScheduler(
     warm_up_steps=10000,
     val_final=1e-5,
-    val_base=1e-4,
+    val_base=4e-5,
     val_start=0,
-    max_decay_steps=300000,
+    max_decay_steps=1000000,
 )
 
 optimizer = dict(
