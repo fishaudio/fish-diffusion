@@ -3,6 +3,7 @@ from .builder import FEATURE_EXTRACTORS
 from .chinese_hubert import ChineseHubertSoft
 from .content_vec import ContentVec
 from .hubert_soft import HubertSoft
+from .llama_tokenizer import LlamaTokenizer
 from .opencpop_transcription import OpenCpopTranscriptionToPhonemesDuration
 from .whisper import AlignedWhisper
 
@@ -14,4 +15,5 @@ __all__ = [
     "AlignedWhisper",
     "ContentVec",
     "BertTokenizer",
+    "LlamaTokenizer",
 ]
