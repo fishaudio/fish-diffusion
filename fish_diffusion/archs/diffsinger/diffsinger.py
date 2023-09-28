@@ -89,9 +89,13 @@ class DiffSinger(nn.Module):
                 1 - mel_masks[:, :, None].float()
             )
 
-        if speakers.ndim in [2, 3] and torch.is_floating_point(speakers):
+        if (
+            speakers is not None
+            and speakers.ndim in [2, 3]
+            and torch.is_floating_point(speakers)
+        ):
             speaker_embed = speakers
-        elif hasattr(self, "speaker_encoder"):
+        elif speakers is not None and hasattr(self, "speaker_encoder"):
             speaker_embed = self.speaker_encoder(speakers)
         else:
             speaker_embed = None
@@ -265,17 +269,17 @@ class DiffSingerLightning(pl.LightningModule):
             assert batch["pitches"].shape[1] == batch["mel"].shape[1]
             pitches = batch["pitches"].clone()
 
-        batch_size = batch["speaker"].shape[0]
+        batch_size = batch["mel"].shape[0]
 
         output = model(
-            speakers=batch["speaker"],
+            speakers=batch.get("speaker", None),
             contents=batch["contents"],
             contents_lens=batch["contents_lens"],
             contents_max_len=batch["contents_max_len"],
             mel=batch["mel"],
             mel_lens=batch["mel_lens"],
             mel_max_len=batch["mel_max_len"],
-            pitches=batch["pitches"],
+            pitches=batch.get("pitches", None),
             pitch_shift=batch.get("key_shift", None),
             phones2mel=batch.get("phones2mel", None),
             energy=batch.get("energy", None),

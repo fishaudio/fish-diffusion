@@ -278,3 +278,23 @@ class NaiveTTSDataset(NaiveDataset):
             ],
         ),
     ]
+
+
+@DATASETS.register_module()
+class NaiveDenoiserDataset(NaiveDataset):
+    processing_pipeline = [
+        dict(
+            type="PickKeys",
+            keys=[
+                "path",
+                "mel",
+                "contents",
+            ],
+        ),
+        dict(type="Transpose", keys=[("mel", 1, 0), ("contents", 1, 0)]),
+    ]
+
+    collating_pipeline = [
+        dict(type="ListToDict"),
+        dict(type="PadStack", keys=[("mel", -2), ("contents", -2)]),
+    ]
