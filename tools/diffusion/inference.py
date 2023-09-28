@@ -54,11 +54,13 @@ class SVCInference(nn.Module):
         self.text_features_extractor = FEATURE_EXTRACTORS.build(
             config.preprocessing.text_features_extractor
         )
-        self.pitch_extractor = PITCH_EXTRACTORS.build(
-            config.preprocessing.pitch_extractor
-        )
 
-        if hasattr(config.preprocessing, "energy_extractor"):
+        if getattr(config.preprocessing, "pitch_extractor", None):
+            self.pitch_extractor = PITCH_EXTRACTORS.build(
+                config.preprocessing.pitch_extractor
+            )
+
+        if getattr(config.preprocessing, "energy_extractor", None):
             self.energy_extractor = ENERGY_EXTRACTORS.build(
                 config.preprocessing.energy_extractor
             )
@@ -102,15 +104,16 @@ class SVCInference(nn.Module):
             mel_len = audio.shape[-1] // 512
 
         # Extract and process pitch
-        if pitches is None:
-            pitches = self.pitch_extractor(audio, sr, pad_to=mel_len).float()
-        else:
-            pitches = repeat_expand(pitches, mel_len)
+        if hasattr(self, "pitch_extractor") and self.pitch_extractor is not None:
+            if pitches is None:
+                pitches = self.pitch_extractor(audio, sr, pad_to=mel_len).float()
+            else:
+                pitches = repeat_expand(pitches, mel_len)
 
-        if (pitches == 0).all():
-            return np.zeros((audio.shape[-1],))
+            if (pitches == 0).all():
+                return np.zeros((audio.shape[-1],))
 
-        pitches *= 2 ** (pitch_adjust / 12)
+            pitches *= 2 ** (pitch_adjust / 12)
 
         # Extract and process text features
         text_features = self.text_features_extractor(audio, sr)[0]
@@ -141,7 +144,7 @@ class SVCInference(nn.Module):
             contents_max_len=max(contents_lens),
             mel_lens=contents_lens,
             mel_max_len=max(contents_lens),
-            pitches=pitches[None].to(self.device),
+            pitches=pitches[None].to(self.device) if pitches is not None else None,
             pitch_shift=pitch_shift,
             energy=energy,
         )
