@@ -48,7 +48,7 @@ def init(
     logger.info(f"Rank {rank} uses device {device}")
 
     text_features_extractor = None
-    if hasattr(config.preprocessing, "text_features_extractor"):
+    if getattr(config.preprocessing, "text_features_extractor", None):
         text_features_extractor = FEATURE_EXTRACTORS.build(
             config.preprocessing.text_features_extractor
         )
@@ -56,7 +56,7 @@ def init(
         text_features_extractor.eval()
 
     pitch_extractor = None
-    if hasattr(config.preprocessing, "pitch_extractor"):
+    if getattr(config.preprocessing, "pitch_extractor", None):
         if config.preprocessing.pitch_extractor.type == "CrepePitchExtractor":
             torchcrepe.load.model(device, "full")
 
@@ -65,7 +65,7 @@ def init(
         pitch_extractor.eval()
 
     energy_extractor = None
-    if hasattr(config.preprocessing, "energy_extractor"):
+    if getattr(config.preprocessing, "energy_extractor", None):
         energy_extractor = ENERGY_EXTRACTORS.build(
             config.preprocessing.energy_extractor
         )
@@ -73,7 +73,7 @@ def init(
         energy_extractor.eval()
 
     vocoder = None
-    if hasattr(config.model, "vocoder"):
+    if getattr(config.model, "vocoder", None):
         vocoder = VOCODERS.build(config.model.vocoder)
         vocoder.to(device)
         vocoder.eval()

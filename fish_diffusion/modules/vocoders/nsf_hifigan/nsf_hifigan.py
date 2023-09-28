@@ -72,7 +72,9 @@ class NsfHifiGAN(pl.LightningModule):
     @torch.no_grad()
     def spec2wav(self, mel, f0, key_shift=0):
         c = mel[None]
-        f0 *= 2 ** (key_shift / 12)
+
+        if key_shift is not None and key_shift != 0:
+            f0 *= 2 ** (key_shift / 12)
 
         if self.use_natural_log is False:
             c = 2.30259 * c

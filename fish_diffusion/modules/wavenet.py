@@ -191,7 +191,7 @@ class WaveNet(nn.Module):
         )
         nn.init.zeros_(self.output_projection.conv.weight)
 
-    def forward(self, x, diffusion_step, conditioner):
+    def forward(self, x, diffusion_step, conditioner, x_masks=None, cond_masks=None):
         """
 
         :param x: [B, M, T]
@@ -214,6 +214,12 @@ class WaveNet(nn.Module):
         diffusion_step = self.diffusion_embedding(diffusion_step)
         diffusion_step = self.mlp(diffusion_step)
 
+        if x_masks is not None:
+            x = x.masked_fill(x_masks[:, None], 0.0)
+
+        if cond_masks is not None:
+            conditioner = conditioner.masked_fill(cond_masks[:, None], 0.0)
+
         skip = []
         for layer in self.residual_layers:
             x, skip_connection = layer(x, conditioner, diffusion_step)
@@ -223,5 +229,8 @@ class WaveNet(nn.Module):
         x = self.skip_projection(x)
         x = F.relu(x)
         x = self.output_projection(x)  # [B, 128, T]
+
+        if x_masks is not None:
+            x = x.masked_fill(x_masks[:, None], 0.0)
 
         return x[:, None] if use_4_dim else x
