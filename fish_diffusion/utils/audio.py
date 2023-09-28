@@ -173,7 +173,7 @@ def separate_vocals(
     device: Union[str, torch.device] = "cpu",
     separate_model: torch.nn.Module = None,
 ):
-    if separate_model is None:
+    if separate_model is not None:
         model = separate_model.to(device)
     else:
         model = separate_audio.init_model("htdemucs", device=device)
