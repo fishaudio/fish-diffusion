@@ -2,7 +2,7 @@
 name = "fish-diffusion"
 version = "2.2.0"
 description = "An easy to understand TTS / SVS / SVC framework"
-license = "MIT"
+license = {file = "LICENSE"}
 authors = [
     {name = "Lengyue", email = "lengyue@lengyue.me"},
 ]
