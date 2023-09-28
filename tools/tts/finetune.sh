@@ -1,5 +1,3 @@
-export NCCL_P2P_DISABLE=1
-
 hostfile=""
 deepspeed --hostfile=$hostfile tools/tts/fine-tune.py \
     --deepspeed tools/tts/ds_config.json \
