@@ -155,3 +155,4 @@ exp_*.sh
 exported
 pitches_editor
 .pdm-python
+.pgx.*
