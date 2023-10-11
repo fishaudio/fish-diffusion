@@ -1,15 +1,15 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Enhancing Generation Quality" href="quality.html" /><link rel="prev" title="Quick FishSVC Guide" href="guide.html" />
 
-    <link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/fishaudio/fish-diffusion@main/images/logo_512x512.png"/><!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
+    <link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/fishaudio/fish-diffusion@main/images/logo_512x512.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>Configuration - Fish Diffusion documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
     
@@ -149,7 +149,7 @@
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="https://cdn.jsdelivr.net/gh/fishaudio/fish-diffusion@main/images/logo_512x512.png" alt="Logo"/>
@@ -217,7 +217,7 @@
         </div>
         <article role="main">
           <section id="configuration">
-<h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading">#</a></h1>
+<h1>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">#</a></h1>
 <p>Since fish diffusion supports various modules, writing a good config file is essential. There are many examples in the configs folder.<br />
 To begin with, you should create a config file <code class="docutils literal notranslate"><span class="pre">exp_xxxxxx.py</span></code> in the <code class="docutils literal notranslate"><span class="pre">configs</span></code> folder with the following code:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">_base_</span> <span class="o">=</span> <span class="p">[</span>
@@ -230,7 +230,7 @@ To begin with, you should create a config file <code class="docutils literal not
 </pre></div>
 </div>
 <section id="preprocessing">
-<h2>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this heading">#</a></h2>
+<h2>Preprocessing<a class="headerlink" href="#preprocessing" title="Link to this heading">#</a></h2>
 <p>Preprocessing config currently includes two components: <code class="docutils literal notranslate"><span class="pre">text_features_extractor</span></code> and <code class="docutils literal notranslate"><span class="pre">pitch_extractor.</span></code></p>
 <p>Stable feature extractors are <code class="docutils literal notranslate"><span class="pre">HubertSoft</span></code>, <code class="docutils literal notranslate"><span class="pre">ChineseHubertSoft</span></code>, and <code class="docutils literal notranslate"><span class="pre">ContentVec</span></code>. Although there is a <code class="docutils literal notranslate"><span class="pre">Chinese</span></code> in the second one, it works on multilingual and outperforms the vanilla one.</p>
 <p>To extract the pitch, you can choose <code class="docutils literal notranslate"><span class="pre">ParselMouthPitchExtractor</span></code> or <code class="docutils literal notranslate"><span class="pre">CrepePitchExtractor</span></code>. ParselMouth is good enough in most cases, and it’s literally 100x faster than Crepe. However, in some edge cases, Crepe is more robust and stable. For more results, see <a class="reference external" href="https://github.com/fishaudio/fish-diffusion/wiki/Pitch-Extractors">Pitch Extractors</a>.</p>
@@ -257,7 +257,7 @@ To begin with, you should create a config file <code class="docutils literal not
 </div></blockquote>
 </section>
 <section id="dataset">
-<h2>Dataset<a class="headerlink" href="#dataset" title="Permalink to this heading">#</a></h2>
+<h2>Dataset<a class="headerlink" href="#dataset" title="Link to this heading">#</a></h2>
 <p>Be default, <code class="docutils literal notranslate"><span class="pre">./_base_/datasets/naive_svc.py</span></code> will try to load data from <code class="docutils literal notranslate"><span class="pre">dataset/train</span></code> and <code class="docutils literal notranslate"><span class="pre">dataset/valid</span></code>. However, if you want to train a multi speakers model, you should refer to <code class="docutils literal notranslate"><span class="pre">svc_hubert_soft_multi_speakers.py</span></code>. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
     <span class="n">train</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
@@ -346,7 +346,7 @@ Don’t worry. You can use the following folder structure and scripts:</p>
 </div>
 </section>
 <section id="data-augmentation">
-<h2>Data Augmentation<a class="headerlink" href="#data-augmentation" title="Permalink to this heading">#</a></h2>
+<h2>Data Augmentation<a class="headerlink" href="#data-augmentation" title="Link to this heading">#</a></h2>
 <p>To enable data augmentation, you can reference to the following config:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">preprocessing</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
     <span class="o">...</span>
@@ -377,7 +377,7 @@ RandomTimeStretching is not tested yet (as of 2023-03-03).</p>
 </div></blockquote>
 </section>
 <section id="appendix-pitch-extractors">
-<h2>Appendix: Pitch Extractors<a class="headerlink" href="#appendix-pitch-extractors" title="Permalink to this heading">#</a></h2>
+<h2>Appendix: Pitch Extractors<a class="headerlink" href="#appendix-pitch-extractors" title="Link to this heading">#</a></h2>
 <p>Currently, this repo supports ParselMouth, Crepe, Harvest, and Dio. However, we recommend only using <strong>Crepe</strong> and <strong>ParselMouth</strong>.</p>
 <ul class="simple">
 <li><p>If your dataset is small and you want it to be more robust, Crepe is probably good for you.</p></li>
@@ -465,12 +465,9 @@ RandomTimeStretching is not tested yet (as of 2023-03-03).</p>
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
     </body>
 </html>

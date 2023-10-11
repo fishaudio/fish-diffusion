@@ -1,15 +1,15 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Configuration" href="config.html" /><link rel="prev" title="Fish Diffusion" href="../index.html" />
 
-    <link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/fishaudio/fish-diffusion@main/images/logo_512x512.png"/><!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
+    <link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/fishaudio/fish-diffusion@main/images/logo_512x512.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>Quick FishSVC Guide - Fish Diffusion documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
     
@@ -149,7 +149,7 @@
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="https://cdn.jsdelivr.net/gh/fishaudio/fish-diffusion@main/images/logo_512x512.png" alt="Logo"/>
@@ -217,7 +217,7 @@
         </div>
         <article role="main">
           <section id="quick-fishsvc-guide">
-<h1>Quick FishSVC Guide<a class="headerlink" href="#quick-fishsvc-guide" title="Permalink to this heading">#</a></h1>
+<h1>Quick FishSVC Guide<a class="headerlink" href="#quick-fishsvc-guide" title="Link to this heading">#</a></h1>
 <blockquote>
 <div><p>Updated: March 03 2023 (Lengyue)<br />
 Made &amp; Updated: Kangarroar (Feb 01 2023)
@@ -225,7 +225,7 @@ Updated: May 17 2023 (OOPPEENN)</p>
 </div></blockquote>
 <p>If you don’t want to install the environment manually or don’t have a powerful GPU, using <a class="reference external" href="https://colab.research.google.com/github/fishaudio/fish-diffusion/blob/main/notebooks/train.ipynb">Google Colab</a> for training is a good option to get started</p>
 <section id="preparing-the-environment">
-<h2>Preparing the environment<a class="headerlink" href="#preparing-the-environment" title="Permalink to this heading">#</a></h2>
+<h2>Preparing the environment<a class="headerlink" href="#preparing-the-environment" title="Link to this heading">#</a></h2>
 <ol class="arabic">
 <li><p>You need to install conda on your PC, I recommend installing Miniconda if you don’t want it to eat a lot of your disk space.</p>
 <p>The link for Miniconda is here: <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">https://docs.conda.io/en/latest/miniconda.html</a></p>
@@ -282,7 +282,7 @@ The link for guide is here: <a class="reference external" href="https://mirrors.
 </ol>
 </section>
 <section id="dataset-preparation-single-speaker">
-<h2>Dataset Preparation (Single Speaker)<a class="headerlink" href="#dataset-preparation-single-speaker" title="Permalink to this heading">#</a></h2>
+<h2>Dataset Preparation (Single Speaker)<a class="headerlink" href="#dataset-preparation-single-speaker" title="Link to this heading">#</a></h2>
 <p>You need to put the dataset into the dataset directory in the following file structure</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dataset
 ├───train
@@ -313,11 +313,11 @@ python<span class="w"> </span>tools/preprocessing/extract_features.py<span class
 </div></blockquote>
 </section>
 <section id="dataset-preparation-multi-speaker">
-<h2>Dataset Preparation (Multi Speaker)<a class="headerlink" href="#dataset-preparation-multi-speaker" title="Permalink to this heading">#</a></h2>
+<h2>Dataset Preparation (Multi Speaker)<a class="headerlink" href="#dataset-preparation-multi-speaker" title="Link to this heading">#</a></h2>
 <p>Reference to <a class="reference external" href="https://fishaudio.github.io/fish-diffusion/pages/config.html#dataset">Dataset Configuration</a>.</p>
 </section>
 <section id="training-time">
-<h2>Training time!<a class="headerlink" href="#training-time" title="Permalink to this heading">#</a></h2>
+<h2>Training time!<a class="headerlink" href="#training-time" title="Link to this heading">#</a></h2>
 <p>You may need to change your batchsize accordingly to your GPU resources, which can be found in <code class="docutils literal notranslate"><span class="pre">configs/_base_/datasets/naive_svc.py</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dataloader</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
     <span class="n">train</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
@@ -369,7 +369,7 @@ You may want to change every how many steps you want to save the ckpt! By defaul
 </section>
 <hr class="docutils" />
 <section id="inference">
-<h2>Inference<a class="headerlink" href="#inference" title="Permalink to this heading">#</a></h2>
+<h2>Inference<a class="headerlink" href="#inference" title="Link to this heading">#</a></h2>
 <p>Inferencing with FishSVC is fully terminal code right now, in my case I have a folder called audios where I drop the wav to inference, the command to run inference is:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>tools/diffusion/inference.py<span class="w"> </span>--config<span class="w"> </span>configs/svc_content_vec.py<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--checkpoint<span class="w"> </span><span class="o">[</span>checkpoint<span class="w"> </span>file<span class="o">]</span><span class="w"> </span><span class="se">\</span>
@@ -397,7 +397,7 @@ You may want to change every how many steps you want to save the ckpt! By defaul
 </section>
 <hr class="docutils" />
 <section id="diff-svc-conversion-to-fish-svc">
-<h2>DIFF SVC CONVERSION TO FISH SVC<a class="headerlink" href="#diff-svc-conversion-to-fish-svc" title="Permalink to this heading">#</a></h2>
+<h2>DIFF SVC CONVERSION TO FISH SVC<a class="headerlink" href="#diff-svc-conversion-to-fish-svc" title="Link to this heading">#</a></h2>
 <p>This is pretty straightforward, conversion takes 2 minutes to run and it allows inference immediately!
 You first need to copy your DiffSVC checkpoint of the model you want to convert, in my case I created a specific folder called “conversion”</p>
 <p>To run the conversion you need to use the following command:</p>
@@ -414,7 +414,7 @@ You first need to copy your DiffSVC checkpoint of the model you want to convert,
 </section>
 <hr class="docutils" />
 <section id="inferencing-with-a-diffsvc-converted-model">
-<h2>Inferencing with a DiffSVC converted model<a class="headerlink" href="#inferencing-with-a-diffsvc-converted-model" title="Permalink to this heading">#</a></h2>
+<h2>Inferencing with a DiffSVC converted model<a class="headerlink" href="#inferencing-with-a-diffsvc-converted-model" title="Link to this heading">#</a></h2>
 <p>It’s the same as a normal FishSVC model, just that instead you will need to use: svc_hybert_soft_diff_svc.py config, instead of the normal one.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>tools/diffusion/inference.py<span class="w"> </span>--config<span class="w"> </span>configs/svc_hubert_soft_diff_svc.py<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--checkpoint<span class="w"> </span><span class="o">[</span>checkpoint<span class="w"> </span>path<span class="o">]</span><span class="w"> </span><span class="se">\</span>
@@ -510,12 +510,9 @@ You first need to copy your DiffSVC checkpoint of the model you want to convert,
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
     </body>
 </html>
