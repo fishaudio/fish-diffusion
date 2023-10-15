@@ -258,21 +258,8 @@ if __name__ == "__main__":
 
         logger.info(f"{curr_worker} Done!")
 
-    # Load config
-    config = Config.fromfile(args.config)
-    files = list_files(args.path, AUDIO_EXTENSIONS, recursive=True, sort=True)
-
-    # Shuffle files will balance the workload of workers
-    Random(42).shuffle(files)
-
-    logger.info(f"{curr_worker} Found {len(files)} files, processing...")
-
-    # Chunk files
-    if args.world_size > 1:
-        files = files[args.rank :: args.world_size]
-        logger.info(f"{curr_worker} Processing subset of {len(files)} files")
-
-    elif args.num_workers > 1:
+    # Multi-processing
+    if args.num_workers > 1:
         logger.info(f"{curr_worker} Launching {args.num_workers} workers")
 
         processes = []
@@ -319,6 +306,20 @@ if __name__ == "__main__":
 
         logger.info(f"{curr_worker} All workers done!")
         exit(0)
+
+    # Load config
+    config = Config.fromfile(args.config)
+    files = list_files(args.path, AUDIO_EXTENSIONS, recursive=True, sort=True)
+
+    # Shuffle files will balance the workload of workers
+    Random(42).shuffle(files)
+
+    logger.info(f"{curr_worker} Found {len(files)} files, processing...")
+
+    # Chunk files
+    if args.world_size > 1:
+        files = files[args.rank :: args.world_size]
+        logger.info(f"{curr_worker} Processing subset of {len(files)} files")
 
     # Main process
     total_samples, failed = 0, 0
