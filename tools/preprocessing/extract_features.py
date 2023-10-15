@@ -2,7 +2,9 @@ import argparse
 import os
 import random
 import subprocess as sp
+import time
 from copy import deepcopy
+from datetime import timedelta
 from pathlib import Path
 from random import Random
 from typing import Optional
@@ -320,6 +322,8 @@ if __name__ == "__main__":
 
     # Main process
     total_samples, failed = 0, 0
+    log_time = 0
+    start_time = time.time()
 
     for idx, audio_path in enumerate(files):
         i = safe_process(args, config, audio_path)
@@ -328,12 +332,17 @@ if __name__ == "__main__":
         else:
             failed += 1
 
-        if (idx + 1) % 100 == 0:
+        if (idx + 1) % 100 == 0 and time.time() - log_time > 10:
+            eta = (time.time() - start_time) / (idx + 1) * (len(files) - idx - 1)
+
             logger.info(
                 f"{curr_worker} "
                 + f"Processed {idx + 1}/{len(files)} files, "
-                + f"{total_samples} samples, {failed} failed"
+                + f"{total_samples} samples, {failed} failed, "
+                + f"ETA: {timedelta(seconds=eta)}"
             )
+
+            log_time = time.time()
 
     logger.info(
         f"{curr_worker} Done! "
