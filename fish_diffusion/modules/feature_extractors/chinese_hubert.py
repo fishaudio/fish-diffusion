@@ -66,10 +66,16 @@ class ChineseHubertSoft(BaseFeatureExtractor):
 
 @FEATURE_EXTRACTORS.register_module()
 class ChineseHubert(BaseFeatureExtractor):
-    def __init__(self, model="TencentGameMate/chinese-hubert-base"):
+    def __init__(
+        self,
+        model: str = "TencentGameMate/chinese-hubert-base",
+        downsample: Optional[int] = None,
+    ):
         super().__init__()
+
         self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(model)
         self.model = HubertModel.from_pretrained(model)
+        self.downsample = downsample
 
     @torch.no_grad()
     def forward(self, path_or_audio, sampling_rate=None):
@@ -81,5 +87,15 @@ class ChineseHubert(BaseFeatureExtractor):
         input_values = input_values.to(self.model.device)
 
         features = self.model(input_values).last_hidden_state
+        features = features.transpose(1, 2)
 
-        return features.transpose(1, 2)
+        if self.downsample is None:
+            return features
+
+        x = torch.nn.functional.interpolate(
+            features,
+            size=features.shape[2] // self.downsample,
+            mode="linear",
+        )
+
+        return x
