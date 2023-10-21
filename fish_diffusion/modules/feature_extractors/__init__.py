@@ -6,14 +6,14 @@ from .encodec import Encodec
 from .hubert_soft import HubertSoft
 from .llama_tokenizer import LlamaTokenizer
 from .opencpop_transcription import OpenCpopTranscriptionToPhonemesDuration
-from .whisper import AlignedWhisper
+from .whisper import QuantizedWhisper
 
 __all__ = [
     "FEATURE_EXTRACTORS",
     "ChineseHubertSoft",
     "HubertSoft",
     "OpenCpopTranscriptionToPhonemesDuration",
-    "AlignedWhisper",
+    "QuantizedWhisper",
     "ContentVec",
     "BertTokenizer",
     "LlamaTokenizer",

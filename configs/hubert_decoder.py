@@ -1,4 +1,8 @@
 from fish_diffusion.datasets.naive import NaiveDenoiserDataset
+from fish_diffusion.datasets.utils import (
+    get_datasets_from_subfolder,
+    get_speaker_map_from_subfolder,
+)
 
 _base_ = [
     "./_base_/archs/diff_svc_v2.py",
@@ -7,7 +11,12 @@ _base_ = [
     "./_base_/datasets/audio_folder.py",
 ]
 
-speaker_mapping = {"default": 0, "aria": 1}
+speaker_mapping = {"aria": 0}
+
+speaker_mapping = get_speaker_map_from_subfolder("dataset/tts/genshin", speaker_mapping)
+genshin_dataset = get_datasets_from_subfolder(
+    "NaiveDenoiserDataset", "dataset/tts/genshin", speaker_mapping
+)
 
 dataset = dict(
     train=dict(
@@ -19,27 +28,8 @@ dataset = dict(
                 path="dataset/tts/aria",
                 speaker_id=speaker_mapping["aria"],
             ),
-            dict(
-                type="NaiveDenoiserDataset",
-                path="dataset/tts/vctk",
-                speaker_id=0,
-            ),
-            dict(
-                type="NaiveDenoiserDataset",
-                path="dataset/tts/genshin",
-                speaker_id=0,
-            ),
-            dict(
-                type="NaiveDenoiserDataset",
-                path="dataset/tts/libritts",
-                speaker_id=0,
-            ),
-            dict(
-                type="NaiveDenoiserDataset",
-                path="dataset/tts/wenet-speech-vocals",
-                speaker_id=0,
-            ),
-        ],
+        ]
+        + genshin_dataset,
         collate_fn=NaiveDenoiserDataset.collate_fn,
     ),
     valid=dict(
@@ -53,8 +43,8 @@ dataset = dict(
             ),
             dict(
                 type="NaiveDenoiserDataset",
-                path="dataset/tts/valid/vctk",
-                speaker_id=0,
+                path="dataset/tts/valid/aria",
+                speaker_id=speaker_mapping["派蒙"],
             ),
         ],
         collate_fn=NaiveDenoiserDataset.collate_fn,
@@ -63,16 +53,10 @@ dataset = dict(
 
 model = dict(
     text_encoder=dict(
-        type="MLPVectorQuantizeEncoder",
-        input_size=1024 * 2,  # Dual hubert
-        output_size=256,
-        dim=512,
-        codebook_size=4096,
-        threshold_ema_dead_code=2,
-        use_cosine_sim=True,
+        input_size=1024,
     ),
     speaker_encoder=dict(
-        input_size=10,
+        input_size=len(speaker_mapping),
     ),
     pitch_encoder=dict(
         _delete_=True,
@@ -87,8 +71,8 @@ model = dict(
 
 preprocessing = dict(
     text_features_extractor=dict(
-        type="EnsembleHubert",
-        models=["TencentGameMate/chinese-hubert-large", "facebook/hubert-large-ll60k"],
+        type="QuantizedWhisper",
+        # models=["TencentGameMate/chinese-hubert-large", "facebook/hubert-large-ll60k"],
     ),
     pitch_extractor=None,
     augmentations=[],

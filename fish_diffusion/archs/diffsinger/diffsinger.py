@@ -82,6 +82,8 @@ class DiffSinger(nn.Module):
         # Extend text encoder to support loss and metrics
         metrics = {}
         features = self.text_encoder(contents, src_masks)
+        text_encoder_loss = 0
+
         if isinstance(features, dict):
             if features.get("loss", None) is not None:
                 text_encoder_loss = features["loss"]

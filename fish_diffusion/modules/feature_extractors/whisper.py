@@ -1,306 +1,186 @@
-from typing import Iterable
+from typing import Iterable, Optional
 
 import torch
 from loguru import logger
 from torch import Tensor, nn
 from torch.hub import load_state_dict_from_url
 from torch.nn import functional as F
-from whisper import _MODELS, log_mel_spectrogram, pad_or_trim
-from whisper.model import AudioEncoder, LayerNorm, ResidualAttentionBlock, sinusoids
+from transformers.models.whisper.modeling_whisper import (
+    WhisperEncoderLayer,
+    WhisperModel,
+)
+from vector_quantize_pytorch import VectorQuantize
+from whisper import log_mel_spectrogram, pad_or_trim
 
 from .base import BaseFeatureExtractor
 from .builder import FEATURE_EXTRACTORS
 
-_PRETRAINED_MODELS = {
-    "aligned-whisper-cn-25k-v1": "https://github.com/fishaudio/fish-diffusion/releases/download/v1.2b0/aligned-whisper-cn-25k-v1.ckpt",
-    "aligned-whisper-cn-40k-v1.1": "https://github.com/fishaudio/fish-diffusion/releases/download/v1.2b0/aligned-whisper-cn-40k-v1.1.ckpt",
-}
 
-
-class PhoneEncoder(nn.Module):
-    def __init__(
-        self, n_phones: int, n_ctx: int, n_state: int, n_head: int, n_layer: int
-    ):
-        super().__init__()
-        self.proj = nn.Embedding(n_phones, n_state, padding_idx=0)
-        self.register_buffer("positional_embedding", sinusoids(n_ctx, n_state))
-
-        self.blocks: Iterable[ResidualAttentionBlock] = nn.ModuleList(
-            [ResidualAttentionBlock(n_state, n_head) for _ in range(n_layer)]
-        )
-        self.ln_post = LayerNorm(n_state)
-
-    def forward(self, x: Tensor):
-        """
-        x : torch.Tensor, shape = (batch_size, n_ctx)
-            the mel spectrogram of the audio
-        """
-        x = F.gelu(self.proj(x))
-        # x = x.permute(0, 2, 1)
-
-        assert x.shape[1:] == self.positional_embedding.shape, "incorrect audio shape"
-        x = (x + self.positional_embedding).to(x.dtype)
-
-        for block in self.blocks:
-            x = block(x)
-
-        x = self.ln_post(x)
-        return x
-
-
-class PartialFreezedAudioEncoder(AudioEncoder):
+class WhisperVQ(nn.Module):
     def __init__(
         self,
-        n_mels: int,
-        n_ctx: int,
-        n_state: int,
-        n_head: int,
-        n_layer: int,
-        n_trainable_layers: int = 2,
-    ):
-        super().__init__(
-            n_mels=n_mels, n_ctx=n_ctx, n_state=n_state, n_head=n_head, n_layer=n_layer
-        )
-
-        self.n_trainable_layers = n_trainable_layers
-
-        # Freeze all layers
-        for param in self.parameters():
-            param.requires_grad = False
-
-        # Unfreeze the last n_trainable_layers
-        for param in self.blocks[-n_trainable_layers:].parameters():
-            param.requires_grad = True
-
-        # Unfreeze the last layer norm
-        for param in self.ln_post.parameters():
-            param.requires_grad = True
-
-
-class AlignedWhisper(nn.Module):
-    def __init__(
-        self,
-        n_mels: int,
-        n_phones: int,
-        n_audio_ctx: int,
-        n_audio_state: int,
-        n_audio_head: int,
-        n_audio_layer: int,
-        n_audio_trainable_layers: int = 2,
-        n_phone_state: int = 384,
-        n_phone_head: int = 4,
-        n_phone_layer: int = 2,
-        n_outputs: int = 256,
+        model_name_or_path: str = "openai/whisper-medium",
+        # Quantization
+        codebook_dim: int = 32,
+        codebook_size: int = 4096,
+        codebook_decay: float = 0.9,
+        threshold_ema_dead_code: int = 0,
+        use_cosine_similarity: bool = True,
+        downsample: bool = True,
+        # Attention
+        post_attention_depth: int = 2,
     ):
         super().__init__()
 
-        self.n_mels = n_mels
-        self.n_phones = n_phones
+        self.model = WhisperModel.from_pretrained(model_name_or_path)
 
-        self.n_audio_ctx = n_audio_ctx
-        self.n_audio_state = n_audio_state
-        self.n_audio_head = n_audio_head
-        self.n_audio_layer = n_audio_layer
-        self.n_audio_trainable_layers = n_audio_trainable_layers
+        # Store vars
+        self.downsample = downsample
+        self.codebook_dim = codebook_dim
+        self.codebook_size = codebook_size
 
-        self.n_phone_state = n_phone_state
-        self.n_phone_head = n_phone_head
-        self.n_phone_layer = n_phone_layer
+        # Pre-quantization
+        whisper_config = self.model.config
+        encoder_width = whisper_config.encoder_attention_heads * 64
 
-        self.n_outputs = n_outputs
-
-        self.audio_encoder = PartialFreezedAudioEncoder(
-            n_mels=n_mels,
-            n_ctx=n_audio_ctx,
-            n_state=n_audio_state,
-            n_head=n_audio_head,
-            n_layer=n_audio_layer,
-            n_trainable_layers=n_audio_trainable_layers,
+        self.pre_ln = nn.LayerNorm(encoder_width)
+        self.pre_mlp = nn.Sequential(
+            nn.Linear(encoder_width, whisper_config.encoder_ffn_dim),
+            nn.GELU(),
+            nn.Linear(whisper_config.encoder_ffn_dim, encoder_width),
         )
 
-        # Tiny phone encoder
-        self.phone_encoder = PhoneEncoder(
-            n_phones=n_phones,
-            n_ctx=n_audio_ctx,
-            n_state=n_phone_state,
-            n_head=n_phone_head,
-            n_layer=n_phone_layer,
+        # Quantization
+        self.quantizer = VectorQuantize(
+            dim=encoder_width,
+            codebook_size=codebook_size,
+            codebook_dim=codebook_dim,
+            decay=codebook_decay,
+            commitment_weight=1.0,
+            threshold_ema_dead_code=threshold_ema_dead_code,
+            use_cosine_sim=use_cosine_similarity,
         )
+        self.pad_embedding = nn.Parameter(torch.randn(encoder_width))
 
-        self.audio_proj = nn.Linear(n_audio_state, n_outputs)
-        self.phone_proj = nn.Linear(n_phone_state, n_outputs)
-
-        self.phone_decoder = nn.Sequential(
-            nn.Linear(n_outputs, n_outputs // 2),
-            nn.Dropout(0.1),
-            nn.Linear(n_outputs // 2, n_phones),
+        # Post-quantization
+        self.post_positional_embedding = nn.Embedding(
+            whisper_config.max_source_positions, encoder_width
         )
-
-    @classmethod
-    def load(
-        cls,
-        url: str,
-        n_phones: int = None,
-        n_outputs: int = None,
-        n_audio_trainable_layers: int = 2,
-    ):
-        # Load weights from the official repo
-        if url in _MODELS:
-            url = _MODELS[url]
-
-        # Load weights from pretrained model
-        if url in _PRETRAINED_MODELS:
-            url = _PRETRAINED_MODELS[url]
-
-        if url.startswith("http"):
-            state_dict = load_state_dict_from_url(url, map_location="cpu")
-        else:
-            state_dict = torch.load(url, map_location="cpu")
-
-        if n_outputs is None:
-            n_outputs = state_dict["dims"].get("n_outputs", 256)
-
-        if n_outputs is None:
-            raise ValueError(
-                "n_outputs must be provided if not found in the model state dict (probably loaded from OpenAI's model hub)."
-            )
-
-        if "n_phones" not in state_dict["dims"]:
-            state_dict["dims"]["n_phones"] = n_phones
-
-        if "n_audio_trainable_layers" not in state_dict["dims"]:
-            state_dict["dims"]["n_audio_trainable_layers"] = n_audio_trainable_layers
-
-        model = cls(
-            n_mels=state_dict["dims"]["n_mels"],
-            n_audio_ctx=state_dict["dims"]["n_audio_ctx"],
-            n_audio_state=state_dict["dims"]["n_audio_state"],
-            n_audio_head=state_dict["dims"]["n_audio_head"],
-            n_audio_layer=state_dict["dims"]["n_audio_layer"],
-            n_audio_trainable_layers=state_dict["dims"]["n_audio_trainable_layers"],
-            n_phones=state_dict["dims"]["n_phones"],
-            n_outputs=n_outputs,
-        )
-
-        model_state_dict = {}
-        for k, v in state_dict["model_state_dict"].items():
-            if k.startswith("encoder."):
-                model_state_dict[f"audio_{k}"] = v
-            elif (
-                k.startswith("phone_encoder.")
-                or k.startswith("phone_proj.")
-                or k.startswith("phone_decoder.")
-                or k.startswith("audio_encoder.")
-                or k.startswith("audio_proj.")
-            ):
-                model_state_dict[k] = v
-
-        results = model.load_state_dict(model_state_dict, strict=False)
-        for i in results.missing_keys:
-            if i.startswith("audio_encoder."):
-                raise ValueError(
-                    f"Mismatch between the model and the provided state dict: {i} is missing."
+        self.post_attention = nn.Sequential(
+            *[
+                WhisperEncoderLayer(
+                    config=whisper_config,
                 )
+                for _ in range(post_attention_depth)
+            ]
+        )
+        self.post_ln = nn.LayerNorm(encoder_width)
 
-        assert results.unexpected_keys == []
+    def encode(
+        self,
+        input_features: Optional[torch.Tensor],
+        attention_mask: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        if attention_mask is not None:
+            assert attention_mask.ndim == 2, "Attention mask must be 2D"
 
-        return model
+            # Whisper will downsample by 2
+            attention_mask = attention_mask[:, ::2]
 
-    def save(self, path: str):
-        state_dict = {"model_state_dict": self.state_dict()}
+        with torch.no_grad():
+            hidden_states = self.model.encoder(
+                input_features,
+            ).last_hidden_state
 
-        state_dict["dims"] = dict(
-            n_mels=self.n_mels,
-            n_audio_ctx=self.n_audio_ctx,
-            n_audio_state=self.n_audio_state,
-            n_audio_head=self.n_audio_head,
-            n_audio_layer=self.n_audio_layer,
-            n_audio_trainable_layers=self.n_audio_trainable_layers,
-            n_phones=self.n_phones,
-            n_phone_state=self.n_phone_state,
-            n_phone_head=self.n_phone_head,
-            n_phone_layer=self.n_phone_layer,
-            n_outputs=self.n_outputs,
+            x = hidden_states
+            if self.downsample:
+                x = x.reshape(x.shape[0], x.shape[1] // 2, 2, x.shape[2]).mean(dim=2)
+
+                if attention_mask is not None:
+                    attention_mask = attention_mask[:, ::2]
+
+        x = x + self.pre_mlp(self.pre_ln(x))
+        quantized, indices, loss = self.quantizer(
+            x, mask=attention_mask.bool() if attention_mask is not None else None
         )
 
-        torch.save(state_dict, path)
+        # Fill masked positions with pad embedding
+        if attention_mask is not None:
+            quantized[attention_mask == 0] = self.pad_embedding
 
-    def forward_audio(self, x: Tensor):
-        x = self.audio_encoder(x)
-        x = self.audio_proj(x)
+        return quantized, indices, loss, hidden_states
 
-        return x
+    def decode(
+        self,
+        hidden_states: torch.Tensor,
+    ) -> torch.Tensor:
+        # Upsample
+        if self.downsample:
+            hidden_states = hidden_states.repeat_interleave(2, dim=1)
 
-    def forward_phones(self, x: Tensor):
-        x = self.phone_encoder(x)
-        x = self.phone_proj(x)
+        # Inject position embeddings
+        positions = torch.arange(
+            0, hidden_states.shape[1], dtype=torch.long, device=hidden_states.device
+        )
+        x = hidden_states + self.post_positional_embedding(positions)
 
-        return x
+        # Decode
+        for layer in self.post_attention:
+            x = layer(x, None, None)[0]
+        hidden_states = self.post_ln(hidden_states)
 
-    def forward_decoder(self, x: Tensor):
-        x = self.phone_decoder(x)
-
-        return x
+        return hidden_states
 
 
 @FEATURE_EXTRACTORS.register_module()
-class AlignedWhisperForAudio(BaseFeatureExtractor):
+class QuantizedWhisper(BaseFeatureExtractor):
     def __init__(
         self,
-        checkpoint: str = "aligned-whisper-cn-40k-v1.1",
-        checkpoint_path: str = None,
+        model_name_or_path: str = "openai/whisper-medium",
+        quantizer_weight: str = "checkpoints/whisper-vq/vanilla/step_10000_patch.ckpt",
     ):
         super().__init__()
 
-        if checkpoint_path is not None:
-            checkpoint = checkpoint_path
+        self.model = WhisperVQ(model_name_or_path)
 
-            logger.warning(
-                "The `checkpoint_path` argument is deprecated and will be removed in a future release. "
-                "Please use `checkpoint` instead."
-            )
+        # Restore quantizer
+        errors = self.model.load_state_dict(
+            torch.load(quantizer_weight, map_location="cpu"),
+            strict=False,
+        )
+        assert (
+            errors.unexpected_keys == []
+        ), f"Unexpected keys: {errors.unexpected_keys}"
+        assert all(
+            k.startswith("model.") for k in errors.missing_keys
+        ), f"Missing keys: {errors.missing_keys}"
 
-        self.model = AlignedWhisper.load(checkpoint)
         self.model.eval()
 
     @torch.no_grad()
+    @torch.autocast(
+        "cuda", dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.half
+    )
     def forward(self, path_or_audio, sampling_rate=None):
         audio = self.preprocess(path_or_audio, sampling_rate)
         mel = log_mel_spectrogram(audio)
-        feature_len = mel.shape[1] // 2
+        feature_len = mel.shape[1]
         mel = pad_or_trim(mel, 3000)
 
-        features = self.model.forward_audio(mel[None])
-        features = features[:, :feature_len]
+        mask = torch.ones(1, mel.shape[1], dtype=torch.float, device=mel.device)
+        mask[:, feature_len:] = 0
+
+        quantized, _, _, _ = self.model.encode(mel[None], mask)
+
+        downsample = mel.shape[1] // quantized.shape[1]
+        feature_len = feature_len // downsample
+        features = quantized[:, :feature_len]
 
         return features.transpose(1, 2)
 
 
-@FEATURE_EXTRACTORS.register_module()
-class AlignedWhisperForPhones(BaseFeatureExtractor):
-    def __init__(
-        self,
-        checkpoint: str = "aligned-whisper-cn-40k-v1.1",
-        checkpoint_path: str = None,
-    ):
-        super().__init__()
+if __name__ == "__main__":
+    model = QuantizedWhisper()
+    print(model)
 
-        if checkpoint_path is not None:
-            checkpoint = checkpoint_path
-
-            logger.warning(
-                "The `checkpoint_path` argument is deprecated and will be removed in a future release. "
-                "Please use `checkpoint` instead."
-            )
-
-        self.model = AlignedWhisper.load(checkpoint)
-        self.model.eval()
-
-    @torch.no_grad()
-    def forward(self, phones: Tensor):
-        phones_len = phones.shape[-1]
-        phones = pad_or_trim(phones, 1500)
-        features = self.model.forward_phones(phones[None])
-        features = features[:, :phones_len]
-
-        return features.transpose(1, 2)
+    model(torch.randn(1, 4 * 16000), 16000)
