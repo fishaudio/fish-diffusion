@@ -2,6 +2,7 @@ from .bert import BertEncoder
 from .builder import ENCODERS
 from .fast_speech import FastSpeech2Encoder
 from .identity import IdentityEncoder
+from .mlp_vq_encoder import MLPVectorQuantizeEncoder
 from .naive_projection import NaiveProjectionEncoder
 from .pitch_quant import QuantizedPitchEncoder
 from .similar_cluster import SimilarClusterEncoder
@@ -16,4 +17,5 @@ __all__ = [
     "QuantizedPitchEncoder",
     "BertEncoder",
     "TransformerEncoder",
+    "MLPVectorQuantizeEncoder",
 ]

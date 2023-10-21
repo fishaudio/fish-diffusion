@@ -99,3 +99,54 @@ class ChineseHubert(BaseFeatureExtractor):
         )
 
         return x
+
+
+@FEATURE_EXTRACTORS.register_module()
+class EnsembleHubert(BaseFeatureExtractor):
+    def __init__(
+        self,
+        models: list[str] = [
+            "TencentGameMate/chinese-hubert-large",
+            "facebook/hubert-large-ll60k",
+        ],
+        downsample: Optional[int] = None,
+    ):
+        super().__init__()
+
+        self.feature_extractors = [
+            Wav2Vec2FeatureExtractor.from_pretrained(model) for model in models
+        ]
+        self.model = nn.ModuleList(
+            [HubertModel.from_pretrained(model) for model in models]
+        )
+        self.model.eval()
+        self.downsample = downsample
+
+    @torch.no_grad()
+    def forward(self, path_or_audio, sampling_rate=None):
+        audio = self.preprocess(path_or_audio, sampling_rate)
+
+        features = []
+        for feature_extractor, model in zip(self.feature_extractors, self.model):
+            input_values = feature_extractor(
+                audio, sampling_rate=16000, return_tensors="pt"
+            ).input_values
+            input_values = input_values.to(model.device)
+
+            feature = model(input_values).last_hidden_state
+            feature = feature.transpose(1, 2)
+            features.append(feature)
+
+        # Concatenate features
+        features = torch.cat(features, dim=1)
+
+        if self.downsample is None:
+            return features
+
+        x = torch.nn.functional.interpolate(
+            features,
+            size=features.shape[2] // self.downsample,
+            mode="linear",
+        )
+
+        return x

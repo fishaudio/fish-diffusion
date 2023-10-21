@@ -79,7 +79,17 @@ class DiffSinger(nn.Module):
             else None
         )
 
+        # Extend text encoder to support loss and metrics
+        metrics = {}
         features = self.text_encoder(contents, src_masks)
+        if isinstance(features, dict):
+            if features.get("loss", None) is not None:
+                text_encoder_loss = features["loss"]
+
+            if features.get("metrics", None) is not None:
+                metrics.update(features["metrics"])
+
+            features = features["features"]
 
         if phones2mel is not None:
             phones2mel = (
@@ -131,6 +141,8 @@ class DiffSinger(nn.Module):
             x_masks=mel_masks,
             x_lens=mel_lens,
             cond_masks=mel_masks,
+            loss=text_encoder_loss,
+            metrics=metrics,
         )
 
     def forward(
@@ -169,6 +181,11 @@ class DiffSinger(nn.Module):
 
         if "loss" in features and features["loss"] is not None:
             output_dict["loss"] = output_dict["loss"] + features["loss"]
+
+        if "metrics" in features:
+            metrics = output_dict.get("metrics", {})
+            metrics.update(features["metrics"])
+            output_dict["metrics"] = metrics
 
         # For validation
         output_dict["features"] = features["features"]
