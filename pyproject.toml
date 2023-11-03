@@ -63,6 +63,9 @@ docs = [
     "sphinx>=5.3.0",
 ]
 
+[[tool.pdm.autoexport]]
+filename = "requirements.txt"
+
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
