@@ -89,7 +89,7 @@ scipy==1.9.3
 six==1.16.0
 soundfile==0.11.0
 stack-data==0.6.1
-tensorboard==2.11.2
+tensorboard==2.12.0
 tensorboard-data-server==0.7.0
 tensorboard-plugin-wit==1.8.1
 threadpoolctl==3.1.0
