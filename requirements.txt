@@ -60,7 +60,7 @@ pickleshare==0.7.5
 Pillow==9.3.0
 platformdirs==2.5.4
 pooch==1.6.0
-ninja
+praat-parselmouth==0.4.3
 prompt-toolkit==3.0.32
 protobuf==3.20.3
 psutil==5.9.4
