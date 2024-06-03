@@ -4,7 +4,6 @@ This file is copied from https://github.com/openvpi/DiffSinger/blob/refactor/pip
 It aims to reduce errors for long utterances and detcect aspiration which is not detected by MFA.
 """
 
-
 import librosa
 import numpy as np
 import parselmouth as pm
