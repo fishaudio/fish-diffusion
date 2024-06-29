@@ -1,6 +1,6 @@
 import soundfile as sf
-import torchaudio
 import torch
+import torchaudio
 
 from fish_diffusion.modules.pitch_extractors import ParselMouthPitchExtractor
 from fish_diffusion.modules.vocoders import NsfHifiGAN
@@ -11,7 +11,7 @@ gan = NsfHifiGAN("checkpoints/nsf_hifigan/model", "checkpoints/nsf_hifigan/confi
 
 audio, sr = torchaudio.load(source)
 
-#Change the multichannel audio to single channel
+# Change the multichannel audio to single channel
 if audio.shape[0] > 1:
     audio = torch.mean(audio, dim=0, keepdim=True)
 
