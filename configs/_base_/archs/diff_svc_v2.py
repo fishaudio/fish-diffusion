@@ -1,7 +1,7 @@
 """
 DiffSVC architecture with WaveNet denoiser and NSF-HiFiGAN vocoder.
 
-Comparing to v1, this version 
+Comparing to v1, this version
 - Doesn't need spec stats anymore.
 - Added dilation cycle to WaveNet denoiser.
 - Used the log10 mel spectrogram.
