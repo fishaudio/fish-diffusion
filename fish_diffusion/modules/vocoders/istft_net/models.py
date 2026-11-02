@@ -3,9 +3,8 @@ import torch.nn.functional as F
 from torch.nn import Conv1d, ReflectionPad1d
 from torch.nn.utils import weight_norm
 
-from fish_diffusion.modules.vocoders.nsf_hifigan.models import LRELU_SLOPE
+from fish_diffusion.modules.vocoders.nsf_hifigan.models import LRELU_SLOPE, init_weights
 from fish_diffusion.modules.vocoders.nsf_hifigan.models import Generator as _Generator
-from fish_diffusion.modules.vocoders.nsf_hifigan.models import init_weights
 
 
 class Generator(_Generator):

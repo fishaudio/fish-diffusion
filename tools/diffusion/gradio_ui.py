@@ -55,9 +55,11 @@ def launch_gradio(
                     speaker = gr.Dropdown(
                         label="Speaker Name (Used for Multi-Speaker Models)",
                         choices=list(speaker_mapping.keys()),
-                        value=speaker
-                        if speaker in speaker_mapping
-                        else list(speaker_mapping.keys())[0],
+                        value=(
+                            speaker
+                            if speaker in speaker_mapping
+                            else list(speaker_mapping.keys())[0]
+                        ),
                     )
                 else:
                     speaker = gr.Number(
